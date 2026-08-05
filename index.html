@@ -83,6 +83,107 @@
       flex-wrap: wrap;
       gap: 6px;
     }
+
+    .subcategory-filter-list {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .subcategory-filter-group {
+      border: 1px solid #232336;
+      border-radius: 10px;
+      overflow: hidden;
+      background: #151522;
+    }
+
+    .subcategory-filter-group summary {
+      list-style: none;
+      cursor: pointer;
+      padding: 10px 12px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      color: #e7defa;
+      font-size: 0.82rem;
+      font-weight: 700;
+      background: #191927;
+    }
+
+    .subcategory-filter-group summary::-webkit-details-marker { display: none; }
+
+    .subcategory-filter-group .group-count {
+      font-size: 0.72rem;
+      color: #8f8fa6;
+      font-weight: 500;
+      white-space: nowrap;
+    }
+
+    .subcategory-filter-body {
+      padding: 10px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+
+    .subcategory-filter-empty {
+      padding: 0 12px 12px;
+      color: #6e6e84;
+      font-size: 0.76rem;
+    }
+
+    .main-category-filter-list {
+      display: flex;
+      flex-direction: column;
+      gap: 0;
+    }
+
+    .main-category-filter-group {
+      border: none;
+      border-top: 1px solid #232336;
+      border-radius: 0;
+      overflow: visible;
+      background: transparent;
+    }
+
+    .main-category-filter-group summary {
+      list-style: none;
+      cursor: pointer;
+      padding: 12px 4px 8px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      color: #e7defa;
+      font-size: 0.82rem;
+      font-weight: 700;
+      background: transparent;
+    }
+
+    .main-category-filter-group summary::-webkit-details-marker { display: none; }
+
+    .main-category-filter-group .group-count {
+      font-size: 0.72rem;
+      color: #8f8fa6;
+      font-weight: 500;
+      white-space: nowrap;
+    }
+
+    .main-category-filter-body {
+      padding: 0 0 12px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+
+    .main-category-filter-active summary {
+      color: #f1e8ff;
+    }
+
+    .main-category-filter-group:first-child {
+      border-top: none;
+    }
     .cat-chip {
       padding: 3px 10px;
       border-radius: 999px;
@@ -96,6 +197,24 @@
     }
     .cat-chip:hover { border-color: #c084fc; color: #c084fc; }
     .cat-chip.active { background: #c084fc22; border-color: #c084fc; color: #c084fc; }
+
+    .cat-chip.used {
+      border-color: #4f7cff88;
+      color: #9fb8ff;
+      background: #203053;
+    }
+
+    .cat-chip.used.active {
+      border-color: #8ab4ff;
+      color: #d6e2ff;
+      background: #2a3e66;
+    }
+
+    .cat-chip-mark {
+      margin-right: 4px;
+      font-weight: 700;
+      color: inherit;
+    }
 
     .prompt-list {
       flex: 1;
@@ -126,6 +245,10 @@
       white-space: nowrap;
       flex-shrink: 0;
       margin-top: 1px;
+    }
+    .prompt-item .cat-badge.sub {
+      background: #22304a;
+      color: #8ab4ff;
     }
     .prompt-item .content { font-size: 0.85rem; color: #ddd; flex: 1; word-break: break-all; }
     .prompt-item .del-btn {
@@ -450,6 +573,11 @@
       gap: 8px;
       flex-wrap: wrap;
       align-items: center;
+      justify-content: flex-start;
+    }
+
+    .composer-actions .btn-danger {
+      margin-left: auto;
     }
 
     .combo-save-row {
@@ -457,7 +585,7 @@
       gap: 8px;
       align-items: center;
       flex-wrap: wrap;
-      margin-left: auto;
+      margin-left: 12px;
     }
 
     .combo-save-row label {
@@ -564,6 +692,15 @@
       color: #666;
       margin: 12px 4px 8px;
     }
+
+    .list-subsection-title {
+      font-size: 0.68rem;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      color: #8a8a9a;
+      margin: 8px 4px 6px 16px;
+    }
+
   </style>
 </head>
 <body>
@@ -585,14 +722,19 @@
     <div class="panel-add-body" id="panel-add-body">
       <div class="add-form">
         <div>
-          <label>카테고리</label>
+          <label>대분류</label>
           <div class="category-input-wrap">
-            <input type="text" id="input-category" placeholder="카테고리" autocomplete="off" />
-            <div class="category-suggest" id="cat-suggest"></div>
+            <select id="input-main-category"></select>
           </div>
         </div>
         <div>
-          <label>프롬프트 내용</label>
+          <label>중분류</label>
+          <div class="category-input-wrap">
+            <select id="input-sub-category" disabled></select>
+          </div>
+        </div>
+        <div>
+          <label>내용</label>
           <textarea id="input-content" placeholder="내용을 입력"></textarea>
         </div>
         <button class="btn btn-primary" onclick="addPrompt()">+ 저장</button>
@@ -619,7 +761,6 @@
           📥 CSV 가져오기
           <input type="file" accept=".csv" id="csv-import" style="display:none" onchange="importCSV(event)" />
         </label>
-        <button class="btn btn-danger btn-sm" onclick="clearAll()">🗑 전체 삭제</button>
       </div>
     </div>
   </div>
@@ -631,8 +772,7 @@
       <span id="count-badge" style="font-size:0.8rem;color:#c084fc;font-weight:700"></span>
     </div>
     <div class="filter-section">
-      <div class="filter-title">개별 프롬프트 카테고리</div>
-      <div class="filter-row" id="cat-filter"></div>
+      <div class="filter-row" id="main-filter"></div>
     </div>
     <div class="prompt-list" id="prompt-list"></div>
   </div>
@@ -655,6 +795,7 @@
       </div>
       <div class="composer-actions">
         <button class="btn btn-primary" onclick="copyPrompt()">📋 클립보드 복사</button>
+        <button class="btn btn-danger btn-sm" onclick="clearCurrentComposition()">🧹 조합 초기화</button>
         <div class="combo-save-row">
           <label for="combo-category">저장 카테고리</label>
           <input type="text" id="combo-category" value="커스텀 조합" placeholder="예: 커스텀 조합" />
@@ -675,12 +816,12 @@
   const COMBO_PANEL_COLLAPSE_KEY = 'prompt_repo_combo_panel_collapsed_v1';
 
   // ── State ──
-  let prompts = [];          // [{id, category, content}] 개별 프롬프트
+  let prompts = [];          // [{id, mainCategory, subCategory, content}] 개별 프롬프트
   let composedPrompts = [];  // [{id, category, content}] 조합 저장 프롬프트
-  let selected = [];         // [{id, category, content, source}]
+  let selected = [];         // [{id, mainCategory, subCategory, content, source}]
   let activeCategoryPrompt = null;
+  let activeSubCategoryPrompt = null;
   let activeCategoryComposed = null;
-  let categoryMenuOpen = false;
   let isAddPanelCollapsed = false;
   let isComboPanelCollapsed = false;
   let isOutputEditing = false;
@@ -692,7 +833,8 @@
   function load() {
     try {
       const raw = localStorage.getItem(STORAGE_KEY);
-      prompts = raw ? JSON.parse(raw) : [];
+      const loaded = raw ? JSON.parse(raw) : [];
+      prompts = loaded.map(normalizePrompt).filter(Boolean);
     } catch { prompts = []; }
 
     try {
@@ -710,13 +852,51 @@
     return Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
   }
 
+  function normalizePrompt(prompt) {
+    if (!prompt) return null;
+    const mainCategory = (prompt.mainCategory ?? '').trim();
+    const subCategory = (prompt.subCategory ?? prompt.category ?? '').trim();
+    const content = (prompt.content ?? '').trim();
+    if (!content) return null;
+    return {
+      id: prompt.id || uid(),
+      mainCategory: mainCategory || '기타',
+      subCategory: subCategory || '기타',
+      content,
+    };
+  }
+
+  function cleanPrompt(prompt) {
+    return {
+      id: prompt.id,
+      mainCategory: prompt.mainCategory,
+      subCategory: prompt.subCategory,
+      content: prompt.content,
+    };
+  }
+
+  function normalizeSelected(item) {
+    if (!item) return null;
+    return {
+      ...item,
+      mainCategory: (item.mainCategory ?? item.category ?? '기타').trim() || '기타',
+      subCategory: (item.subCategory ?? item.category ?? '기타').trim() || '기타',
+      content: (item.content ?? '').trim(),
+    };
+  }
+
   // ── Categories ──
   function getCategories() {
     return [...new Set([...prompts, ...composedPrompts].map(p => p.category).filter(Boolean))].sort();
   }
 
-  function getPromptCategories() {
-    return [...new Set(prompts.map(p => p.category).filter(Boolean))].sort();
+  function getMainCategories() {
+    return [...new Set(prompts.map(p => p.mainCategory).filter(Boolean))].sort();
+  }
+
+  function getSubCategories(mainCategory) {
+    const filtered = mainCategory ? prompts.filter(p => p.mainCategory === mainCategory) : prompts;
+    return [...new Set(filtered.map(p => p.subCategory).filter(Boolean))].sort();
   }
 
   function getComposedCategories() {
@@ -725,35 +905,93 @@
 
   // ── Render ──
   function render() {
-    renderCategoryFilter();
+    renderMainCategoryFilter();
     renderComposedFilter();
     renderComposedLoadList();
+    renderCategorySelectors();
+    syncAddFormSelection();
     renderPromptList();
     renderSelected();
-    renderCategorySuggestions();
     document.getElementById('count-badge').textContent = prompts.length ? `(${prompts.length})` : '';
   }
 
-  function renderCategoryFilter() {
-    const cats = getPromptCategories();
-    const el = document.getElementById('cat-filter');
+  function renderCategorySelectors() {
+    renderMainCategorySelect();
+    renderSubCategorySelect();
+  }
+
+  function syncAddFormSelection() {
+    const mainSelect = document.getElementById('input-main-category');
+    const subSelect = document.getElementById('input-sub-category');
+
+    if (activeCategoryPrompt) {
+      mainSelect.value = activeCategoryPrompt;
+    }
+
+    renderSubCategorySelect();
+
+    if (activeCategoryPrompt && activeSubCategoryPrompt) {
+      subSelect.value = activeSubCategoryPrompt;
+    } else if (activeCategoryPrompt) {
+      subSelect.value = '';
+    }
+  }
+
+  function renderMainCategoryFilter() {
+    const el = document.getElementById('main-filter');
     el.innerHTML = '';
+    const mainCategories = getMainCategories();
+    if (mainCategories.length === 0) {
+      el.innerHTML = '<div class="subcategory-filter-empty">아직 대분류가 없습니다. 새 프롬프트를 추가하세요.</div>';
+      return;
+    }
 
-    const all = document.createElement('span');
-    all.className = 'cat-chip' + (activeCategoryPrompt === null ? ' active' : '');
-    all.textContent = '전체';
-    all.onclick = () => { activeCategoryPrompt = null; render(); };
-    el.appendChild(all);
+    const list = document.createElement('div');
+    list.className = 'main-category-filter-list';
 
-    if (cats.length === 0) return;
+    mainCategories.forEach(mainCategory => {
+      const subCategories = getSubCategories(mainCategory);
+      const group = document.createElement('details');
+      group.className = 'main-category-filter-group';
+      group.open = true;
 
-    cats.forEach(c => {
-      const chip = document.createElement('span');
-      chip.className = 'cat-chip' + (activeCategoryPrompt === c ? ' active' : '');
-      chip.textContent = c;
-      chip.onclick = () => { activeCategoryPrompt = (activeCategoryPrompt === c) ? null : c; render(); };
-      el.appendChild(chip);
+      if (activeCategoryPrompt === mainCategory) {
+        group.classList.add('main-category-filter-active');
+      }
+
+      const summary = document.createElement('summary');
+      summary.innerHTML = `<span>${esc(mainCategory)}</span><span class="group-count">${subCategories.length}개</span>`;
+      group.appendChild(summary);
+
+      const body = document.createElement('div');
+      body.className = 'main-category-filter-body';
+
+      if (subCategories.length === 0) {
+        const empty = document.createElement('span');
+        empty.className = 'subcategory-filter-empty';
+        empty.style.padding = '0';
+        empty.textContent = '중분류 없음';
+        body.appendChild(empty);
+      } else {
+        subCategories.forEach(subCategory => {
+          const used = isSubCategoryUsed(mainCategory, subCategory);
+          const chip = document.createElement('span');
+          chip.className = 'cat-chip' + (used ? ' used' : '') + (activeCategoryPrompt === mainCategory && activeSubCategoryPrompt === subCategory ? ' active' : '');
+          chip.innerHTML = `${used ? '<span class="cat-chip-mark">✓</span>' : ''}${esc(subCategory)}`;
+          chip.onclick = () => {
+            activeCategoryPrompt = mainCategory;
+            activeSubCategoryPrompt = subCategory;
+            render();
+          };
+          body.appendChild(chip);
+        });
+      }
+
+      group.appendChild(body);
+      list.appendChild(group);
     });
+
+    el.appendChild(list);
   }
 
   function renderComposedFilter() {
@@ -833,7 +1071,7 @@
       return;
     }
     clearOutputOverride();
-    selected = [{ ...item, source: 'composed' }];
+    selected = [{ ...normalizeSelected(item), source: 'composed' }];
     render();
     showToast('커스텀 조합을 불러왔습니다');
   }
@@ -850,42 +1088,49 @@
 
   function renderPromptList() {
     const list = document.getElementById('prompt-list');
-    const filteredPrompts = activeCategoryPrompt
-      ? prompts.filter(p => p.category === activeCategoryPrompt)
-      : prompts;
+
+    if (!activeCategoryPrompt) {
+      list.innerHTML = '<div class="empty-state">대분류 섹션에서 중분류 칩을 선택하세요.</div>';
+      return;
+    }
+
+    const filteredPrompts = prompts.filter(p => {
+      if (activeCategoryPrompt && p.mainCategory !== activeCategoryPrompt) return false;
+      if (activeSubCategoryPrompt && p.subCategory !== activeSubCategoryPrompt) return false;
+      return true;
+    });
 
     if (filteredPrompts.length === 0) {
-      list.innerHTML = '<div class="empty-state">저장된 프롬프트가 없습니다.<br/>새 프롬프트를 추가하세요.</div>';
+      list.innerHTML = '<div class="empty-state">선택한 조건의 프롬프트가 없습니다.<br/>다른 중분류를 눌러보세요.</div>';
       return;
     }
 
     list.innerHTML = '';
 
-    if (filteredPrompts.length > 0) {
-      appendListSection(list, '개별 프롬프트', filteredPrompts, 'prompt');
-    }
-  }
-
-  function appendListSection(root, title, items, source) {
-    const sectionTitle = document.createElement('div');
-    sectionTitle.className = 'list-section-title';
-    sectionTitle.textContent = title;
-    root.appendChild(sectionTitle);
-
-    items.forEach(p => {
-      const isSelected = selected.some(s => s.id === p.id && s.source === source);
+    filteredPrompts.forEach(p => {
+      const isSelected = selected.some(s => s.id === p.id && s.source === 'prompt');
       const item = document.createElement('div');
       item.className = 'prompt-item' + (isSelected ? ' selected' : '');
       item.innerHTML = `
-        <span class="cat-badge">${esc(p.category)}</span>
+        <span class="cat-badge">${esc(p.mainCategory)}</span>
+        <span class="cat-badge sub">${esc(p.subCategory)}</span>
         <span class="content">${esc(p.content)}</span>
-        <button class="del-btn" title="삭제" onclick="deletePrompt('${p.id}','${source}',event)">×</button>
+        <button class="del-btn" title="삭제" onclick="deletePrompt('${p.id}','prompt',event)">×</button>
       `;
       item.onclick = (e) => {
         if (e.target.classList.contains('del-btn')) return;
-        toggleSelect(p, source);
+        toggleSelect(p, 'prompt');
       };
-      root.appendChild(item);
+      list.appendChild(item);
+    });
+  }
+
+  function isSubCategoryUsed(mainCategory, subCategory) {
+    return selected.some(item => {
+      if (item.source === 'prompt') {
+        return item.mainCategory === mainCategory && item.subCategory === subCategory;
+      }
+      return false;
     });
   }
 
@@ -907,7 +1152,8 @@
         chip.draggable = true;
         chip.dataset.idx = i;
         chip.innerHTML = `
-          <span class="chip-cat">${esc(p.category)}</span>
+          <span class="chip-cat">${esc(p.mainCategory || p.category)}</span>
+          <span class="chip-cat" style="color:#8ab4ff">${esc(p.subCategory || '')}</span>
           <span>${esc(p.content)}</span>
           <button class="chip-remove" title="제거" onclick="removeSelected(${i})">×</button>
         `;
@@ -981,62 +1227,87 @@
   }
 
   function renderCategorySuggestions() {
-    const menu = document.getElementById('cat-suggest');
-    const input = document.getElementById('input-category');
-    const keyword = input.value.trim().toLowerCase();
-    const categories = getPromptCategories();
-    const filtered = categories.filter(c => c.toLowerCase().includes(keyword));
+    renderCategorySelectors();
+  }
 
-    menu.innerHTML = '';
+  function appendSelectOption(select, value, label) {
+    const option = document.createElement('option');
+    option.value = value;
+    option.textContent = label;
+    select.appendChild(option);
+  }
+
+  function renderMainCategorySelect() {
+    const select = document.getElementById('input-main-category');
+    const categories = getMainCategories();
+    const current = select.value;
+
+    select.innerHTML = '';
+    appendSelectOption(select, '', '대분류 선택');
+    categories.forEach(category => appendSelectOption(select, category, category));
+    appendSelectOption(select, '__new__', '＋ 새 대분류 추가');
 
     if (categories.length === 0) {
-      const empty = document.createElement('div');
-      empty.className = 'category-empty';
-      empty.textContent = '아직 카테고리가 없습니다. 새 카테고리를 입력하세요.';
-      menu.appendChild(empty);
-      if (categoryMenuOpen) menu.classList.add('open');
-      else menu.classList.remove('open');
-      return;
+      appendSelectOption(select, '기타', '기타');
     }
 
-    if (filtered.length === 0) {
-      const empty = document.createElement('div');
-      empty.className = 'category-empty';
-      empty.textContent = '일치하는 카테고리가 없습니다.';
-      menu.appendChild(empty);
+    if (current && [...categories, '기타'].includes(current)) {
+      select.value = current;
+    }
+  }
+
+  function renderSubCategorySelect() {
+    const mainSelect = document.getElementById('input-main-category');
+    const select = document.getElementById('input-sub-category');
+    const mainCategory = mainSelect.value && mainSelect.value !== '__new__' ? mainSelect.value : '';
+    const categories = mainCategory ? getSubCategories(mainCategory) : [];
+    const current = select.value;
+
+    select.innerHTML = '';
+    appendSelectOption(select, '', mainCategory ? '중분류 선택' : '대분류를 먼저 선택');
+
+    if (mainCategory) {
+      categories.forEach(category => appendSelectOption(select, category, category));
+      appendSelectOption(select, '__new__', '＋ 새 중분류 추가');
+      if (categories.length === 0) {
+        appendSelectOption(select, '기타', '기타');
+      }
+      select.disabled = false;
+      if (current && [...categories, '기타'].includes(current)) {
+        select.value = current;
+      }
     } else {
-      filtered.forEach(c => {
-        const btn = document.createElement('button');
-        btn.type = 'button';
-        btn.className = 'category-option';
-        btn.textContent = c;
-        btn.onclick = () => selectCategory(c);
-        menu.appendChild(btn);
-      });
+      select.disabled = true;
     }
-
-    const exactMatch = categories.some(c => c.toLowerCase() === keyword);
-    if (input.value.trim() && !exactMatch) {
-      const createBtn = document.createElement('button');
-      createBtn.type = 'button';
-      createBtn.className = 'category-option category-option-create';
-      createBtn.textContent = `새 카테고리로 사용: ${input.value.trim()}`;
-      createBtn.onclick = () => selectCategory(input.value.trim());
-      menu.appendChild(createBtn);
-    }
-
-    if (categoryMenuOpen) menu.classList.add('open');
-    else menu.classList.remove('open');
   }
 
-  function openCategoryMenu() {
-    categoryMenuOpen = true;
-    renderCategorySuggestions();
+  function handleMainCategoryChange() {
+    const select = document.getElementById('input-main-category');
+    if (select.value === '__new__') {
+      const nextValue = prompt('새 대분류 이름을 입력하세요');
+      if (nextValue && nextValue.trim()) {
+        const value = nextValue.trim();
+        appendSelectOption(select, value, value);
+        select.value = value;
+      } else {
+        select.value = '';
+      }
+    }
+    renderSubCategorySelect();
   }
 
-  function closeCategoryMenu() {
-    categoryMenuOpen = false;
-    renderCategorySuggestions();
+  function handleSubCategoryChange() {
+    const select = document.getElementById('input-sub-category');
+    if (select.value === '__new__') {
+      const nextValue = prompt('새 중분류 이름을 입력하세요');
+      if (nextValue && nextValue.trim()) {
+        const value = nextValue.trim();
+        appendSelectOption(select, value, value);
+        select.value = value;
+      } else {
+        select.value = '';
+      }
+    }
   }
 
   function setAddPanelCollapsed(collapsed) {
@@ -1070,20 +1341,31 @@
   }
 
   function selectCategory(value) {
-    document.getElementById('input-category').value = value;
-    closeCategoryMenu();
+    const select = document.getElementById('input-main-category');
+    select.value = value;
+    activeCategoryPrompt = value;
+    activeSubCategoryPrompt = null;
+    renderSubCategorySelect();
+  }
+
+  function selectSubCategory(value) {
+    const select = document.getElementById('input-sub-category');
+    select.value = value;
+    activeSubCategoryPrompt = value;
   }
 
   // ── Actions ──
   function addPrompt() {
-    const cat = document.getElementById('input-category').value.trim();
+    const mainCategory = document.getElementById('input-main-category').value.trim();
+    const subCategory = document.getElementById('input-sub-category').value.trim();
     const content = document.getElementById('input-content').value.trim();
-    if (!cat) { showToast('카테고리를 입력하세요'); return; }
+    if (!mainCategory) { showToast('대분류를 입력하세요'); return; }
+    if (!subCategory) { showToast('중분류를 입력하세요'); return; }
     if (!content) { showToast('프롬프트 내용을 입력하세요'); return; }
-    prompts.push({ id: uid(), category: cat, content });
+    prompts.push({ id: uid(), mainCategory, subCategory, content });
     save();
     document.getElementById('input-content').value = '';
-    closeCategoryMenu();
+    renderCategorySelectors();
     render();
     showToast('저장되었습니다');
   }
@@ -1125,15 +1407,12 @@
     render();
   }
 
-  function clearAll() {
-    if (!confirm('모든 프롬프트를 삭제하시겠습니까?')) return;
+  function clearCurrentComposition() {
+    if (!confirm('현재 조합된 프롬프트를 모두 초기화하시겠습니까?')) return;
     clearOutputOverride();
-    prompts = [];
-    composedPrompts = [];
     selected = [];
-    save();
     render();
-    showToast('전체 삭제되었습니다');
+    showToast('현재 조합이 초기화되었습니다');
   }
 
   function copyPrompt() {
@@ -1168,8 +1447,8 @@
   // ── CSV ──
   function exportCSV() {
     if (prompts.length === 0 && composedPrompts.length === 0) { showToast('내보낼 프롬프트가 없습니다'); return; }
-    const rows = [['type', 'category', 'content']];
-    prompts.forEach(p => rows.push(['individual', csvEsc(p.category), csvEsc(p.content)]));
+    const rows = [['type', 'mainCategory', 'subCategory', 'content']];
+    prompts.forEach(p => rows.push(['individual', csvEsc(p.mainCategory), csvEsc(p.subCategory), csvEsc(p.content)]));
     composedPrompts.forEach(p => rows.push(['composed', csvEsc(p.category), csvEsc(p.content)]));
     const csv = rows.map(r => r.join(',')).join('\n');
     const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
@@ -1191,13 +1470,25 @@
       const lines = text.split(/\r?\n/).filter(l => l.trim());
       let added = 0;
       lines.forEach((line, i) => {
-        if (i === 0 && /^(type,category,content|category,content)/i.test(line.trim())) return; // header
+        if (i === 0 && /^(type,mainCategory,subCategory,content|type,category,content|category,content)/i.test(line.trim())) return; // header
         const parts = parseCSVLine(line);
+        if (parts.length >= 4 && parts[1].trim() && parts[2].trim() && parts[3].trim()) {
+          const type = parts[0].trim().toLowerCase();
+          const item = { id: uid(), mainCategory: parts[1].trim(), subCategory: parts[2].trim(), content: parts[3].trim() };
+          if (type === 'composed' || type === 'combo' || type === 'custom') {
+            composedPrompts.push({ id: item.id, category: item.subCategory, content: item.content });
+          } else {
+            prompts.push(item);
+          }
+          added++;
+          return;
+        }
+
         if (parts.length >= 3 && parts[1].trim() && parts[2].trim()) {
           const type = parts[0].trim().toLowerCase();
-          const item = { id: uid(), category: parts[1].trim(), content: parts[2].trim() };
+          const item = { id: uid(), mainCategory: parts[1].trim(), subCategory: parts[1].trim(), content: parts[2].trim() };
           if (type === 'composed' || type === 'combo' || type === 'custom') {
-            composedPrompts.push(item);
+            composedPrompts.push({ id: item.id, category: item.subCategory, content: item.content });
           } else {
             prompts.push(item);
           }
@@ -1207,7 +1498,7 @@
 
         if (parts.length >= 2 && parts[0].trim() && parts[1].trim()) {
           // 이전 CSV 포맷(category,content)은 개별 프롬프트로 가져온다.
-          prompts.push({ id: uid(), category: parts[0].trim(), content: parts[1].trim() });
+          prompts.push({ id: uid(), mainCategory: '기타', subCategory: parts[0].trim(), content: parts[1].trim() });
           added++;
         }
       });
@@ -1286,27 +1577,12 @@
     if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) addPrompt();
   });
 
-  // ── Category input: list + free typing ──
-  const categoryInput = document.getElementById('input-category');
+  // ── Category selectors ──
+  const categoryInput = document.getElementById('input-main-category');
+  const subCategoryInput = document.getElementById('input-sub-category');
 
-  categoryInput.addEventListener('focus', openCategoryMenu);
-  categoryInput.addEventListener('click', openCategoryMenu);
-  categoryInput.addEventListener('input', () => {
-    categoryMenuOpen = true;
-    renderCategorySuggestions();
-  });
-
-  categoryInput.addEventListener('keydown', e => {
-    if (e.key === 'Escape') {
-      closeCategoryMenu();
-      categoryInput.blur();
-    }
-  });
-
-  categoryInput.addEventListener('blur', () => {
-    // click 이벤트가 먼저 처리될 시간을 주기 위해 짧게 지연
-    setTimeout(closeCategoryMenu, 120);
-  });
+  categoryInput.addEventListener('change', handleMainCategoryChange);
+  subCategoryInput.addEventListener('change', handleSubCategoryChange);
 
   // ── Init ──
   setAddPanelCollapsed(localStorage.getItem(ADD_PANEL_COLLAPSE_KEY) === 'true');
