@@ -1,0 +1,689 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>프롬프트 저장소</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      background: #0f0f13;
+      color: #e0e0e0;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    header {
+      background: #1a1a24;
+      padding: 16px 24px;
+      border-bottom: 1px solid #2a2a3a;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    header h1 { font-size: 1.3rem; color: #c084fc; font-weight: 700; }
+
+    .main {
+      display: flex;
+      flex: 1;
+      gap: 0;
+      overflow: hidden;
+      height: calc(100vh - 57px);
+    }
+
+    /* ── Left Panel: Prompt Library ── */
+    .panel-library {
+      width: 320px;
+      min-width: 220px;
+      background: #13131c;
+      border-right: 1px solid #2a2a3a;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    .panel-header {
+      padding: 14px 16px 10px;
+      font-size: 0.78rem;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: #888;
+      border-bottom: 1px solid #1e1e2e;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .category-filter {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      padding: 10px 12px;
+      border-bottom: 1px solid #1e1e2e;
+    }
+    .cat-chip {
+      padding: 3px 10px;
+      border-radius: 999px;
+      background: #1e1e2e;
+      color: #aaa;
+      font-size: 0.78rem;
+      cursor: pointer;
+      border: 1px solid transparent;
+      transition: all .15s;
+      user-select: none;
+    }
+    .cat-chip:hover { border-color: #c084fc; color: #c084fc; }
+    .cat-chip.active { background: #c084fc22; border-color: #c084fc; color: #c084fc; }
+
+    .prompt-list {
+      flex: 1;
+      overflow-y: auto;
+      padding: 8px;
+    }
+
+    .prompt-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 8px;
+      padding: 8px 10px;
+      border-radius: 8px;
+      background: #1a1a26;
+      margin-bottom: 6px;
+      cursor: pointer;
+      border: 1px solid transparent;
+      transition: all .15s;
+    }
+    .prompt-item:hover { border-color: #c084fc55; background: #1e1e30; }
+    .prompt-item.selected { border-color: #c084fc; background: #c084fc18; }
+    .prompt-item .cat-badge {
+      font-size: 0.68rem;
+      background: #c084fc22;
+      color: #c084fc;
+      border-radius: 4px;
+      padding: 2px 6px;
+      white-space: nowrap;
+      flex-shrink: 0;
+      margin-top: 1px;
+    }
+    .prompt-item .content { font-size: 0.85rem; color: #ddd; flex: 1; word-break: break-all; }
+    .prompt-item .del-btn {
+      background: none;
+      border: none;
+      color: #555;
+      cursor: pointer;
+      font-size: 1rem;
+      padding: 0 2px;
+      line-height: 1;
+      flex-shrink: 0;
+    }
+    .prompt-item .del-btn:hover { color: #f87171; }
+
+    /* ── Center Panel: Add Prompt ── */
+    .panel-add {
+      width: 260px;
+      min-width: 200px;
+      background: #15151f;
+      border-right: 1px solid #2a2a3a;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .panel-add .panel-header { justify-content: flex-start; }
+
+    .add-form {
+      padding: 14px 14px 0;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    label { font-size: 0.78rem; color: #888; margin-bottom: 2px; display: block; }
+
+    input[type="text"], textarea, select {
+      width: 100%;
+      background: #1a1a28;
+      border: 1px solid #2a2a3a;
+      border-radius: 8px;
+      color: #e0e0e0;
+      padding: 8px 10px;
+      font-size: 0.85rem;
+      font-family: inherit;
+      outline: none;
+      transition: border-color .15s;
+    }
+    input[type="text"]:focus, textarea:focus, select:focus { border-color: #c084fc; }
+    textarea { resize: vertical; min-height: 80px; }
+
+    .btn {
+      padding: 9px 14px;
+      border-radius: 8px;
+      border: none;
+      font-size: 0.85rem;
+      cursor: pointer;
+      font-family: inherit;
+      transition: all .15s;
+      font-weight: 600;
+    }
+    .btn-primary { background: #c084fc; color: #0f0f13; }
+    .btn-primary:hover { background: #d8a0ff; }
+    .btn-secondary { background: #1e1e2e; color: #ccc; border: 1px solid #2a2a3a; }
+    .btn-secondary:hover { background: #2a2a3e; }
+    .btn-danger { background: #f87171; color: #0f0f13; }
+    .btn-danger:hover { background: #fca5a5; }
+    .btn-sm { padding: 5px 10px; font-size: 0.78rem; }
+
+    .csv-section {
+      padding: 14px;
+      border-top: 1px solid #1e1e2e;
+      margin-top: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .csv-section .section-label { font-size: 0.75rem; color: #666; text-transform: uppercase; letter-spacing: 0.06em; }
+
+    /* ── Right Panel: Composer ── */
+    .panel-composer {
+      flex: 1;
+      background: #11111a;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    .selected-chips {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 7px;
+      padding: 12px 16px;
+      min-height: 60px;
+      border-bottom: 1px solid #1e1e2e;
+      align-content: flex-start;
+    }
+
+    .selected-chip {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      background: #c084fc22;
+      border: 1px solid #c084fc55;
+      border-radius: 6px;
+      padding: 4px 8px;
+      font-size: 0.82rem;
+      color: #e0d0ff;
+      cursor: default;
+    }
+    .selected-chip .chip-cat { font-size: 0.7rem; color: #c084fc; font-weight: 600; }
+    .selected-chip .chip-remove {
+      background: none; border: none; color: #c084fc99; cursor: pointer;
+      font-size: 0.9rem; padding: 0; line-height: 1;
+    }
+    .selected-chip .chip-remove:hover { color: #f87171; }
+
+    .composer-output {
+      flex: 1;
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      overflow-y: auto;
+    }
+
+    .output-box {
+      background: #1a1a26;
+      border: 1px solid #2a2a3a;
+      border-radius: 10px;
+      padding: 14px;
+      font-size: 0.88rem;
+      color: #e0e0e0;
+      line-height: 1.6;
+      white-space: pre-wrap;
+      word-break: break-all;
+      min-height: 80px;
+      flex: 1;
+    }
+
+    .composer-actions {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .separator-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 0.78rem;
+      color: #666;
+    }
+    .separator-row input {
+      width: 80px;
+    }
+
+    /* Scrollbar */
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: #2a2a3a; border-radius: 3px; }
+
+    /* Toast */
+    #toast {
+      position: fixed;
+      bottom: 24px;
+      left: 50%;
+      transform: translateX(-50%) translateY(60px);
+      background: #c084fc;
+      color: #0f0f13;
+      padding: 10px 20px;
+      border-radius: 8px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      opacity: 0;
+      transition: all .3s;
+      z-index: 9999;
+      pointer-events: none;
+    }
+    #toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+    .empty-state {
+      text-align: center;
+      color: #444;
+      font-size: 0.85rem;
+      padding: 32px 16px;
+    }
+
+    .drag-over { border-color: #c084fc !important; background: #c084fc11 !important; }
+  </style>
+</head>
+<body>
+
+<header>
+  <span style="font-size:1.4rem">✨</span>
+  <h1>프롬프트 저장소</h1>
+  <span style="margin-left:auto;font-size:0.78rem;color:#555">이미지 생성 프롬프트 관리</span>
+</header>
+
+<div class="main">
+
+  <!-- Left: Library -->
+  <div class="panel-library">
+    <div class="panel-header">
+      <span>저장된 프롬프트</span>
+      <span id="count-badge" style="font-size:0.8rem;color:#c084fc;font-weight:700"></span>
+    </div>
+    <div class="category-filter" id="cat-filter"></div>
+    <div class="prompt-list" id="prompt-list"></div>
+  </div>
+
+  <!-- Center: Add + CSV -->
+  <div class="panel-add">
+    <div class="panel-header"><span>새 프롬프트 추가</span></div>
+    <div class="add-form">
+      <div>
+        <label>카테고리</label>
+        <input type="text" id="input-category" placeholder="예) 조명, 카메라, 배경..." list="cat-datalist" />
+        <datalist id="cat-datalist"></datalist>
+      </div>
+      <div>
+        <label>프롬프트 내용</label>
+        <textarea id="input-content" placeholder="예) 정면에서 강한 플래시"></textarea>
+      </div>
+      <button class="btn btn-primary" onclick="addPrompt()">+ 저장</button>
+    </div>
+
+    <div class="csv-section">
+      <div class="section-label">CSV 가져오기 / 내보내기</div>
+      <button class="btn btn-secondary btn-sm" onclick="exportCSV()">📤 CSV 내보내기</button>
+      <label class="btn btn-secondary btn-sm" style="text-align:center;cursor:pointer">
+        📥 CSV 가져오기
+        <input type="file" accept=".csv" id="csv-import" style="display:none" onchange="importCSV(event)" />
+      </label>
+      <button class="btn btn-danger btn-sm" onclick="clearAll()">🗑 전체 삭제</button>
+    </div>
+  </div>
+
+  <!-- Right: Composer -->
+  <div class="panel-composer">
+    <div class="panel-header" style="padding:14px 16px 10px;font-size:0.78rem;text-transform:uppercase;letter-spacing:.08em;color:#888;border-bottom:1px solid #1e1e2e;display:flex;align-items:center;gap:8px">
+      <span>조합된 프롬프트</span>
+      <span style="font-size:0.72rem;color:#555">← 왼쪽 프롬프트를 클릭하면 조합됩니다</span>
+    </div>
+    <div class="selected-chips" id="selected-chips">
+      <span class="empty-state" id="chips-empty">선택된 프롬프트가 없습니다</span>
+    </div>
+    <div class="composer-output">
+      <div class="separator-row">
+        <span>구분자:</span>
+        <input type="text" id="separator" value=", " title="프롬프트 사이 구분자" />
+        <button class="btn btn-secondary btn-sm" onclick="clearSelected()">선택 초기화</button>
+      </div>
+      <div class="output-box" id="output-box">프롬프트를 선택하면 여기에 표시됩니다.</div>
+      <div class="composer-actions">
+        <button class="btn btn-primary" onclick="copyPrompt()">📋 클립보드 복사</button>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<div id="toast">복사되었습니다!</div>
+
+<script>
+  const STORAGE_KEY = 'prompt_repo_v1';
+
+  // ── State ──
+  let prompts = [];      // [{id, category, content}]
+  let selected = [];     // [{id, category, content}]
+  let activeCategory = null;
+
+  // ── Persistence ──
+  function load() {
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY);
+      prompts = raw ? JSON.parse(raw) : [];
+    } catch { prompts = []; }
+  }
+
+  function save() {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(prompts));
+  }
+
+  function uid() {
+    return Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
+  }
+
+  // ── Categories ──
+  function getCategories() {
+    return [...new Set(prompts.map(p => p.category).filter(Boolean))].sort();
+  }
+
+  // ── Render ──
+  function render() {
+    renderCategoryFilter();
+    renderPromptList();
+    renderSelected();
+    updateDatalist();
+    document.getElementById('count-badge').textContent = prompts.length ? `(${prompts.length})` : '';
+  }
+
+  function renderCategoryFilter() {
+    const cats = getCategories();
+    const el = document.getElementById('cat-filter');
+    el.innerHTML = '';
+    if (cats.length === 0) return;
+    const all = document.createElement('span');
+    all.className = 'cat-chip' + (activeCategory === null ? ' active' : '');
+    all.textContent = '전체';
+    all.onclick = () => { activeCategory = null; render(); };
+    el.appendChild(all);
+    cats.forEach(c => {
+      const chip = document.createElement('span');
+      chip.className = 'cat-chip' + (activeCategory === c ? ' active' : '');
+      chip.textContent = c;
+      chip.onclick = () => { activeCategory = (activeCategory === c) ? null : c; render(); };
+      el.appendChild(chip);
+    });
+  }
+
+  function renderPromptList() {
+    const list = document.getElementById('prompt-list');
+    const filtered = activeCategory
+      ? prompts.filter(p => p.category === activeCategory)
+      : prompts;
+
+    if (filtered.length === 0) {
+      list.innerHTML = '<div class="empty-state">저장된 프롬프트가 없습니다.<br/>새 프롬프트를 추가하세요.</div>';
+      return;
+    }
+
+    list.innerHTML = '';
+    filtered.forEach(p => {
+      const isSelected = selected.some(s => s.id === p.id);
+      const item = document.createElement('div');
+      item.className = 'prompt-item' + (isSelected ? ' selected' : '');
+      item.innerHTML = `
+        <span class="cat-badge">${esc(p.category)}</span>
+        <span class="content">${esc(p.content)}</span>
+        <button class="del-btn" title="삭제" onclick="deletePrompt('${p.id}',event)">×</button>
+      `;
+      item.onclick = (e) => {
+        if (e.target.classList.contains('del-btn')) return;
+        toggleSelect(p);
+      };
+      list.appendChild(item);
+    });
+  }
+
+  function renderSelected() {
+    const container = document.getElementById('selected-chips');
+    const empty = document.getElementById('chips-empty');
+    container.innerHTML = '';
+
+    if (selected.length === 0) {
+      const e = document.createElement('span');
+      e.id = 'chips-empty';
+      e.className = 'empty-state';
+      e.textContent = '선택된 프롬프트가 없습니다';
+      container.appendChild(e);
+    } else {
+      selected.forEach((p, i) => {
+        const chip = document.createElement('div');
+        chip.className = 'selected-chip';
+        chip.draggable = true;
+        chip.dataset.idx = i;
+        chip.innerHTML = `
+          <span class="chip-cat">${esc(p.category)}</span>
+          <span>${esc(p.content)}</span>
+          <button class="chip-remove" title="제거" onclick="removeSelected(${i})">×</button>
+        `;
+        chip.addEventListener('dragstart', dragStart);
+        chip.addEventListener('dragover', dragOver);
+        chip.addEventListener('drop', drop);
+        container.appendChild(chip);
+      });
+    }
+
+    updateOutput();
+  }
+
+  function updateOutput() {
+    const sep = document.getElementById('separator').value;
+    const box = document.getElementById('output-box');
+    if (selected.length === 0) {
+      box.textContent = '프롬프트를 선택하면 여기에 표시됩니다.';
+    } else {
+      box.textContent = selected.map(p => p.content).join(sep);
+    }
+  }
+
+  function updateDatalist() {
+    const dl = document.getElementById('cat-datalist');
+    dl.innerHTML = '';
+    getCategories().forEach(c => {
+      const opt = document.createElement('option');
+      opt.value = c;
+      dl.appendChild(opt);
+    });
+  }
+
+  // ── Actions ──
+  function addPrompt() {
+    const cat = document.getElementById('input-category').value.trim();
+    const content = document.getElementById('input-content').value.trim();
+    if (!cat) { showToast('카테고리를 입력하세요'); return; }
+    if (!content) { showToast('프롬프트 내용을 입력하세요'); return; }
+    prompts.push({ id: uid(), category: cat, content });
+    save();
+    document.getElementById('input-content').value = '';
+    render();
+    showToast('저장되었습니다');
+  }
+
+  function deletePrompt(id, e) {
+    e.stopPropagation();
+    prompts = prompts.filter(p => p.id !== id);
+    selected = selected.filter(s => s.id !== id);
+    save();
+    render();
+  }
+
+  function toggleSelect(p) {
+    const idx = selected.findIndex(s => s.id === p.id);
+    if (idx >= 0) {
+      selected.splice(idx, 1);
+    } else {
+      selected.push(p);
+    }
+    render();
+  }
+
+  function removeSelected(i) {
+    selected.splice(i, 1);
+    render();
+  }
+
+  function clearSelected() {
+    selected = [];
+    render();
+  }
+
+  function clearAll() {
+    if (!confirm('모든 프롬프트를 삭제하시겠습니까?')) return;
+    prompts = [];
+    selected = [];
+    save();
+    render();
+    showToast('전체 삭제되었습니다');
+  }
+
+  function copyPrompt() {
+    const text = document.getElementById('output-box').textContent;
+    if (!text || text.includes('선택하면')) { showToast('복사할 프롬프트가 없습니다'); return; }
+    navigator.clipboard.writeText(text).then(() => showToast('클립보드에 복사되었습니다!')).catch(() => {
+      const ta = document.createElement('textarea');
+      ta.value = text;
+      document.body.appendChild(ta);
+      ta.select();
+      document.execCommand('copy');
+      document.body.removeChild(ta);
+      showToast('클립보드에 복사되었습니다!');
+    });
+  }
+
+  // ── CSV ──
+  function exportCSV() {
+    if (prompts.length === 0) { showToast('내보낼 프롬프트가 없습니다'); return; }
+    const rows = [['category', 'content']];
+    prompts.forEach(p => rows.push([csvEsc(p.category), csvEsc(p.content)]));
+    const csv = rows.map(r => r.join(',')).join('\n');
+    const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'prompts_' + new Date().toISOString().slice(0, 10) + '.csv';
+    a.click();
+    URL.revokeObjectURL(url);
+    showToast('CSV 내보내기 완료');
+  }
+
+  function importCSV(e) {
+    const file = e.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+      const text = ev.target.result.replace(/^\uFEFF/, '');
+      const lines = text.split(/\r?\n/).filter(l => l.trim());
+      let added = 0;
+      lines.forEach((line, i) => {
+        if (i === 0 && line.toLowerCase().startsWith('category')) return; // header
+        const parts = parseCSVLine(line);
+        if (parts.length >= 2 && parts[0].trim() && parts[1].trim()) {
+          prompts.push({ id: uid(), category: parts[0].trim(), content: parts[1].trim() });
+          added++;
+        }
+      });
+      save();
+      render();
+      showToast(`${added}개 프롬프트를 가져왔습니다`);
+    };
+    reader.readAsText(file, 'UTF-8');
+    e.target.value = '';
+  }
+
+  function parseCSVLine(line) {
+    const result = [];
+    let cur = '';
+    let inQ = false;
+    for (let i = 0; i < line.length; i++) {
+      const c = line[i];
+      if (c === '"') {
+        if (inQ && line[i + 1] === '"') { cur += '"'; i++; }
+        else inQ = !inQ;
+      } else if (c === ',' && !inQ) {
+        result.push(cur); cur = '';
+      } else {
+        cur += c;
+      }
+    }
+    result.push(cur);
+    return result;
+  }
+
+  function csvEsc(s) {
+    if (/[",\n\r]/.test(s)) return '"' + s.replace(/"/g, '""') + '"';
+    return s;
+  }
+
+  // ── Drag to reorder ──
+  let dragIdx = null;
+
+  function dragStart(e) {
+    dragIdx = +e.currentTarget.dataset.idx;
+    e.dataTransfer.effectAllowed = 'move';
+  }
+
+  function dragOver(e) {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
+  }
+
+  function drop(e) {
+    e.preventDefault();
+    const toIdx = +e.currentTarget.dataset.idx;
+    if (dragIdx === null || dragIdx === toIdx) return;
+    const item = selected.splice(dragIdx, 1)[0];
+    selected.splice(toIdx, 0, item);
+    dragIdx = null;
+    render();
+  }
+
+  // ── Separator live update ──
+  document.getElementById('separator').addEventListener('input', updateOutput);
+
+  // ── Toast ──
+  function showToast(msg) {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.classList.add('show');
+    clearTimeout(t._timer);
+    t._timer = setTimeout(() => t.classList.remove('show'), 2000);
+  }
+
+  // ── Escape HTML ──
+  function esc(s) {
+    return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+
+  // ── Keyboard shortcut: Enter in textarea ──
+  document.getElementById('input-content').addEventListener('keydown', e => {
+    if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) addPrompt();
+  });
+
+  // ── Init ──
+  load();
+  render();
+</script>
+</body>
+</html>
