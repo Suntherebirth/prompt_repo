@@ -352,7 +352,7 @@
       color: #a9a9bc;
       border-radius: 8px;
       padding: 8px 10px;
-      font-size: 0.8rem;
+      font-size: 0.76rem;
       cursor: pointer;
       transition: all .15s;
       font-weight: 600;
@@ -379,6 +379,87 @@
 
     .panel-mode-view.active {
       display: flex;
+    }
+
+    .panel-filter-view {
+      padding: 12px;
+      overflow-y: auto;
+    }
+
+    .panel-filter-view .filter-section {
+      padding: 0;
+      border-bottom: none;
+    }
+
+    .library-footer {
+      padding: 10px 12px 12px;
+      border-top: 1px solid #1e1e2e;
+      background: #13131c;
+    }
+
+    .library-footer .btn {
+      width: 100%;
+    }
+
+    .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(10, 10, 16, 0.7);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 9998;
+      padding: 18px;
+    }
+
+    .modal-backdrop.open {
+      display: flex;
+    }
+
+    .modal-card {
+      width: min(560px, 100%);
+      max-height: 92vh;
+      background: #15151f;
+      border: 1px solid #2a2a3a;
+      border-radius: 12px;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    .modal-header {
+      padding: 14px 16px;
+      border-bottom: 1px solid #242437;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+
+    .modal-title {
+      font-size: 0.9rem;
+      color: #ddd;
+      font-weight: 700;
+    }
+
+    .modal-close {
+      width: 28px;
+      height: 28px;
+      border-radius: 7px;
+      border: 1px solid #2a2a3a;
+      background: #1e1e2e;
+      color: #aaa;
+      cursor: pointer;
+      line-height: 1;
+    }
+
+    .modal-close:hover {
+      color: #eee;
+      border-color: #c084fc66;
+    }
+
+    .modal-body {
+      overflow-y: auto;
     }
 
     .panel-add.collapsed .panel-add-body {
@@ -753,44 +834,13 @@
   <!-- Left: Add + CSV -->
   <div class="panel-add" id="panel-add">
     <div class="panel-header">
-      <span class="title">새 프롬프트 추가</span>
-      <button class="panel-toggle-btn" id="toggle-add-panel" onclick="toggleAddPanel()" title="접기" aria-label="새 프롬프트 추가 패널 접기">◀</button>
+      <span class="title">필터 / 커스텀 조합</span>
+      <button class="panel-toggle-btn" id="toggle-add-panel" onclick="toggleAddPanel()" title="접기" aria-label="필터 및 커스텀 조합 패널 접기">◀</button>
     </div>
     <div class="panel-add-body" id="panel-add-body">
       <div class="panel-mode-toggle">
-        <button class="mode-toggle-btn active" id="mode-btn-add" type="button" onclick="setPanelMode('add')">새 프롬프트 추가</button>
+        <button class="mode-toggle-btn active" id="mode-btn-filter" type="button" onclick="setPanelMode('filter')">중분류 선택</button>
         <button class="mode-toggle-btn" id="mode-btn-combo" type="button" onclick="setPanelMode('combo')">커스텀 조합</button>
-      </div>
-
-      <div class="panel-mode-view active" id="panel-view-add">
-        <div class="add-form">
-          <div>
-            <label>대분류</label>
-            <div class="category-input-wrap">
-              <select id="input-main-category"></select>
-            </div>
-          </div>
-          <div>
-            <label>중분류</label>
-            <div class="category-input-wrap">
-              <select id="input-sub-category" disabled></select>
-            </div>
-          </div>
-          <div>
-            <label>내용</label>
-            <textarea id="input-content" placeholder="내용을 입력"></textarea>
-          </div>
-          <button class="btn btn-primary" onclick="addPrompt()">+ 저장</button>
-        </div>
-
-        <div class="csv-section">
-          <div class="section-label">CSV 가져오기 / 내보내기</div>
-          <button class="btn btn-secondary btn-sm" onclick="exportCSV()">📤 CSV 내보내기</button>
-          <label class="btn btn-secondary btn-sm" style="text-align:center;cursor:pointer">
-            📥 CSV 가져오기
-            <input type="file" accept=".csv" id="csv-import" style="display:none" onchange="importCSV(event)" />
-          </label>
-        </div>
       </div>
 
       <div class="panel-mode-view" id="panel-view-combo">
@@ -812,6 +862,12 @@
           </div>
         </div>
       </div>
+
+      <div class="panel-mode-view panel-filter-view" id="panel-view-filter">
+        <div class="filter-section">
+          <div class="filter-row" id="main-filter"></div>
+        </div>
+      </div>
     </div>
   </div>
 
@@ -821,10 +877,10 @@
       <span>저장된 프롬프트</span>
       <span id="count-badge" style="font-size:0.8rem;color:#c084fc;font-weight:700"></span>
     </div>
-    <div class="filter-section">
-      <div class="filter-row" id="main-filter"></div>
-    </div>
     <div class="prompt-list" id="prompt-list"></div>
+    <div class="library-footer">
+      <button class="btn btn-primary" type="button" onclick="openAddPromptModal()">+ 새 프롬프트 추가</button>
+    </div>
   </div>
 
   <!-- Right: Composer -->
@@ -856,6 +912,45 @@
 
 </div>
 
+<div class="modal-backdrop" id="add-prompt-modal" onclick="handleAddPromptModalBackdrop(event)">
+  <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="add-prompt-modal-title">
+    <div class="modal-header">
+      <span class="modal-title" id="add-prompt-modal-title">새 프롬프트 추가</span>
+      <button class="modal-close" type="button" onclick="closeAddPromptModal()" aria-label="모달 닫기">×</button>
+    </div>
+    <div class="modal-body">
+      <div class="add-form" style="max-height:none">
+        <div>
+          <label>대분류</label>
+          <div class="category-input-wrap">
+            <select id="input-main-category"></select>
+          </div>
+        </div>
+        <div>
+          <label>중분류</label>
+          <div class="category-input-wrap">
+            <select id="input-sub-category" disabled></select>
+          </div>
+        </div>
+        <div>
+          <label>내용</label>
+          <textarea id="input-content" placeholder="내용을 입력"></textarea>
+        </div>
+        <button class="btn btn-primary" onclick="addPrompt()">+ 저장</button>
+      </div>
+
+      <div class="csv-section" style="margin-top:0">
+        <div class="section-label">CSV 가져오기 / 내보내기</div>
+        <button class="btn btn-secondary btn-sm" onclick="exportCSV()">📤 CSV 내보내기</button>
+        <label class="btn btn-secondary btn-sm" style="text-align:center;cursor:pointer">
+          📥 CSV 가져오기
+          <input type="file" accept=".csv" id="csv-import" style="display:none" onchange="importCSV(event)" />
+        </label>
+      </div>
+    </div>
+  </div>
+</div>
+
 <div id="toast">복사되었습니다!</div>
 
 <script>
@@ -872,9 +967,12 @@
   let activeSubCategoryPrompt = null;
   let activeCategoryComposed = null;
   let isAddPanelCollapsed = false;
-  let addPanelMode = 'add';
+  let addPanelMode = 'filter';
   let isOutputEditing = false;
   let customOutputText = null;
+  let isAddPromptModalOpen = false;
+  let lastAddMainCategory = '';
+  let lastAddSubCategory = '';
 
   const OUTPUT_PLACEHOLDER = '프롬프트를 선택하면 여기에 표시됩니다.';
 
@@ -1193,7 +1291,7 @@
     const list = document.getElementById('prompt-list');
 
     if (!activeCategoryPrompt) {
-      list.innerHTML = '<div class="empty-state">대분류 섹션에서 중분류 칩을 선택하세요.</div>';
+      list.innerHTML = '<div class="empty-state">왼쪽 패널의 중분류 선택 탭에서 필터를 선택하세요.</div>';
       return;
     }
 
@@ -1204,7 +1302,7 @@
     });
 
     if (filteredPrompts.length === 0) {
-      list.innerHTML = '<div class="empty-state">선택한 조건의 프롬프트가 없습니다.<br/>다른 중분류를 눌러보세요.</div>';
+      list.innerHTML = '<div class="empty-state">선택한 조건의 프롬프트가 없습니다.<br/>중분류 선택 탭에서 다른 조건을 선택하세요.</div>';
       return;
     }
 
@@ -1482,7 +1580,7 @@
     panel.classList.toggle('collapsed', collapsed);
     toggleBtn.textContent = collapsed ? '▶' : '◀';
     toggleBtn.title = collapsed ? '펼치기' : '접기';
-    toggleBtn.setAttribute('aria-label', collapsed ? '새 프롬프트 추가 패널 펼치기' : '새 프롬프트 추가 패널 접기');
+    toggleBtn.setAttribute('aria-label', collapsed ? '필터 및 커스텀 조합 패널 펼치기' : '필터 및 커스텀 조합 패널 접기');
   }
 
   function toggleAddPanel() {
@@ -1491,13 +1589,61 @@
   }
 
   function setPanelMode(mode) {
-    addPanelMode = mode === 'combo' ? 'combo' : 'add';
-    const isAddMode = addPanelMode === 'add';
-    document.getElementById('panel-view-add').classList.toggle('active', isAddMode);
-    document.getElementById('panel-view-combo').classList.toggle('active', !isAddMode);
-    document.getElementById('mode-btn-add').classList.toggle('active', isAddMode);
-    document.getElementById('mode-btn-combo').classList.toggle('active', !isAddMode);
+    if (mode !== 'combo' && mode !== 'filter') {
+      addPanelMode = 'filter';
+    } else {
+      addPanelMode = mode;
+    }
+
+    document.getElementById('panel-view-filter').classList.toggle('active', addPanelMode === 'filter');
+    document.getElementById('panel-view-combo').classList.toggle('active', addPanelMode === 'combo');
+
+    document.getElementById('mode-btn-filter').classList.toggle('active', addPanelMode === 'filter');
+    document.getElementById('mode-btn-combo').classList.toggle('active', addPanelMode === 'combo');
     localStorage.setItem(ADD_PANEL_MODE_KEY, addPanelMode);
+  }
+
+  function openAddPromptModal() {
+    const modal = document.getElementById('add-prompt-modal');
+    const mainSelect = document.getElementById('input-main-category');
+    const subSelect = document.getElementById('input-sub-category');
+
+    isAddPromptModalOpen = true;
+    modal.classList.add('open');
+    document.body.style.overflow = 'hidden';
+
+    renderCategorySelectors();
+
+    const targetMain = activeCategoryPrompt || lastAddMainCategory;
+    if (targetMain && [...getMainCategories(), '__new__'].includes(targetMain)) {
+      mainSelect.value = targetMain;
+    }
+
+    renderSubCategorySelect();
+
+    const targetSub = activeSubCategoryPrompt || lastAddSubCategory;
+    if (targetSub && [...getSubCategories(mainSelect.value), '기타'].includes(targetSub)) {
+      subSelect.value = targetSub;
+    }
+
+    syncAddFormSelection();
+    document.getElementById('input-content').focus();
+  }
+
+    lastAddMainCategory = select.value;
+    lastAddSubCategory = '';
+  function closeAddPromptModal() {
+    const modal = document.getElementById('add-prompt-modal');
+    isAddPromptModalOpen = false;
+    modal.classList.remove('open');
+    document.body.style.overflow = '';
+  }
+
+  function handleAddPromptModalBackdrop(e) {
+    if (e.target && e.target.id === 'add-prompt-modal') {
+      closeAddPromptModal();
+    }
+    lastAddSubCategory = select.value;
   }
 
   function selectCategory(value) {
@@ -1516,17 +1662,32 @@
 
   // ── Actions ──
   function addPrompt() {
-    const mainCategory = document.getElementById('input-main-category').value.trim();
-    const subCategory = document.getElementById('input-sub-category').value.trim();
-    const content = document.getElementById('input-content').value.trim();
+    const mainSelect = document.getElementById('input-main-category');
+    const subSelect = document.getElementById('input-sub-category');
+    const mainCategory = mainSelect.value.trim();
+    const subCategory = subSelect.value.trim();
+    const contentInput = document.getElementById('input-content');
+    const content = contentInput.value.trim();
     if (!mainCategory) { showToast('대분류를 입력하세요'); return; }
     if (!subCategory) { showToast('중분류를 입력하세요'); return; }
     if (!content) { showToast('프롬프트 내용을 입력하세요'); return; }
+
+    lastAddMainCategory = mainCategory;
+    lastAddSubCategory = subCategory;
+    activeCategoryPrompt = mainCategory;
+    activeSubCategoryPrompt = subCategory;
+
     prompts.push({ id: uid(), mainCategory, subCategory, content });
     save();
-    document.getElementById('input-content').value = '';
+    contentInput.value = '';
+
     renderCategorySelectors();
+    mainSelect.value = mainCategory;
+    renderSubCategorySelect();
+    subSelect.value = subCategory;
+
     render();
+    closeAddPromptModal();
     showToast('저장되었습니다');
   }
 
@@ -1781,6 +1942,12 @@
     if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) addPrompt();
   });
 
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Escape' && isAddPromptModalOpen) {
+      closeAddPromptModal();
+    }
+  });
+
   // ── Category selectors ──
   const categoryInput = document.getElementById('input-main-category');
   const subCategoryInput = document.getElementById('input-sub-category');
@@ -1794,7 +1961,7 @@
 
   // ── Init ──
   setAddPanelCollapsed(localStorage.getItem(ADD_PANEL_COLLAPSE_KEY) === 'true');
-  setPanelMode(localStorage.getItem(ADD_PANEL_MODE_KEY) || 'add');
+  setPanelMode(localStorage.getItem(ADD_PANEL_MODE_KEY) || 'filter');
   load();
   render();
 </script>
