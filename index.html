@@ -15,7 +15,7 @@
       font-family: 'Segoe UI', system-ui, sans-serif;
       background: #0f0f13;
       color: #e0e0e0;
-      height: 100vh;
+      height: 100dvh;
       display: flex;
       flex-direction: column;
       overflow: hidden;
@@ -36,7 +36,6 @@
       flex: 1;
       gap: 0;
       overflow: hidden;
-      height: calc(100vh - 57px);
       min-height: 0;
     }
 
@@ -230,15 +229,15 @@
     .cat-chip.active { background: #c084fc22; border-color: #c084fc; color: #c084fc; }
 
     .cat-chip.used {
-      border-color: #4f7cff88;
-      color: #9fb8ff;
-      background: #203053;
+      border-color: #34d39988;
+      color: #86efac;
+      background: #16352d;
     }
 
     .cat-chip.used.active {
-      border-color: #8ab4ff;
-      color: #d6e2ff;
-      background: #2a3e66;
+      border-color: #6ee7b7;
+      color: #dcfce7;
+      background: #1f4a3c;
     }
 
     .cat-chip-mark {
@@ -367,6 +366,20 @@
       border-top: 1px solid #1e1e2e;
     }
 
+    .hidden-option-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-top: 2px;
+      color: #b9b9cb;
+      font-size: 0.8rem;
+    }
+
+    .hidden-option-row input[type="checkbox"] {
+      accent-color: #c084fc;
+      cursor: pointer;
+    }
+
     .add-form {
       padding: 14px;
       display: flex;
@@ -413,6 +426,38 @@
       background: #c084fc22;
       color: #efdcff;
       font-weight: 600;
+    }
+
+    #add-sub-tabs .tab-btn {
+      border-color: #2a3f66;
+      background: #1a2333;
+      color: #a9c6ff;
+    }
+
+    #add-sub-tabs .tab-btn:hover {
+      border-color: #5b8cff;
+      color: #d8e6ff;
+    }
+
+    #add-sub-tabs .tab-btn.active {
+      border-color: #7aa8ff;
+      background: #223a62;
+      color: #e3eeff;
+    }
+
+    .sub-field-label {
+      color: #8ab4ff;
+    }
+
+    .sub-field-select {
+      border-color: #2a3f66;
+      background: #172237;
+      color: #d5e4ff;
+    }
+
+    .sub-field-select:focus {
+      border-color: #7aa8ff;
+      box-shadow: 0 0 0 1px #7aa8ff33;
     }
 
     .tab-empty {
@@ -592,7 +637,8 @@
       display: flex;
       flex-direction: column;
       gap: 12px;
-      overflow-y: auto;
+      overflow: hidden;
+      min-height: 0;
     }
 
     .output-box {
@@ -605,15 +651,16 @@
       line-height: 1.6;
       white-space: pre-wrap;
       word-break: break-all;
-      min-height: 80px;
+      min-height: 0;
       flex: 1;
       cursor: text;
+      overflow-y: auto;
     }
 
     .output-editor {
       display: none;
       width: 100%;
-      min-height: 140px;
+      min-height: 0;
       background: #1a1a26;
       border: 1px solid #c084fc;
       border-radius: 10px;
@@ -621,9 +668,11 @@
       padding: 14px;
       font-size: 0.88rem;
       line-height: 1.6;
-      resize: vertical;
+      resize: none;
       outline: none;
       font-family: inherit;
+      flex: 1;
+      overflow-y: auto;
     }
 
     .output-edit-actions {
@@ -640,7 +689,7 @@
       justify-content: flex-start;
     }
 
-    .composer-actions .btn-danger {
+    .composer-actions .btn-save-composed {
       margin-left: auto;
     }
 
@@ -662,7 +711,8 @@
       display: flex;
       flex-direction: column;
       gap: 6px;
-      max-height: 180px;
+      flex: 1;
+      min-height: 0;
       overflow-y: auto;
       padding-right: 2px;
     }
@@ -671,11 +721,12 @@
       display: flex;
       flex-direction: column;
       align-items: stretch;
-      gap: 6px;
+      gap: 10px;
       border: 1px solid #2a2a3a;
       border-radius: 7px;
       background: #171724;
-      padding: 7px;
+      padding: 12px;
+      min-height: 120px;
     }
 
     .combo-load-item .meta {
@@ -683,7 +734,7 @@
       flex: 1;
       display: flex;
       flex-direction: column;
-      gap: 4px;
+      gap: 6px;
     }
 
     .combo-load-item .meta .cat {
@@ -695,9 +746,13 @@
     .combo-load-item .meta .text {
       font-size: 0.78rem;
       color: #c9c9d9;
-      white-space: nowrap;
+      line-height: 1.45;
+      min-height: 2.9em;
+      display: -webkit-box;
+      line-clamp: 2;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
       overflow: hidden;
-      text-overflow: ellipsis;
     }
 
     .combo-load-actions {
@@ -709,6 +764,8 @@
 
     .combo-load-actions .btn {
       width: 100%;
+      padding-top: 7px;
+      padding-bottom: 7px;
     }
 
     .combo-load-empty {
@@ -827,7 +884,6 @@
 <header>
   <span style="font-size:1.4rem">✨</span>
   <h1>프롬프트 저장소</h1>
-  <span style="margin-left:auto;font-size:0.78rem;color:#555">이미지 생성 프롬프트 관리</span>
 </header>
 
 <div class="main">
@@ -897,6 +953,7 @@
       </div>
       <div class="composer-actions">
         <button class="btn btn-primary" onclick="copyPrompt()">📋 클립보드 복사</button>
+        <button class="btn btn-secondary btn-sm btn-save-composed" type="button" onclick="openSaveComposedModal()">💾 새 조합</button>
         <button class="btn btn-danger btn-sm" onclick="clearCurrentComposition()">🧹 초기화</button>
       </div>
     </div>
@@ -923,10 +980,14 @@
             <select id="input-main-category"></select>
           </div>
         </div>
+        <label class="hidden-option-row">
+          <input type="checkbox" id="input-main-hidden" />
+          <span>이 대분류의 중분류 칩을 좌측 패널에서 기본 숨김</span>
+        </label>
         <div>
-          <label>중분류</label>
+          <label class="sub-field-label">중분류</label>
           <div class="category-input-wrap">
-            <select id="input-sub-category" disabled></select>
+            <select id="input-sub-category" class="sub-field-select" disabled></select>
           </div>
         </div>
         <div>
@@ -957,9 +1018,9 @@
           </div>
         </div>
         <div>
-          <label>커스텀 이름(중분류)</label>
+          <label class="sub-field-label">커스텀 이름(중분류)</label>
           <div class="category-input-wrap">
-            <select id="combo-sub-category" disabled></select>
+            <select id="combo-sub-category" class="sub-field-select" disabled></select>
           </div>
         </div>
       </div>
@@ -977,6 +1038,7 @@
   const STORAGE_KEY = 'prompt_repo_v1';
   const COMPOSED_STORAGE_KEY = 'prompt_repo_composed_v1';
   const LEFT_PANEL_TAB_KEY = 'prompt_repo_left_panel_tab_v1';
+  const HIDDEN_MAIN_CATEGORIES_KEY = 'prompt_repo_hidden_main_categories_v1';
 
   // ── State ──
   let prompts = [];          // [{id, mainCategory, subCategory, content}] 개별 프롬프트
@@ -986,6 +1048,8 @@
   let activeSubCategoryPrompt = null;
   let activeCategoryComposed = null;
   let leftPanelTab = 'prompt';
+  let hiddenMainCategories = new Set();
+  let openedHiddenMainCategories = new Set();
   let isOutputEditing = false;
   let customOutputText = null;
 
@@ -1004,11 +1068,19 @@
       const loadedComposed = rawComposed ? JSON.parse(rawComposed) : [];
       composedPrompts = loadedComposed.map(normalizeComposedPrompt).filter(Boolean);
     } catch { composedPrompts = []; }
+
+    try {
+      const rawHidden = localStorage.getItem(HIDDEN_MAIN_CATEGORIES_KEY);
+      const loadedHidden = rawHidden ? JSON.parse(rawHidden) : [];
+      hiddenMainCategories = new Set(Array.isArray(loadedHidden) ? loadedHidden.filter(Boolean) : []);
+    } catch { hiddenMainCategories = new Set(); }
+
   }
 
   function save() {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(prompts));
     localStorage.setItem(COMPOSED_STORAGE_KEY, JSON.stringify(composedPrompts));
+    localStorage.setItem(HIDDEN_MAIN_CATEGORIES_KEY, JSON.stringify([...hiddenMainCategories]));
   }
 
   function uid() {
@@ -1158,17 +1230,6 @@
       return;
     }
 
-    const allMainBtn = document.createElement('button');
-    allMainBtn.type = 'button';
-    allMainBtn.className = 'tab-btn' + (activeCategoryPrompt === null ? ' active' : '');
-    allMainBtn.textContent = '전체';
-    allMainBtn.onclick = () => {
-      activeCategoryPrompt = null;
-      activeSubCategoryPrompt = null;
-      render();
-    };
-    mainEl.appendChild(allMainBtn);
-
     mainCategories.forEach(category => {
       const btn = document.createElement('button');
       btn.type = 'button';
@@ -1196,16 +1257,6 @@
       return;
     }
 
-    const allSubBtn = document.createElement('button');
-    allSubBtn.type = 'button';
-    allSubBtn.className = 'tab-btn' + (activeSubCategoryPrompt === null ? ' active' : '');
-    allSubBtn.textContent = '중분류 전체';
-    allSubBtn.onclick = () => {
-      activeSubCategoryPrompt = null;
-      render();
-    };
-    subEl.appendChild(allSubBtn);
-
     subCategories.forEach(subCategory => {
       const btn = document.createElement('button');
       btn.type = 'button';
@@ -1232,6 +1283,7 @@
   function syncAddFormSelection() {
     const mainSelect = document.getElementById('input-main-category');
     const subSelect = document.getElementById('input-sub-category');
+    const hiddenCheckbox = document.getElementById('input-main-hidden');
 
     if (activeCategoryPrompt) {
       mainSelect.value = activeCategoryPrompt;
@@ -1244,6 +1296,9 @@
     } else if (activeCategoryPrompt) {
       subSelect.value = '';
     }
+
+    const currentMainCategory = mainSelect.value && mainSelect.value !== '__new__' ? mainSelect.value : '';
+    hiddenCheckbox.checked = currentMainCategory ? hiddenMainCategories.has(currentMainCategory) : false;
   }
 
   function renderMainCategoryFilter() {
@@ -1260,6 +1315,8 @@
 
     mainCategories.forEach(mainCategory => {
       const subCategories = getSubCategories(mainCategory);
+      const hideByDefault = hiddenMainCategories.has(mainCategory);
+      const isHiddenOpen = openedHiddenMainCategories.has(mainCategory);
       const group = document.createElement('div');
       group.className = 'main-category-filter-group';
 
@@ -1270,12 +1327,41 @@
       const header = document.createElement('div');
       header.className = 'main-category-filter-header';
       header.innerHTML = `<span>${esc(mainCategory)}</span><span class="group-count">${subCategories.length}개</span>`;
+      header.style.cursor = 'pointer';
+      header.onclick = () => {
+        // 기본숨김 카테고리는 헤더 탭으로 펼침/접힘만 토글한다.
+        if (hideByDefault) {
+          if (openedHiddenMainCategories.has(mainCategory)) {
+            openedHiddenMainCategories.delete(mainCategory);
+            if (activeCategoryPrompt === mainCategory) {
+              activeCategoryPrompt = null;
+              activeSubCategoryPrompt = null;
+            }
+          } else {
+            openedHiddenMainCategories.add(mainCategory);
+            activeCategoryPrompt = mainCategory;
+            if (!subCategories.includes(activeSubCategoryPrompt)) {
+              activeSubCategoryPrompt = null;
+            }
+          }
+          render();
+          return;
+        }
+
+        activeCategoryPrompt = mainCategory;
+        if (!subCategories.includes(activeSubCategoryPrompt)) {
+          activeSubCategoryPrompt = null;
+        }
+        render();
+      };
       group.appendChild(header);
 
       const body = document.createElement('div');
       body.className = 'main-category-filter-body';
 
-      if (subCategories.length === 0) {
+      if (hideByDefault && !isHiddenOpen) {
+        body.style.display = 'none';
+      } else if (subCategories.length === 0) {
         const empty = document.createElement('span');
         empty.className = 'subcategory-filter-empty';
         empty.style.padding = '0';
@@ -1622,6 +1708,7 @@
 
   function handleMainCategoryChange() {
     const select = document.getElementById('input-main-category');
+    const hiddenCheckbox = document.getElementById('input-main-hidden');
     if (select.value === '__new__') {
       const nextValue = prompt('새 대분류 이름을 입력하세요');
       if (nextValue && nextValue.trim()) {
@@ -1633,6 +1720,8 @@
       }
     }
     renderSubCategorySelect();
+    const mainCategory = select.value && select.value !== '__new__' ? select.value : '';
+    hiddenCheckbox.checked = mainCategory ? hiddenMainCategories.has(mainCategory) : false;
   }
 
   function handleSubCategoryChange() {
@@ -1744,12 +1833,18 @@
     const mainCategory = document.getElementById('input-main-category').value.trim();
     const subCategory = document.getElementById('input-sub-category').value.trim();
     const content = document.getElementById('input-content').value.trim();
+    const hiddenMain = document.getElementById('input-main-hidden').checked;
     if (!mainCategory) { showToast('대분류를 입력하세요'); return; }
     if (!subCategory) { showToast('중분류를 입력하세요'); return; }
     if (!content) { showToast('프롬프트 내용을 입력하세요'); return; }
+
+    if (hiddenMain) hiddenMainCategories.add(mainCategory);
+    else hiddenMainCategories.delete(mainCategory);
+
     prompts.push({ id: uid(), mainCategory, subCategory, content });
     save();
     document.getElementById('input-content').value = '';
+    document.getElementById('input-main-hidden').checked = false;
     renderCategorySelectors();
     render();
     closeAddPromptModal();
