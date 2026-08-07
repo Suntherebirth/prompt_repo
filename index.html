@@ -1801,7 +1801,9 @@
   let imageViewerDragOffsetX = 0;
   let imageViewerDragOffsetY = 0;
   let imageViewerLastGestureAt = 0;
+  let doubleTapTouchLockUntil = 0;
   const PROMPT_SWIPE_ACTION_WIDTH = 124;
+  const DOUBLE_TAP_ADD_TOUCH_COOLDOWN_MS = 240;
   const PROMPT_PREVIEW_MAX_WIDTH_BY_LEVEL = {
     1: '340px',
     2: '380px',
@@ -3051,6 +3053,14 @@
     return tapComposeMode === PROMPT_ADD_MODE.SWIPE;
   }
 
+  function isDoubleTapTouchCooldownActive() {
+    return Date.now() < doubleTapTouchLockUntil;
+  }
+
+  function activateDoubleTapTouchCooldown() {
+    doubleTapTouchLockUntil = Date.now() + DOUBLE_TAP_ADD_TOUCH_COOLDOWN_MS;
+  }
+
   function setTapComposeMode(mode, options = {}) {
     tapComposeMode = normalizeTapComposeMode(mode);
     localStorage.setItem(TAP_COMPOSE_MODE_KEY, tapComposeMode);
@@ -3487,6 +3497,7 @@
     item.addEventListener('pointerdown', (e) => {
       if (e.pointerType === 'mouse' && e.button !== 0) return;
       if (e.target.closest('.prompt-item-actions')) return;
+      if (isDoubleTapTouchCooldownActive()) return;
 
       pointerId = e.pointerId;
       tracking = true;
@@ -4138,6 +4149,10 @@
   }
 
   function handlePromptTap(p) {
+    if (isDoubleTapTouchCooldownActive()) {
+      return;
+    }
+
     const idx = selected.findIndex(s => s.id === p.id && s.source === 'prompt');
     if (idx >= 0) {
       clearOutputOverride();
@@ -4152,7 +4167,10 @@
     }
 
     if (tapComposeMode === PROMPT_ADD_MODE.DOUBLE_TAP_PREVIEW && activePromptPreviewId === p.id) {
-      addPromptToComposition(p);
+      const added = addPromptToComposition(p);
+      if (added) {
+        activateDoubleTapTouchCooldown();
+      }
       return;
     }
 
@@ -4166,7 +4184,7 @@
     const idx = selected.findIndex(s => s.id === p.id && s.source === 'prompt');
     if (idx >= 0) {
       showToast('이미 조합에 추가된 프롬프트입니다');
-      return;
+      return false;
     }
 
     if (activePromptPreviewId !== p.id) {
@@ -4183,6 +4201,7 @@
       selectingFromPreviewId = null;
       renderPromptList();
     }, 300);
+    return true;
   }
 
   function removeSelected(i) {
