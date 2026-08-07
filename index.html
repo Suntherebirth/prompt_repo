@@ -147,6 +147,7 @@
     }
 
     .panel-library.preview-level-3-full .library-footer {
+      padding-top: 0;
       padding-left: 0;
       padding-right: 0;
     }
@@ -154,7 +155,7 @@
     .prompt-description-preview {
       width: min(100%, var(--prompt-preview-max-width, 380px));
       margin: 0 auto 10px;
-      border: 1px dashed #3a3a52;
+      border: 0;
       border-radius: 10px;
       background: linear-gradient(180deg, #171723, #14141d);
       aspect-ratio: 4 / 3;
@@ -166,8 +167,16 @@
     }
 
     .panel-library.preview-level-3-full .prompt-description-preview {
-      width: 100%;
-      margin: 0 0 10px;
+      width: calc(100% - 8px);
+      margin: 0 auto;
+      border: 0;
+      border-radius: 0;
+      background: transparent;
+      padding: 0;
+    }
+
+    .panel-library.preview-level-3-full .prompt-description-preview img {
+      border-radius: 0;
     }
 
     .prompt-description-preview.has-image {
@@ -1674,7 +1683,7 @@
       </div>
       <div class="settings-option-card">
         <div class="settings-option-title">이미지 영역 설정</div>
-        <div class="settings-option-description">4:3 비율은 그대로 유지하고 설명 이미지 영역 크기만 조정합니다. 현재 기준값은 2이고, 1은 약간 작게, 3은 약간 크게입니다.</div>
+        <div class="settings-option-description">4:3 비율은 그대로 유지하고 설명 이미지 영역 크기만 조정합니다. 현재 기준값은 2이고, 1은 약간 작게, 3은 섹션 너비에 맞춰 최대 크기로 표시합니다.</div>
         <div class="settings-level-row" role="group" aria-label="이미지 영역 크기 선택">
           <button class="settings-level-btn" type="button" data-preview-size-level="1" onclick="setPromptPreviewSizeLevel(1, { notify: true })">1</button>
           <button class="settings-level-btn" type="button" data-preview-size-level="2" onclick="setPromptPreviewSizeLevel(2, { notify: true })">2</button>
