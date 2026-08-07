@@ -2,7 +2,7 @@
 <html lang="ko">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
   <title>프롬프트 저장소</title>
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -44,6 +44,39 @@
 
     .title-manage-btn:hover {
       color: #dfb7ff;
+    }
+
+    .header-right {
+      margin-left: auto;
+      display: flex;
+      align-items: center;
+    }
+
+    .tap-compose-toggle-btn {
+      border: 1px solid #2f3550;
+      background: #1a1f2f;
+      color: #a9bddf;
+      border-radius: 999px;
+      padding: 7px 12px;
+      font-size: 0.78rem;
+      font-weight: 700;
+      letter-spacing: 0.01em;
+      cursor: pointer;
+      transition: all .18s ease;
+      white-space: nowrap;
+    }
+
+    .tap-compose-toggle-btn:hover {
+      border-color: #8ab4ff;
+      color: #d9e8ff;
+      background: #202b45;
+    }
+
+    .tap-compose-toggle-btn.active {
+      border-color: #34d399;
+      color: #d1fae5;
+      background: #183f35;
+      box-shadow: 0 0 0 1px rgba(52, 211, 153, 0.18);
     }
 
     .main {
@@ -365,7 +398,8 @@
       border: 1px solid transparent;
       transition: all .15s;
       overflow: hidden;
-      touch-action: pan-y;
+      touch-action: manipulation;
+      -webkit-tap-highlight-color: transparent;
     }
     .prompt-item:hover { border-color: #c084fc55; background: #1e1e30; }
     .prompt-item.selected { border-color: #34d399; background: #16352d; }
@@ -394,6 +428,12 @@
     }
     .prompt-item.actions-open .prompt-item-swipe-content {
       transform: translateX(-124px);
+    }
+    .prompt-item.swipe-commit {
+      pointer-events: none;
+    }
+    .prompt-item.swipe-commit .prompt-item-swipe-content {
+      box-shadow: 0 10px 24px rgba(52, 211, 153, 0.14);
     }
     .prompt-item-indicator {
       width: 0;
@@ -1226,6 +1266,9 @@
 <header>
   <span style="font-size:1.4rem">✨</span>
   <h1><button class="title-manage-btn" id="title-manage-btn" type="button" onclick="openCategoryManageModal()">프롬프트 저장소</button></h1>
+  <div class="header-right">
+    <button id="tap-compose-toggle-btn" class="tap-compose-toggle-btn" type="button" onclick="toggleTapComposeMode()">밀어서 추가</button>
+  </div>
 </header>
 
 <div class="main">
@@ -1413,6 +1456,7 @@
   const LEFT_PANEL_TAB_KEY = 'prompt_repo_left_panel_tab_v1';
   const CATEGORY_CONFIG_KEY = 'prompt_repo_category_config_v1';
   const HIDDEN_MAIN_CATEGORIES_KEY = 'prompt_repo_hidden_main_categories_v1';
+  const TAP_COMPOSE_MODE_KEY = 'prompt_repo_tap_compose_mode_v1';
 
   // ── State ──
   let prompts = [];          // [{id, mainCategory, subCategory, content, imageData, imageName}] 개별 프롬프트
@@ -1427,6 +1471,7 @@
   let openedHiddenMainCategories = new Set();
   let isOutputEditing = false;
   let customOutputText = null;
+  let tapComposeMode = false;
   let pendingPromptImage = null;
   let promptFormMode = 'add';
   let editingPromptId = null;
@@ -2174,6 +2219,7 @@
 
   // ── Render ──
   function render() {
+    renderTapComposeToggle();
     ensureActiveCategoryState();
     renderMainCategoryFilter();
     renderAddFilterTabs();
@@ -2198,6 +2244,29 @@
     } else {
       countBadge.textContent = prompts.length ? `(${prompts.length})` : '';
     }
+  }
+
+  function renderTapComposeToggle() {
+    const btn = document.getElementById('tap-compose-toggle-btn');
+    if (!btn) return;
+    btn.classList.toggle('active', tapComposeMode);
+    btn.textContent = tapComposeMode ? '터치로 추가' : '밀어서 추가';
+    btn.title = tapComposeMode
+      ? '한 번 탭하면 조합에 바로 추가됩니다'
+      : '한 번 탭하면 미리보기만 됩니다';
+  }
+
+  function setTapComposeMode(enabled, options = {}) {
+    tapComposeMode = !!enabled;
+    localStorage.setItem(TAP_COMPOSE_MODE_KEY, tapComposeMode ? '1' : '0');
+    renderTapComposeToggle();
+    if (options.notify) {
+      showToast(tapComposeMode ? '탭 즉시 추가 모드가 켜졌습니다' : '탭 미리보기 모드로 전환되었습니다');
+    }
+  }
+
+  function toggleTapComposeMode() {
+    setTapComposeMode(!tapComposeMode, { notify: true });
   }
 
   function renderLibraryHeader() {
@@ -2475,7 +2544,12 @@
       if (exceptPromptId && item.dataset.promptId === exceptPromptId) return;
       item.classList.remove('actions-open');
       const swipeContent = item.querySelector('.prompt-item-swipe-content');
-      if (swipeContent) swipeContent.style.transform = '';
+      if (swipeContent) {
+        swipeContent.style.transform = '';
+        swipeContent.style.opacity = '';
+        swipeContent.style.transition = '';
+      }
+      item.classList.remove('swipe-commit');
     });
   }
 
@@ -2485,6 +2559,8 @@
 
     const closedX = 0;
     const openedX = -PROMPT_SWIPE_ACTION_WIDTH;
+    const rightSwipeLimitX = 92;
+    const rightSwipeCommitX = 56;
     let pointerId = null;
     let tracking = false;
     let swiping = false;
@@ -2494,7 +2570,8 @@
     let currentX = 0;
 
     const setSwipeX = (x) => {
-      currentX = Math.min(closedX, Math.max(openedX, x));
+      const maxX = tapComposeMode ? closedX : rightSwipeLimitX;
+      currentX = Math.min(maxX, Math.max(openedX, x));
       swipeContent.style.transform = `translateX(${currentX}px)`;
     };
 
@@ -2509,6 +2586,36 @@
       item.classList.remove('actions-open');
       swipeContent.style.transition = '';
       setSwipeX(closedX);
+    };
+
+    const commitAddAnimation = () => {
+      if (item.classList.contains('swipe-commit')) return;
+      item.classList.add('swipe-commit');
+      const startCommitX = Math.max(0, currentX);
+      swipeContent.style.transition = 'none';
+      swipeContent.style.transform = `translateX(${startCommitX}px) scale(1)`;
+      swipeContent.style.opacity = '1';
+      swipeContent.style.filter = 'saturate(1)';
+
+      requestAnimationFrame(() => {
+        swipeContent.style.transition = 'transform .32s cubic-bezier(0.16, 1, 0.3, 1), opacity .24s ease-out, filter .28s ease-out';
+        swipeContent.style.transform = 'translateX(128px) scale(0.972)';
+        swipeContent.style.opacity = '0';
+        swipeContent.style.filter = 'saturate(1.05)';
+      });
+
+      // 스와이프 커밋 후 짧은 지연 뒤 조합에 반영한다.
+      window.setTimeout(() => {
+        addPromptToComposition(promptData);
+      }, 80);
+
+      window.setTimeout(() => {
+        swipeContent.style.transition = '';
+        swipeContent.style.transform = '';
+        swipeContent.style.opacity = '';
+        swipeContent.style.filter = '';
+        item.classList.remove('swipe-commit');
+      }, 320);
     };
 
     item.addEventListener('pointerdown', (e) => {
@@ -2552,6 +2659,12 @@
       swipeContent.style.transition = '';
 
       if (swiping) {
+        if (!tapComposeMode && currentX >= rightSwipeCommitX) {
+          closeAllPromptSwipeActions(promptData.id);
+          commitAddAnimation();
+          return;
+        }
+
         if (currentX <= openedX / 2) openActions();
         else closeActions();
         return;
@@ -3052,23 +3165,40 @@
 
   function handlePromptTap(p) {
     const idx = selected.findIndex(s => s.id === p.id && s.source === 'prompt');
-
-    if (activePromptPreviewId !== p.id) {
-      activePromptPreviewId = p.id;
+    if (idx >= 0) {
+      clearOutputOverride();
+      selected.splice(idx, 1);
       render();
       return;
     }
 
-    if (idx >= 0) {
-      selected.splice(idx, 1);
-      render();
+    if (tapComposeMode) {
+      addPromptToComposition(p);
       return;
+    }
+
+    if (activePromptPreviewId !== p.id) {
+      activePromptPreviewId = p.id;
+      render();
+    }
+  }
+
+  function addPromptToComposition(p) {
+    const idx = selected.findIndex(s => s.id === p.id && s.source === 'prompt');
+    if (idx >= 0) {
+      showToast('이미 조합에 추가된 프롬프트입니다');
+      return;
+    }
+
+    if (activePromptPreviewId !== p.id) {
+      activePromptPreviewId = p.id;
     }
 
     clearOutputOverride();
     selectingFromPreviewId = p.id;
     selected.push({ ...p, source: 'prompt' });
     render();
+    showToast('조합에 추가되었습니다');
     setTimeout(() => {
       if (selectingFromPreviewId !== p.id) return;
       selectingFromPreviewId = null;
@@ -3286,6 +3416,25 @@
     return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
   }
 
+  function preventSafariDoubleTapZoom() {
+    const DOUBLE_TAP_DELAY = 320;
+    let lastTouchEndAt = 0;
+
+    document.addEventListener('touchend', (e) => {
+      const target = e.target;
+      if (!(target instanceof Element)) return;
+
+      // 더블탭이 자주 발생하는 상호작용 영역에서만 확대 제스처를 차단한다.
+      if (!target.closest('.prompt-item, .prompt-list, .cat-chip, .mode-toggle-btn, .btn, .tap-compose-toggle-btn')) return;
+
+      const now = Date.now();
+      if (now - lastTouchEndAt <= DOUBLE_TAP_DELAY) {
+        e.preventDefault();
+      }
+      lastTouchEndAt = now;
+    }, { passive: false });
+  }
+
   // ── Keyboard shortcut: Enter in textarea ──
   document.getElementById('input-content').addEventListener('keydown', e => {
     if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) addPrompt();
@@ -3332,6 +3481,8 @@
   comboSubCategoryInput.addEventListener('change', handleComposedSubCategoryChange);
 
   // ── Init ──
+  preventSafariDoubleTapZoom();
+  setTapComposeMode(localStorage.getItem(TAP_COMPOSE_MODE_KEY) === '1');
   setLeftPanelTab(localStorage.getItem(LEFT_PANEL_TAB_KEY) || 'prompt');
   load();
   render();
