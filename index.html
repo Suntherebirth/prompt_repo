@@ -1513,11 +1513,11 @@
           </div>
 
           <div class="csv-section" style="margin-top:0">
-            <div class="section-label">JSON 백업 / 복원</div>
-            <button class="btn btn-secondary btn-sm" onclick="exportJSONBackup()">📤 JSON 내보내기</button>
+            <div class="section-label">ZIP 백업 / 복원</div>
+            <button class="btn btn-secondary btn-sm" onclick="exportJSONBackup()">📤 ZIP 내보내기</button>
             <label class="btn btn-secondary btn-sm" style="text-align:center;cursor:pointer">
-              📥 JSON 가져오기
-              <input type="file" accept="application/json,.json" id="json-import" style="display:none" onchange="importJSONBackup(event)" />
+              📥 ZIP/JSON 가져오기
+              <input type="file" accept="application/zip,.zip,application/json,.json" id="json-import" style="display:none" onchange="importJSONBackup(event)" />
             </label>
           </div>
         </div>
@@ -1695,6 +1695,7 @@
   </div>
 </div>
 
+<script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
 <script>
   const STORAGE_KEY = 'prompt_repo_v1';
   const COMPOSED_STORAGE_KEY = 'prompt_repo_composed_v1';
@@ -1703,9 +1704,11 @@
   const HIDDEN_MAIN_CATEGORIES_KEY = 'prompt_repo_hidden_main_categories_v1';
   const TAP_COMPOSE_MODE_KEY = 'prompt_repo_tap_compose_mode_v1';
   const PROMPT_PREVIEW_SIZE_LEVEL_KEY = 'prompt_repo_prompt_preview_size_level_v1';
+  const IMAGE_DB_NAME = 'prompt_repo_images_v1';
+  const IMAGE_STORE_NAME = 'images';
 
   // ── State ──
-  let prompts = [];          // [{id, mainCategory, subCategory, content, imageData, imageName}] 개별 프롬프트
+  let prompts = [];          // [{id, mainCategory, subCategory, content, imageId, imageName}] 개별 프롬프트
   let composedPrompts = [];  // [{id, mainCategory, subCategory, items, content}] 조합 저장 프롬프트
   let selected = [];         // [{id, mainCategory, subCategory, content, source}]
   let activeCategoryPrompt = null;
@@ -1721,6 +1724,7 @@
   let pendingPromptImage = null;
   let promptFormMode = 'add';
   let editingPromptId = null;
+  let editingPromptImageId = '';
   let editingPromptImageData = '';
   let activePromptPreviewId = null;
   let selectingFromPreviewId = null;
@@ -1745,12 +1749,207 @@
   };
 
   const OUTPUT_PLACEHOLDER = '프롬프트를 선택하면 여기에 표시됩니다.';
+  const promptImageUrlCache = new Map();
+  const promptImageLoadPromises = new Map();
+  let imageDbPromise = null;
 
   function createDefaultCategoryConfig() {
     return {
       mainOrder: [],
       mains: {},
     };
+  }
+
+  function getImageExtensionFromMimeType(mimeType) {
+    const mime = String(mimeType || '').toLowerCase();
+    if (mime === 'image/jpeg') return 'jpg';
+    if (mime === 'image/png') return 'png';
+    if (mime === 'image/webp') return 'webp';
+    if (mime === 'image/gif') return 'gif';
+    if (mime === 'image/bmp') return 'bmp';
+    if (mime === 'image/svg+xml') return 'svg';
+    if (mime === 'image/avif') return 'avif';
+    return 'bin';
+  }
+
+  function getImageExtension(fileName, mimeType) {
+    const file = String(fileName || '');
+    const extMatch = file.match(/\.([a-zA-Z0-9]+)$/);
+    if (extMatch?.[1]) return extMatch[1].toLowerCase();
+    return getImageExtensionFromMimeType(mimeType);
+  }
+
+  function dataUrlToBlob(dataUrl) {
+    const value = String(dataUrl || '');
+    const match = value.match(/^data:([^;,]+)?(;base64)?,(.*)$/);
+    if (!match) throw new Error('유효하지 않은 데이터 URL입니다');
+    const mimeType = match[1] || 'application/octet-stream';
+    const isBase64 = !!match[2];
+    const body = match[3] || '';
+    let binary;
+    if (isBase64) {
+      binary = atob(body);
+    } else {
+      binary = decodeURIComponent(body);
+    }
+    const bytes = new Uint8Array(binary.length);
+    for (let i = 0; i < binary.length; i += 1) bytes[i] = binary.charCodeAt(i);
+    return new Blob([bytes], { type: mimeType });
+  }
+
+  function openImageDb() {
+    if (imageDbPromise) return imageDbPromise;
+    imageDbPromise = new Promise((resolve, reject) => {
+      const request = indexedDB.open(IMAGE_DB_NAME, 1);
+      request.onupgradeneeded = () => {
+        const db = request.result;
+        if (!db.objectStoreNames.contains(IMAGE_STORE_NAME)) {
+          db.createObjectStore(IMAGE_STORE_NAME, { keyPath: 'id' });
+        }
+      };
+      request.onsuccess = () => resolve(request.result);
+      request.onerror = () => reject(request.error || new Error('이미지 DB를 열 수 없습니다'));
+    });
+    return imageDbPromise;
+  }
+
+  async function withImageStore(mode, worker) {
+    const db = await openImageDb();
+    return new Promise((resolve, reject) => {
+      const tx = db.transaction(IMAGE_STORE_NAME, mode);
+      const store = tx.objectStore(IMAGE_STORE_NAME);
+      let settled = false;
+
+      const finishResolve = (value) => {
+        if (settled) return;
+        settled = true;
+        resolve(value);
+      };
+
+      const finishReject = (error) => {
+        if (settled) return;
+        settled = true;
+        reject(error);
+      };
+
+      tx.onerror = () => finishReject(tx.error || new Error('이미지 DB 트랜잭션 실패'));
+      tx.onabort = () => finishReject(tx.error || new Error('이미지 DB 트랜잭션 중단'));
+
+      Promise.resolve()
+        .then(() => worker(store))
+        .then((result) => {
+          tx.oncomplete = () => finishResolve(result);
+        })
+        .catch(finishReject);
+    });
+  }
+
+  async function saveImageBlobRecord({ id, blob, mimeType = '', fileName = '' }) {
+    const imageId = id || uid();
+    const nextMimeType = String(mimeType || blob?.type || '').trim() || 'application/octet-stream';
+    const ext = getImageExtension(fileName, nextMimeType);
+    const record = {
+      id: imageId,
+      blob,
+      mimeType: nextMimeType,
+      extension: ext,
+      fileName: String(fileName || '').trim(),
+      updatedAt: Date.now(),
+    };
+    await withImageStore('readwrite', (store) => {
+      store.put(record);
+    });
+    revokePromptImageObjectUrl(imageId);
+    return imageId;
+  }
+
+  async function getImageRecord(imageId) {
+    if (!imageId) return null;
+    return withImageStore('readonly', (store) => new Promise((resolve, reject) => {
+      const request = store.get(imageId);
+      request.onsuccess = () => resolve(request.result || null);
+      request.onerror = () => reject(request.error || new Error('이미지 레코드를 읽지 못했습니다'));
+    }));
+  }
+
+  async function deleteImageRecord(imageId) {
+    if (!imageId) return;
+    await withImageStore('readwrite', (store) => {
+      store.delete(imageId);
+    });
+    revokePromptImageObjectUrl(imageId);
+  }
+
+  async function getAllImageRecords() {
+    return withImageStore('readonly', (store) => new Promise((resolve, reject) => {
+      const request = store.getAll();
+      request.onsuccess = () => resolve(Array.isArray(request.result) ? request.result : []);
+      request.onerror = () => reject(request.error || new Error('이미지 목록을 읽지 못했습니다'));
+    }));
+  }
+
+  async function clearAllImageRecords() {
+    await withImageStore('readwrite', (store) => {
+      store.clear();
+    });
+    promptImageUrlCache.forEach((url) => URL.revokeObjectURL(url));
+    promptImageUrlCache.clear();
+    promptImageLoadPromises.clear();
+  }
+
+  function revokePromptImageObjectUrl(imageId) {
+    const cachedUrl = promptImageUrlCache.get(imageId);
+    if (cachedUrl) URL.revokeObjectURL(cachedUrl);
+    promptImageUrlCache.delete(imageId);
+    promptImageLoadPromises.delete(imageId);
+  }
+
+  async function getPromptImageObjectUrl(imageId) {
+    if (!imageId) return '';
+    const cached = promptImageUrlCache.get(imageId);
+    if (cached) return cached;
+
+    const pending = promptImageLoadPromises.get(imageId);
+    if (pending) return pending;
+
+    const loader = (async () => {
+      const record = await getImageRecord(imageId);
+      if (!record?.blob) return '';
+
+      // Safari 안정성을 위해 blob을 직접 재사용하지 않고 새 Blob으로 복제한다.
+      const buffer = await record.blob.arrayBuffer();
+      const freshBlob = new Blob([buffer], { type: record.mimeType || record.blob.type || 'application/octet-stream' });
+      const objectUrl = URL.createObjectURL(freshBlob);
+      promptImageUrlCache.set(imageId, objectUrl);
+      promptImageLoadPromises.delete(imageId);
+      return objectUrl;
+    })().catch(() => {
+      promptImageLoadPromises.delete(imageId);
+      return '';
+    });
+
+    promptImageLoadPromises.set(imageId, loader);
+    return loader;
+  }
+
+  function getAllReferencedImageIds() {
+    const ids = new Set();
+    prompts.forEach((item) => {
+      if (item?.imageId) ids.add(item.imageId);
+    });
+    composedPrompts.forEach((composed) => {
+      if (!Array.isArray(composed?.items)) return;
+      composed.items.forEach((item) => {
+        if (item?.imageId) ids.add(item.imageId);
+      });
+    });
+    return ids;
+  }
+
+  async function deleteImageIfOrphaned(imageId) {
+    if (!imageId) return;
+    if (getAllReferencedImageIds().has(imageId)) return;
+    await deleteImageRecord(imageId);
   }
 
   function uniqueInOrder(values) {
@@ -1858,8 +2057,18 @@
   }
 
   function save() {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(prompts));
-    localStorage.setItem(COMPOSED_STORAGE_KEY, JSON.stringify(composedPrompts));
+    const promptPayload = prompts.map(cleanPrompt);
+    const composedPayload = composedPrompts.map(item => ({
+      id: item.id,
+      mainCategory: item.mainCategory,
+      subCategory: item.subCategory,
+      category: item.category,
+      items: Array.isArray(item.items) ? item.items.map(cleanPrompt) : [],
+      content: item.content,
+    }));
+
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(promptPayload));
+    localStorage.setItem(COMPOSED_STORAGE_KEY, JSON.stringify(composedPayload));
     localStorage.setItem(HIDDEN_MAIN_CATEGORIES_KEY, JSON.stringify([...hiddenMainCategories]));
     localStorage.setItem(CATEGORY_CONFIG_KEY, JSON.stringify(categoryConfig));
   }
@@ -1879,6 +2088,8 @@
       mainCategory: mainCategory || '기타',
       subCategory: subCategory || '기타',
       content,
+      imageId: (prompt.imageId ?? '').trim(),
+      // 레거시 데이터 호환용. 새 저장에서는 사용하지 않는다.
       imageData: (prompt.imageData ?? '').trim(),
       imageName: (prompt.imageName ?? '').trim(),
     };
@@ -1890,7 +2101,8 @@
       mainCategory: prompt.mainCategory,
       subCategory: prompt.subCategory,
       content: prompt.content,
-      imageData: prompt.imageData,
+      imageId: prompt.imageId || '',
+      imageData: !prompt.imageId && prompt.imageData ? prompt.imageData : '',
       imageName: prompt.imageName,
     };
   }
@@ -1961,6 +2173,7 @@
       dataUrl,
       fileName: file.name || '',
       mimeType: file.type || '',
+      file,
       imageName: buildPromptImageName(
         document.getElementById('input-main-category')?.value?.trim(),
         document.getElementById('input-sub-category')?.value?.trim(),
@@ -1980,6 +2193,7 @@
   function resetPromptFormToAdd() {
     promptFormMode = 'add';
     editingPromptId = null;
+    editingPromptImageId = '';
     editingPromptImageData = '';
     const modalTitle = document.getElementById('add-prompt-title');
     const saveButton = document.querySelector('#add-prompt-modal .modal-actions .btn-primary');
@@ -1990,11 +2204,33 @@
   function setPromptFormToEdit(prompt) {
     promptFormMode = 'edit';
     editingPromptId = prompt.id;
-    editingPromptImageData = prompt.imageData || '';
+    editingPromptImageId = prompt.imageId || '';
+    editingPromptImageData = '';
     const modalTitle = document.getElementById('add-prompt-title');
     const saveButton = document.querySelector('#add-prompt-modal .modal-actions .btn-primary');
     if (modalTitle) modalTitle.textContent = '프롬프트 편집';
     if (saveButton) saveButton.textContent = '적용';
+  }
+
+  function getPromptImageSource(prompt) {
+    if (!prompt) return '';
+    if (prompt.imageData) return prompt.imageData;
+    if (prompt.imageId) return promptImageUrlCache.get(prompt.imageId) || '';
+    return '';
+  }
+
+  function queuePromptImageLoad(prompt) {
+    if (!prompt?.imageId || prompt.imageData) return;
+    getPromptImageObjectUrl(prompt.imageId)
+      .then((url) => {
+        if (!url) return;
+        renderPromptDescriptionPreview();
+        if (activeImageViewer?.imageId === prompt.imageId && activeImageViewer.src !== url) {
+          activeImageViewer = { ...activeImageViewer, src: url };
+          renderImageViewer();
+        }
+      })
+      .catch(() => {});
   }
 
   function syncPromptFormFields(prompt) {
@@ -2012,7 +2248,7 @@
     contentInput.value = prompt.content || '';
   }
 
-  function openEditPromptModal(id, e) {
+  async function openEditPromptModal(id, e) {
     if (e) e.stopPropagation();
     const prompt = prompts.find(item => item.id === id);
     if (!prompt) {
@@ -2025,10 +2261,16 @@
     setPromptFormToEdit(prompt);
     renderCategorySelectors();
     syncPromptFormFields(prompt);
-    pendingPromptImage = prompt.imageData ? {
-      dataUrl: prompt.imageData,
+    let editImageDataUrl = prompt.imageData || '';
+    if (!editImageDataUrl && prompt.imageId) {
+      const imageUrl = await getPromptImageObjectUrl(prompt.imageId);
+      editImageDataUrl = imageUrl || '';
+    }
+    pendingPromptImage = editImageDataUrl ? {
+      dataUrl: editImageDataUrl,
       fileName: prompt.imageName || '',
       mimeType: '',
+      file: null,
       imageName: prompt.imageName || buildPromptImageName(prompt.mainCategory, prompt.subCategory, prompt.content),
     } : null;
     renderPendingPromptImagePreview();
@@ -2043,13 +2285,16 @@
       || selected.find(item => item.source === 'prompt' && item.imageData)
       || selected.find(item => item.source === 'prompt');
 
-    if (prompt?.imageData) {
+    const imageSrc = getPromptImageSource(prompt);
+    if (imageSrc) {
       const altText = prompt.imageName || getPromptDisplayName(prompt.mainCategory, prompt.subCategory);
       preview.classList.add('has-image');
       preview.title = '터치하면 이미지를 크게 봅니다';
-      preview.innerHTML = `<img src="${prompt.imageData}" alt="${esc(altText)}" />`;
+      preview.innerHTML = `<img src="${imageSrc}" alt="${esc(altText)}" />`;
       return;
     }
+
+    queuePromptImageLoad(prompt);
 
     preview.classList.remove('has-image');
     preview.title = '';
@@ -2061,9 +2306,14 @@
       || selected.find(item => item.source === 'prompt' && item.imageData)
       || selected.find(item => item.source === 'prompt');
 
-    if (!prompt?.imageData) return null;
+    const imageSrc = getPromptImageSource(prompt);
+    if (!imageSrc) {
+      queuePromptImageLoad(prompt);
+      return null;
+    }
     return {
-      src: prompt.imageData,
+      src: imageSrc,
+      imageId: prompt.imageId || '',
       alt: prompt.imageName || getPromptDisplayName(prompt.mainCategory, prompt.subCategory),
     };
   }
@@ -3607,7 +3857,7 @@
   }
 
   // ── Actions ──
-  function addPrompt() {
+  async function addPrompt() {
     const isEditMode = promptFormMode === 'edit' && !!editingPromptId;
     const mainCategory = document.getElementById('input-main-category').value.trim();
     const subCategory = document.getElementById('input-sub-category').value.trim();
@@ -3621,21 +3871,54 @@
     const mainConfig = ensureMainCategoryConfig(mainCategory);
     mainConfig.subOrder = uniqueInOrder([...(mainConfig.subOrder || []), subCategory]);
 
-    const nextImageData = pendingPromptImage?.dataUrl || editingPromptImageData || '';
+    const previousPrompt = isEditMode ? prompts.find(prompt => prompt.id === editingPromptId) : null;
+    const previousImageId = previousPrompt?.imageId || editingPromptImageId || '';
+    let nextImageId = previousImageId;
+
+    try {
+      if (pendingPromptImage?.file instanceof File) {
+        nextImageId = await saveImageBlobRecord({
+          blob: pendingPromptImage.file,
+          mimeType: pendingPromptImage.mimeType || pendingPromptImage.file.type || '',
+          fileName: pendingPromptImage.fileName || pendingPromptImage.file.name || '',
+        });
+      } else if (!previousImageId && pendingPromptImage?.dataUrl?.startsWith('data:')) {
+        const blob = dataUrlToBlob(pendingPromptImage.dataUrl);
+        nextImageId = await saveImageBlobRecord({
+          blob,
+          mimeType: pendingPromptImage.mimeType || blob.type || '',
+          fileName: pendingPromptImage.fileName || '',
+        });
+      }
+    } catch {
+      showToast('이미지 저장 중 오류가 발생했습니다');
+      return;
+    }
+
     const nextPrompt = {
       id: editingPromptId || uid(),
       mainCategory,
       subCategory,
       content,
-      imageData: nextImageData,
+      imageId: nextImageId,
+      imageData: '',
       imageName: buildPromptImageName(mainCategory, subCategory, content),
     };
 
     if (promptFormMode === 'edit' && editingPromptId) {
       prompts = prompts.map(prompt => prompt.id === editingPromptId ? nextPrompt : prompt);
+      selected = selected.map(item => {
+        if (item.source !== 'prompt' || item.id !== editingPromptId) return item;
+        return { ...item, ...nextPrompt };
+      });
     } else {
       prompts.push(nextPrompt);
     }
+
+    if (isEditMode && previousImageId && previousImageId !== nextImageId) {
+      await deleteImageIfOrphaned(previousImageId);
+    }
+
     ensureCategoryConfigConsistency();
     save();
     document.getElementById('input-content').value = '';
@@ -3647,18 +3930,24 @@
     showToast(isEditMode ? '프롬프트가 수정되었습니다' : '저장되었습니다');
   }
 
-  function deletePrompt(id, source, e) {
+  async function deletePrompt(id, source, e) {
     e.stopPropagation();
     if (source === 'prompt' && !confirm('정말 삭제하시겠습니까?')) return;
     clearOutputOverride();
+    let removedImageId = '';
     if (source === 'composed') {
       composedPrompts = composedPrompts.filter(p => p.id !== id);
     } else {
+      const removedPrompt = prompts.find(p => p.id === id);
+      removedImageId = removedPrompt?.imageId || '';
       prompts = prompts.filter(p => p.id !== id);
       ensureCategoryConfigConsistency();
     }
     selected = selected.filter(s => !(s.id === id && s.source === source));
     save();
+    if (removedImageId) {
+      await deleteImageIfOrphaned(removedImageId);
+    }
     render();
   }
 
@@ -3785,22 +4074,10 @@
     showToast('조합 프롬프트가 저장되었습니다');
   }
 
-  // ── JSON Backup ──
-  function exportJSONBackup() {
-    if (prompts.length === 0 && composedPrompts.length === 0) { showToast('내보낼 프롬프트가 없습니다'); return; }
-
-    const defaultFileName = 'prompt_backup_' + new Date().toISOString().slice(0, 10) + '.json';
-    const inputName = prompt('내보낼 JSON 파일 이름을 입력하세요', defaultFileName);
-    if (inputName === null) {
-      showToast('JSON 내보내기가 취소되었습니다');
-      return;
-    }
-
-    let fileName = inputName.trim() || defaultFileName;
-    if (!/\.json$/i.test(fileName)) fileName += '.json';
-
-    const backup = {
-      version: 1,
+  // ── ZIP Backup (metadata + images) ──
+  function buildBackupPayload() {
+    return {
+      version: 2,
       exportedAt: new Date().toISOString(),
       prompts: prompts.map(cleanPrompt),
       composedPrompts: composedPrompts.map(item => ({
@@ -3815,66 +4092,166 @@
       hiddenMainCategories: [...hiddenMainCategories],
       leftPanelTab,
     };
-
-    const blob = new Blob([JSON.stringify(backup, null, 2)], { type: 'application/json;charset=utf-8;' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = fileName;
-    a.click();
-    URL.revokeObjectURL(url);
-    showToast('JSON 내보내기 완료');
   }
 
-  function importJSONBackup(e) {
-    const file = e.target.files[0];
-    if (!file) return;
-    const reader = new FileReader();
-    reader.onload = (ev) => {
-      try {
-        const parsed = JSON.parse(String(ev.target.result || '{}'));
-        const nextPrompts = Array.isArray(parsed.prompts) ? parsed.prompts.map(normalizePrompt).filter(Boolean) : [];
-        const nextComposed = Array.isArray(parsed.composedPrompts) ? parsed.composedPrompts.map(normalizeComposedPrompt).filter(Boolean) : [];
-        const nextHidden = Array.isArray(parsed.hiddenMainCategories) ? parsed.hiddenMainCategories.filter(Boolean) : [];
-        const nextCategoryConfig = parsed.categoryConfig && typeof parsed.categoryConfig === 'object' ? parsed.categoryConfig : null;
+  function applyImportedBackupData(parsed) {
+    const nextPrompts = Array.isArray(parsed.prompts) ? parsed.prompts.map(normalizePrompt).filter(Boolean) : [];
+    const nextComposed = Array.isArray(parsed.composedPrompts) ? parsed.composedPrompts.map(normalizeComposedPrompt).filter(Boolean) : [];
+    const nextHidden = Array.isArray(parsed.hiddenMainCategories) ? parsed.hiddenMainCategories.filter(Boolean) : [];
+    const nextCategoryConfig = parsed.categoryConfig && typeof parsed.categoryConfig === 'object' ? parsed.categoryConfig : null;
 
-        if (nextPrompts.length === 0 && nextComposed.length === 0) {
-          showToast('가져올 데이터가 없습니다');
-          return;
-        }
+    if (nextPrompts.length === 0 && nextComposed.length === 0) {
+      throw new Error('EMPTY_DATA');
+    }
 
-        if (!confirm('현재 저장된 프롬프트를 가져온 JSON으로 덮어쓰시겠습니까?')) {
-          return;
-        }
+    prompts = nextPrompts;
+    composedPrompts = nextComposed;
+    hiddenMainCategories = new Set(nextHidden);
+    if (nextCategoryConfig) {
+      categoryConfig = createDefaultCategoryConfig();
+      categoryConfig.mainOrder = uniqueInOrder(Array.isArray(nextCategoryConfig.mainOrder) ? nextCategoryConfig.mainOrder.filter(Boolean) : []);
+      const mains = nextCategoryConfig.mains && typeof nextCategoryConfig.mains === 'object' ? nextCategoryConfig.mains : {};
+      Object.entries(mains).forEach(([key, value]) => {
+        if (!key || !value || typeof value !== 'object') return;
+        categoryConfig.mains[key] = {
+          hiddenByDefault: !!value.hiddenByDefault,
+          subOrder: uniqueInOrder(Array.isArray(value.subOrder) ? value.subOrder.filter(Boolean) : []),
+        };
+      });
+    } else {
+      categoryConfig = createDefaultCategoryConfig();
+    }
 
-        prompts = nextPrompts;
-        composedPrompts = nextComposed;
-        hiddenMainCategories = new Set(nextHidden);
-        if (nextCategoryConfig) {
-          categoryConfig = createDefaultCategoryConfig();
-          categoryConfig.mainOrder = uniqueInOrder(Array.isArray(nextCategoryConfig.mainOrder) ? nextCategoryConfig.mainOrder.filter(Boolean) : []);
-          const mains = nextCategoryConfig.mains && typeof nextCategoryConfig.mains === 'object' ? nextCategoryConfig.mains : {};
-          Object.entries(mains).forEach(([key, value]) => {
-            if (!key || !value || typeof value !== 'object') return;
-            categoryConfig.mains[key] = {
-              hiddenByDefault: !!value.hiddenByDefault,
-              subOrder: uniqueInOrder(Array.isArray(value.subOrder) ? value.subOrder.filter(Boolean) : []),
-            };
-          });
-        } else {
-          categoryConfig = createDefaultCategoryConfig();
-        }
-        ensureCategoryConfigConsistency();
-        activePromptPreviewId = prompts[0]?.id || null;
-        save();
-        render();
-        showToast('JSON 가져오기 완료');
-      } catch {
-        showToast('JSON 파일을 읽지 못했습니다');
+    ensureCategoryConfigConsistency();
+    activePromptPreviewId = prompts[0]?.id || null;
+    save();
+    render();
+  }
+
+  async function exportJSONBackup() {
+    if (prompts.length === 0 && composedPrompts.length === 0) {
+      showToast('내보낼 프롬프트가 없습니다');
+      return;
+    }
+
+    if (typeof window.JSZip === 'undefined') {
+      showToast('ZIP 기능을 불러오지 못했습니다. 잠시 후 다시 시도하세요');
+      return;
+    }
+
+    const defaultFileName = 'prompt_backup_' + new Date().toISOString().slice(0, 10) + '.zip';
+    const inputName = prompt('내보낼 ZIP 파일 이름을 입력하세요', defaultFileName);
+    if (inputName === null) {
+      showToast('ZIP 내보내기가 취소되었습니다');
+      return;
+    }
+
+    let fileName = inputName.trim() || defaultFileName;
+    if (!/\.zip$/i.test(fileName)) fileName += '.zip';
+
+    try {
+      const zip = new window.JSZip();
+      const payload = buildBackupPayload();
+      const referencedImageIds = [...getAllReferencedImageIds()];
+      const imageManifest = {};
+      const imageFolder = zip.folder('images');
+
+      for (const imageId of referencedImageIds) {
+        const record = await getImageRecord(imageId);
+        if (!record?.blob) continue;
+        const extension = record.extension || getImageExtension(record.fileName, record.mimeType);
+        const path = `images/${imageId}.${extension}`;
+        imageManifest[imageId] = {
+          path,
+          mimeType: record.mimeType || record.blob.type || 'application/octet-stream',
+          fileName: record.fileName || '',
+        };
+        imageFolder.file(`${imageId}.${extension}`, record.blob);
       }
-    };
-    reader.readAsText(file, 'UTF-8');
+
+      zip.file('backup.json', JSON.stringify({ ...payload, imageManifest }, null, 2));
+
+      const zipBlob = await zip.generateAsync({ type: 'blob' });
+      const url = URL.createObjectURL(zipBlob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = fileName;
+      a.click();
+      URL.revokeObjectURL(url);
+      showToast('ZIP 내보내기 완료');
+    } catch {
+      showToast('ZIP 내보내기에 실패했습니다');
+    }
+  }
+
+  async function importJSONBackup(e) {
+    const file = e.target.files[0];
     e.target.value = '';
+    if (!file) return;
+
+    const lowerName = String(file.name || '').toLowerCase();
+
+    try {
+      if (lowerName.endsWith('.zip')) {
+        if (typeof window.JSZip === 'undefined') {
+          showToast('ZIP 기능을 불러오지 못했습니다. 잠시 후 다시 시도하세요');
+          return;
+        }
+
+        const zip = await window.JSZip.loadAsync(file);
+        const backupEntry = zip.file('backup.json');
+        if (!backupEntry) {
+          showToast('backup.json이 없는 ZIP입니다');
+          return;
+        }
+
+        const backupText = await backupEntry.async('text');
+        const parsed = JSON.parse(backupText || '{}');
+
+        if (!confirm('현재 저장된 프롬프트를 가져온 ZIP으로 덮어쓰시겠습니까?')) {
+          return;
+        }
+
+        await clearAllImageRecords();
+
+        const manifest = parsed.imageManifest && typeof parsed.imageManifest === 'object' ? parsed.imageManifest : {};
+        for (const [imageId, info] of Object.entries(manifest)) {
+          if (!imageId || !info || typeof info !== 'object') continue;
+          const imagePath = String(info.path || '').replace(/^\/+/, '');
+          if (!imagePath) continue;
+          const imageEntry = zip.file(imagePath);
+          if (!imageEntry) continue;
+          const imageBuffer = await imageEntry.async('arraybuffer');
+          const blob = new Blob([imageBuffer], { type: info.mimeType || 'application/octet-stream' });
+          await saveImageBlobRecord({
+            id: imageId,
+            blob,
+            mimeType: info.mimeType || blob.type || 'application/octet-stream',
+            fileName: info.fileName || '',
+          });
+        }
+
+        applyImportedBackupData(parsed);
+        showToast('ZIP 가져오기 완료');
+        return;
+      }
+
+      // 구버전 JSON 백업도 계속 가져올 수 있게 유지한다.
+      const text = await file.text();
+      const parsed = JSON.parse(text || '{}');
+      if (!confirm('현재 저장된 프롬프트를 가져온 JSON으로 덮어쓰시겠습니까?')) {
+        return;
+      }
+
+      applyImportedBackupData(parsed);
+      showToast('JSON 가져오기 완료');
+    } catch (error) {
+      if (error?.message === 'EMPTY_DATA') {
+        showToast('가져올 데이터가 없습니다');
+        return;
+      }
+      showToast('백업 파일을 읽지 못했습니다');
+    }
   }
 
   // ── Drag to reorder ──
