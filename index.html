@@ -7,13 +7,18 @@
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
+    html, body {
+      height: 100%;
+    }
+
     body {
       font-family: 'Segoe UI', system-ui, sans-serif;
       background: #0f0f13;
       color: #e0e0e0;
-      min-height: 100vh;
+      height: 100vh;
       display: flex;
       flex-direction: column;
+      overflow: hidden;
     }
 
     header {
@@ -32,12 +37,14 @@
       gap: 0;
       overflow: hidden;
       height: calc(100vh - 57px);
+      min-height: 0;
     }
 
     /* ── Left Panel: Prompt Library ── */
     .panel-library {
       width: 420px;
       min-width: 300px;
+      height: 100%;
       background: #13131c;
       border-right: 1px solid #2a2a3a;
       display: flex;
@@ -274,10 +281,12 @@
     .panel-add {
       width: 260px;
       min-width: 200px;
+      height: 100%;
       background: #15151f;
       border-right: 1px solid #2a2a3a;
       display: flex;
       flex-direction: column;
+      overflow: hidden;
     }
 
     .panel-add.collapsed {
@@ -513,6 +522,7 @@
     /* ── Right Panel: Composer ── */
     .panel-composer {
       flex: 1;
+      height: 100%;
       background: #11111a;
       display: flex;
       flex-direction: column;
