@@ -52,6 +52,43 @@
       align-items: center;
     }
 
+    .settings-trigger-btn {
+      width: 38px;
+      height: 38px;
+      border: 1px solid #2f3550;
+      background: #1a1f2f;
+      color: #cfd9ef;
+      border-radius: 999px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: all .18s ease;
+      box-shadow: 0 0 0 1px rgba(138, 180, 255, 0.06);
+    }
+
+    .settings-trigger-btn:hover {
+      border-color: #8ab4ff;
+      color: #eef5ff;
+      background: #202b45;
+    }
+
+    .settings-trigger-btn.active {
+      border-color: #c084fc;
+      color: #f3e8ff;
+      background: #2a2036;
+    }
+
+    .settings-trigger-btn svg {
+      width: 18px;
+      height: 18px;
+      display: block;
+    }
+
+    .settings-trigger-btn svg * {
+      vector-effect: non-scaling-stroke;
+    }
+
     .tap-compose-toggle-btn {
       border: 1px solid #2f3550;
       background: #1a1f2f;
@@ -105,8 +142,12 @@
       background: #13131c;
     }
 
+    .panel-library.combo-mode .library-footer {
+      display: none;
+    }
+
     .prompt-description-preview {
-      width: min(100%, 380px);
+      width: min(100%, var(--prompt-preview-max-width, 380px));
       margin: 0 auto 10px;
       border: 1px dashed #3a3a52;
       border-radius: 10px;
@@ -117,6 +158,10 @@
       justify-content: center;
       overflow: hidden;
       padding: 10px;
+    }
+
+    .prompt-description-preview.has-image {
+      cursor: zoom-in;
     }
 
     .prompt-description-preview img {
@@ -1198,6 +1243,150 @@
       padding: 0 14px 14px;
     }
 
+    .settings-drawer {
+      position: fixed;
+      inset: 0;
+      display: none;
+      justify-content: flex-end;
+      background: rgba(8, 8, 12, 0.56);
+      z-index: 9997;
+    }
+
+    .settings-drawer.open {
+      display: flex;
+    }
+
+    .settings-drawer-panel {
+      width: min(360px, calc(100vw - 24px));
+      height: 100%;
+      background: #15151f;
+      border-left: 1px solid #2a2a3a;
+      box-shadow: -18px 0 40px rgba(0, 0, 0, 0.34);
+      display: flex;
+      flex-direction: column;
+    }
+
+    .settings-drawer-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      padding: 16px;
+      border-bottom: 1px solid #232336;
+      background: #1a1a28;
+    }
+
+    .settings-drawer-header h2 {
+      font-size: 0.95rem;
+      color: #ece1ff;
+      letter-spacing: 0.02em;
+    }
+
+    .settings-drawer-body {
+      flex: 1;
+      overflow-y: auto;
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .settings-option-card {
+      border: 1px solid #2a2a3a;
+      border-radius: 12px;
+      background: #171724;
+      padding: 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .settings-option-title {
+      font-size: 0.84rem;
+      font-weight: 700;
+      color: #ece1ff;
+    }
+
+    .settings-option-description {
+      font-size: 0.78rem;
+      line-height: 1.5;
+      color: #9898ab;
+    }
+
+    .settings-level-row {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .settings-level-btn {
+      flex: 1;
+      min-width: 84px;
+      border: 1px solid #2a2a3a;
+      background: #1a1a28;
+      color: #b8b8c8;
+      border-radius: 10px;
+      padding: 9px 10px;
+      font-size: 0.78rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all .15s ease;
+    }
+
+    .settings-level-btn:hover {
+      border-color: #8ab4ff;
+      color: #e6f0ff;
+      background: #1d2538;
+    }
+
+    .settings-level-btn.active {
+      border-color: #c084fc;
+      color: #f1e4ff;
+      background: #2a2036;
+      box-shadow: 0 0 0 1px rgba(192, 132, 252, 0.16);
+    }
+
+    .image-viewer-modal {
+      position: fixed;
+      inset: 0;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      background: rgba(3, 4, 8, 0.92);
+      z-index: 10000;
+    }
+
+    .image-viewer-modal.open {
+      display: flex;
+    }
+
+    .image-viewer-stage {
+      position: relative;
+      width: min(96vw, 1600px);
+      height: min(96vh, 1200px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .image-viewer-stage img {
+      max-width: 100%;
+      max-height: 100%;
+      width: auto;
+      height: auto;
+      object-fit: contain;
+      border-radius: 12px;
+      box-shadow: 0 24px 60px rgba(0, 0, 0, 0.44);
+    }
+
+    .image-viewer-close {
+      position: absolute;
+      top: 0;
+      right: 0;
+      transform: translateY(-100%);
+    }
+
     .category-manage-main-list {
       display: flex;
       flex-direction: column;
@@ -1267,7 +1456,19 @@
   <span style="font-size:1.4rem">✨</span>
   <h1><button class="title-manage-btn" id="title-manage-btn" type="button" onclick="openCategoryManageModal()">프롬프트 저장소</button></h1>
   <div class="header-right">
-    <button id="tap-compose-toggle-btn" class="tap-compose-toggle-btn" type="button" onclick="toggleTapComposeMode()">밀어서 추가</button>
+    <button id="settings-trigger-btn" class="settings-trigger-btn" type="button" aria-label="설정 열기" aria-haspopup="dialog" aria-expanded="false" onclick="toggleSettingsDrawer()">
+      <svg viewBox="0 0 24 24" fill="none" aria-hidden="true" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="12" cy="12" r="3.25"></circle>
+        <path d="M12 2.75v2.5"></path>
+        <path d="M12 18.75v2.5"></path>
+        <path d="M4.75 12h2.5"></path>
+        <path d="M16.75 12h2.5"></path>
+        <path d="M5.93 5.93l1.77 1.77"></path>
+        <path d="M16.3 16.3l1.77 1.77"></path>
+        <path d="M5.93 18.07l1.77-1.77"></path>
+        <path d="M16.3 7.7l1.77-1.77"></path>
+      </svg>
+    </button>
   </div>
 </header>
 
@@ -1376,10 +1577,6 @@
             </div>
           </div>
         </div>
-        <label class="hidden-option-row">
-          <input type="checkbox" id="input-main-hidden" />
-          <span>이 대분류의 중분류 칩을 좌측 패널에서 기본 숨김</span>
-        </label>
         <div>
           <label>내용</label>
           <textarea id="input-content" placeholder="내용을 입력"></textarea>
@@ -1448,7 +1645,40 @@
   </div>
 </div>
 
+<div class="settings-drawer" id="settings-drawer" onclick="handleSettingsDrawerBackdrop(event)">
+  <div class="settings-drawer-panel" role="dialog" aria-modal="true" aria-labelledby="settings-drawer-title">
+    <div class="settings-drawer-header">
+      <h2 id="settings-drawer-title">설정</h2>
+      <button class="btn btn-secondary btn-sm" type="button" onclick="closeSettingsDrawer()">닫기</button>
+    </div>
+    <div class="settings-drawer-body">
+      <div class="settings-option-card">
+        <div class="settings-option-title">프롬프트 추가 방식</div>
+        <div class="settings-option-description">밀어서 추가는 스와이프로 조합에 넣고, 터치로 추가는 한 번 탭하면 바로 조합에 넣습니다.</div>
+        <button id="tap-compose-toggle-btn" class="tap-compose-toggle-btn" type="button" onclick="toggleTapComposeMode()">밀어서 추가</button>
+      </div>
+      <div class="settings-option-card">
+        <div class="settings-option-title">이미지 영역 설정</div>
+        <div class="settings-option-description">4:3 비율은 그대로 유지하고 설명 이미지 영역 크기만 조정합니다. 현재 기준값은 2이고, 1은 약간 작게, 3은 약간 크게입니다.</div>
+        <div class="settings-level-row" role="group" aria-label="이미지 영역 크기 선택">
+          <button class="settings-level-btn" type="button" data-preview-size-level="1" onclick="setPromptPreviewSizeLevel(1, { notify: true })">1</button>
+          <button class="settings-level-btn" type="button" data-preview-size-level="2" onclick="setPromptPreviewSizeLevel(2, { notify: true })">2</button>
+          <button class="settings-level-btn" type="button" data-preview-size-level="3" onclick="setPromptPreviewSizeLevel(3, { notify: true })">3</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
 <div id="toast">복사되었습니다!</div>
+
+<div class="image-viewer-modal" id="image-viewer-modal" onclick="handleImageViewerBackdrop(event)">
+  <div class="image-viewer-stage" role="dialog" aria-modal="true" aria-labelledby="image-viewer-title">
+    <button class="btn btn-secondary btn-sm image-viewer-close" type="button" onclick="closeImageViewer()">닫기</button>
+    <img id="image-viewer-image" alt="" />
+    <span id="image-viewer-title" style="display:none">설명 이미지 전체 보기</span>
+  </div>
+</div>
 
 <script>
   const STORAGE_KEY = 'prompt_repo_v1';
@@ -1457,6 +1687,7 @@
   const CATEGORY_CONFIG_KEY = 'prompt_repo_category_config_v1';
   const HIDDEN_MAIN_CATEGORIES_KEY = 'prompt_repo_hidden_main_categories_v1';
   const TAP_COMPOSE_MODE_KEY = 'prompt_repo_tap_compose_mode_v1';
+  const PROMPT_PREVIEW_SIZE_LEVEL_KEY = 'prompt_repo_prompt_preview_size_level_v1';
 
   // ── State ──
   let prompts = [];          // [{id, mainCategory, subCategory, content, imageData, imageName}] 개별 프롬프트
@@ -1478,7 +1709,15 @@
   let editingPromptImageData = '';
   let activePromptPreviewId = null;
   let selectingFromPreviewId = null;
+  let isSettingsDrawerOpen = false;
+  let promptPreviewSizeLevel = 2;
+  let activeImageViewer = null;
   const PROMPT_SWIPE_ACTION_WIDTH = 124;
+  const PROMPT_PREVIEW_MAX_WIDTH_BY_LEVEL = {
+    1: '340px',
+    2: '380px',
+    3: '620px',
+  };
 
   const OUTPUT_PLACEHOLDER = '프롬프트를 선택하면 여기에 표시됩니다.';
 
@@ -1736,9 +1975,8 @@
   function syncPromptFormFields(prompt) {
     const mainSelect = document.getElementById('input-main-category');
     const subSelect = document.getElementById('input-sub-category');
-    const hiddenCheckbox = document.getElementById('input-main-hidden');
     const contentInput = document.getElementById('input-content');
-    if (!mainSelect || !subSelect || !hiddenCheckbox || !contentInput || !prompt) return;
+    if (!mainSelect || !subSelect || !contentInput || !prompt) return;
 
     mainSelect.value = prompt.mainCategory || '';
     renderSubCategorySelect();
@@ -1747,7 +1985,6 @@
     }
     subSelect.value = prompt.subCategory || '';
     contentInput.value = prompt.content || '';
-    hiddenCheckbox.checked = prompt.mainCategory ? getMainCategoryConfig(prompt.mainCategory).hiddenByDefault : false;
   }
 
   function openEditPromptModal(id, e) {
@@ -1783,11 +2020,69 @@
 
     if (prompt?.imageData) {
       const altText = prompt.imageName || getPromptDisplayName(prompt.mainCategory, prompt.subCategory);
+      preview.classList.add('has-image');
+      preview.title = '터치하면 이미지를 크게 봅니다';
       preview.innerHTML = `<img src="${prompt.imageData}" alt="${esc(altText)}" />`;
       return;
     }
 
+    preview.classList.remove('has-image');
+    preview.title = '';
     preview.innerHTML = '<span class="empty-state">설명 이미지가 표시됩니다.</span>';
+  }
+
+  function getActivePromptPreviewImage() {
+    const prompt = prompts.find(item => item.id === activePromptPreviewId)
+      || selected.find(item => item.source === 'prompt' && item.imageData)
+      || selected.find(item => item.source === 'prompt');
+
+    if (!prompt?.imageData) return null;
+    return {
+      src: prompt.imageData,
+      alt: prompt.imageName || getPromptDisplayName(prompt.mainCategory, prompt.subCategory),
+    };
+  }
+
+  function normalizePromptPreviewSizeLevel(level) {
+    const value = Number(level);
+    return value === 1 || value === 2 || value === 3 ? value : 2;
+  }
+
+  function getPromptPreviewSizeLabel(level) {
+    if (level === 1) return '1단계';
+    if (level === 3) return '3단계';
+    return '2단계';
+  }
+
+  function renderPromptPreviewSizeLevel() {
+    const preview = document.getElementById('prompt-description-preview');
+    if (preview) {
+      preview.style.setProperty('--prompt-preview-max-width', PROMPT_PREVIEW_MAX_WIDTH_BY_LEVEL[promptPreviewSizeLevel]);
+    }
+
+    document.querySelectorAll('[data-preview-size-level]').forEach(button => {
+      const level = normalizePromptPreviewSizeLevel(button.dataset.previewSizeLevel);
+      const isActive = level === promptPreviewSizeLevel;
+      button.classList.toggle('active', isActive);
+      button.setAttribute('aria-pressed', isActive ? 'true' : 'false');
+      button.title = isActive ? `현재 이미지 영역 크기 ${getPromptPreviewSizeLabel(level)}` : `이미지 영역 크기를 ${getPromptPreviewSizeLabel(level)}로 변경`;
+    });
+  }
+
+  function renderImageViewer() {
+    const modal = document.getElementById('image-viewer-modal');
+    const image = document.getElementById('image-viewer-image');
+    if (!modal || !image) return;
+
+    const isOpen = !!activeImageViewer?.src;
+    modal.classList.toggle('open', isOpen);
+    if (isOpen) {
+      image.src = activeImageViewer.src;
+      image.alt = activeImageViewer.alt || '설명 이미지';
+    } else {
+      image.removeAttribute('src');
+      image.alt = '';
+    }
   }
 
   function normalizeSelected(item) {
@@ -2220,12 +2515,14 @@
   // ── Render ──
   function render() {
     renderTapComposeToggle();
+    renderPromptPreviewSizeLevel();
     ensureActiveCategoryState();
     renderMainCategoryFilter();
     renderAddFilterTabs();
     renderComposedFilter();
     renderComposedLoadList();
     renderLibraryHeader();
+    renderLibraryLayout();
     renderCategorySelectors();
     renderComposedCategorySelectors();
     syncAddFormSelection();
@@ -2256,6 +2553,16 @@
       : '한 번 탭하면 미리보기만 됩니다';
   }
 
+  function renderSettingsDrawer() {
+    const drawer = document.getElementById('settings-drawer');
+    const trigger = document.getElementById('settings-trigger-btn');
+    if (!drawer || !trigger) return;
+    drawer.classList.toggle('open', isSettingsDrawerOpen);
+    trigger.classList.toggle('active', isSettingsDrawerOpen);
+    trigger.setAttribute('aria-expanded', isSettingsDrawerOpen ? 'true' : 'false');
+    trigger.title = isSettingsDrawerOpen ? '설정 닫기' : '설정 열기';
+  }
+
   function setTapComposeMode(enabled, options = {}) {
     tapComposeMode = !!enabled;
     localStorage.setItem(TAP_COMPOSE_MODE_KEY, tapComposeMode ? '1' : '0');
@@ -2269,10 +2576,64 @@
     setTapComposeMode(!tapComposeMode, { notify: true });
   }
 
+  function openImageViewer() {
+    const image = getActivePromptPreviewImage();
+    if (!image) return;
+    activeImageViewer = image;
+    renderImageViewer();
+  }
+
+  function closeImageViewer() {
+    activeImageViewer = null;
+    renderImageViewer();
+  }
+
+  function handleImageViewerBackdrop(e) {
+    if (e.target.id === 'image-viewer-modal') {
+      closeImageViewer();
+    }
+  }
+
+  function setPromptPreviewSizeLevel(level, options = {}) {
+    promptPreviewSizeLevel = normalizePromptPreviewSizeLevel(level);
+    localStorage.setItem(PROMPT_PREVIEW_SIZE_LEVEL_KEY, String(promptPreviewSizeLevel));
+    renderPromptPreviewSizeLevel();
+    if (options.notify) {
+      showToast(`이미지 영역 크기를 ${getPromptPreviewSizeLabel(promptPreviewSizeLevel)}로 변경했습니다`);
+    }
+  }
+
+  function openSettingsDrawer() {
+    isSettingsDrawerOpen = true;
+    renderSettingsDrawer();
+  }
+
+  function closeSettingsDrawer() {
+    isSettingsDrawerOpen = false;
+    renderSettingsDrawer();
+  }
+
+  function toggleSettingsDrawer() {
+    isSettingsDrawerOpen = !isSettingsDrawerOpen;
+    renderSettingsDrawer();
+  }
+
+  function handleSettingsDrawerBackdrop(e) {
+    if (e.target.id === 'settings-drawer') {
+      closeSettingsDrawer();
+    }
+  }
+
   function renderLibraryHeader() {
     const title = document.getElementById('library-title');
     if (!title) return;
     title.textContent = leftPanelTab === 'combo' ? '커스텀 조합 카드' : '개별 프롬프트';
+  }
+
+  function renderLibraryLayout() {
+    const panel = document.querySelector('.panel-library');
+    if (!panel) return;
+    panel.classList.toggle('combo-mode', leftPanelTab === 'combo');
   }
 
   function ensureActiveCategoryState() {
@@ -2362,7 +2723,6 @@
   function syncAddFormSelection() {
     const mainSelect = document.getElementById('input-main-category');
     const subSelect = document.getElementById('input-sub-category');
-    const hiddenCheckbox = document.getElementById('input-main-hidden');
 
     if (activeCategoryPrompt) {
       mainSelect.value = activeCategoryPrompt;
@@ -2375,9 +2735,6 @@
     } else if (activeCategoryPrompt) {
       subSelect.value = '';
     }
-
-    const currentMainCategory = mainSelect.value && mainSelect.value !== '__new__' ? mainSelect.value : '';
-    hiddenCheckbox.checked = currentMainCategory ? getMainCategoryConfig(currentMainCategory).hiddenByDefault : false;
   }
 
   function renderMainCategoryFilter() {
@@ -2969,7 +3326,6 @@
 
   function handleMainCategoryChange() {
     const select = document.getElementById('input-main-category');
-    const hiddenCheckbox = document.getElementById('input-main-hidden');
     if (select.value === '__new__') {
       const nextValue = prompt('새 대분류 이름을 입력하세요');
       if (nextValue && nextValue.trim()) {
@@ -2983,8 +3339,6 @@
       }
     }
     renderSubCategorySelect();
-    const mainCategory = select.value && select.value !== '__new__' ? select.value : '';
-    hiddenCheckbox.checked = mainCategory ? getMainCategoryConfig(mainCategory).hiddenByDefault : false;
     renderPendingPromptImagePreview();
   }
 
@@ -3110,7 +3464,6 @@
     const mainCategory = document.getElementById('input-main-category').value.trim();
     const subCategory = document.getElementById('input-sub-category').value.trim();
     const content = document.getElementById('input-content').value.trim();
-    const hiddenMain = document.getElementById('input-main-hidden').checked;
     if (!mainCategory) { showToast('대분류를 입력하세요'); return; }
     if (!subCategory) { showToast('중분류를 입력하세요'); return; }
     if (!content) { showToast('프롬프트 내용을 입력하세요'); return; }
@@ -3119,7 +3472,6 @@
     categoryConfig.mainOrder = uniqueInOrder([...(categoryConfig.mainOrder || []), mainCategory]);
     const mainConfig = ensureMainCategoryConfig(mainCategory);
     mainConfig.subOrder = uniqueInOrder([...(mainConfig.subOrder || []), subCategory]);
-    setMainCategoryHidden(mainCategory, hiddenMain);
 
     const nextImageData = pendingPromptImage?.dataUrl || editingPromptImageData || '';
     const nextPrompt = {
@@ -3139,7 +3491,6 @@
     ensureCategoryConfigConsistency();
     save();
     document.getElementById('input-content').value = '';
-    document.getElementById('input-main-hidden').checked = false;
     clearPendingPromptImage();
     resetPromptFormToAdd();
     renderCategorySelectors();
@@ -3425,7 +3776,7 @@
       if (!(target instanceof Element)) return;
 
       // 더블탭이 자주 발생하는 상호작용 영역에서만 확대 제스처를 차단한다.
-      if (!target.closest('.prompt-item, .prompt-list, .cat-chip, .mode-toggle-btn, .btn, .tap-compose-toggle-btn')) return;
+      if (!target.closest('.prompt-item, .prompt-list, .cat-chip, .mode-toggle-btn, .btn, .tap-compose-toggle-btn, .settings-trigger-btn, .prompt-description-preview')) return;
 
       const now = Date.now();
       if (now - lastTouchEndAt <= DOUBLE_TAP_DELAY) {
@@ -3466,7 +3817,13 @@
       closeAddPromptModal();
       closeSaveComposedModal();
       closeCategoryManageModal();
+      closeSettingsDrawer();
+      closeImageViewer();
     }
+  });
+
+  document.getElementById('prompt-description-preview').addEventListener('click', () => {
+    openImageViewer();
   });
 
   // ── Category selectors ──
@@ -3483,6 +3840,9 @@
   // ── Init ──
   preventSafariDoubleTapZoom();
   setTapComposeMode(localStorage.getItem(TAP_COMPOSE_MODE_KEY) === '1');
+  setPromptPreviewSizeLevel(localStorage.getItem(PROMPT_PREVIEW_SIZE_LEVEL_KEY) || 2);
+  renderSettingsDrawer();
+  renderImageViewer();
   setLeftPanelTab(localStorage.getItem(LEFT_PANEL_TAB_KEY) || 'prompt');
   load();
   render();
