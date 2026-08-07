@@ -7,18 +7,13 @@
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
-    html, body {
-      height: 100%;
-    }
-
     body {
       font-family: 'Segoe UI', system-ui, sans-serif;
       background: #0f0f13;
       color: #e0e0e0;
-      height: 100vh;
+      min-height: 100vh;
       display: flex;
       flex-direction: column;
-      overflow: hidden;
     }
 
     header {
@@ -37,14 +32,12 @@
       gap: 0;
       overflow: hidden;
       height: calc(100vh - 57px);
-      min-height: 0;
     }
 
     /* ── Left Panel: Prompt Library ── */
     .panel-library {
       width: 420px;
       min-width: 300px;
-      height: 100%;
       background: #13131c;
       border-right: 1px solid #2a2a3a;
       display: flex;
@@ -281,12 +274,10 @@
     .panel-add {
       width: 260px;
       min-width: 200px;
-      height: 100%;
       background: #15151f;
       border-right: 1px solid #2a2a3a;
       display: flex;
       flex-direction: column;
-      overflow: hidden;
     }
 
     .panel-add.collapsed {
@@ -339,139 +330,15 @@
       min-height: 0;
     }
 
-    .panel-mode-toggle {
-      display: flex;
-      gap: 8px;
-      padding: 12px 14px 0;
-    }
-
-    .mode-toggle-btn {
-      flex: 1;
-      border: 1px solid #2a2a3a;
-      background: #1a1a28;
-      color: #a9a9bc;
-      border-radius: 8px;
-      padding: 8px 10px;
-      font-size: 0.76rem;
-      cursor: pointer;
-      transition: all .15s;
-      font-weight: 600;
-    }
-
-    .mode-toggle-btn:hover {
-      border-color: #c084fc66;
-      color: #ddd;
-    }
-
-    .mode-toggle-btn.active {
-      background: #c084fc22;
-      border-color: #c084fc;
-      color: #e7d2ff;
-    }
-
-    .panel-mode-view {
-      display: none;
-      flex: 1;
-      min-height: 0;
-      flex-direction: column;
-      overflow: hidden;
-    }
-
-    .panel-mode-view.active {
-      display: flex;
-    }
-
-    .panel-filter-view {
-      padding: 12px;
-      overflow-y: auto;
-    }
-
-    .panel-filter-view .filter-section {
-      padding: 0;
-      border-bottom: none;
-    }
-
-    .library-footer {
-      padding: 10px 12px 12px;
-      border-top: 1px solid #1e1e2e;
-      background: #13131c;
-    }
-
-    .library-footer .btn {
-      width: 100%;
-    }
-
-    .modal-backdrop {
-      position: fixed;
-      inset: 0;
-      background: rgba(10, 10, 16, 0.7);
-      display: none;
-      align-items: center;
-      justify-content: center;
-      z-index: 9998;
-      padding: 18px;
-    }
-
-    .modal-backdrop.open {
-      display: flex;
-    }
-
-    .modal-card {
-      width: min(560px, 100%);
-      max-height: 92vh;
-      background: #15151f;
-      border: 1px solid #2a2a3a;
-      border-radius: 12px;
-      display: flex;
-      flex-direction: column;
-      overflow: hidden;
-    }
-
-    .modal-header {
-      padding: 14px 16px;
-      border-bottom: 1px solid #242437;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 12px;
-    }
-
-    .modal-title {
-      font-size: 0.9rem;
-      color: #ddd;
-      font-weight: 700;
-    }
-
-    .modal-close {
-      width: 28px;
-      height: 28px;
-      border-radius: 7px;
-      border: 1px solid #2a2a3a;
-      background: #1e1e2e;
-      color: #aaa;
-      cursor: pointer;
-      line-height: 1;
-    }
-
-    .modal-close:hover {
-      color: #eee;
-      border-color: #c084fc66;
-    }
-
-    .modal-body {
-      overflow-y: auto;
-    }
-
     .panel-add.collapsed .panel-add-body {
       display: none;
     }
 
     .add-form {
-      padding: 14px;
+      padding: 14px 14px 0;
       display: flex;
       flex-direction: column;
       gap: 10px;
-      overflow-y: auto;
     }
 
     .category-input-wrap {
@@ -574,36 +441,59 @@
     }
     .csv-section .section-label { font-size: 0.75rem; color: #666; text-transform: uppercase; letter-spacing: 0.06em; }
 
-    .combo-section {
-      display: flex;
-      flex-direction: column;
-      flex: 1;
-      min-height: 0;
-      overflow: hidden;
-      padding: 14px;
-      gap: 10px;
-    }
-
-    .combo-save-body {
+    .combo-save-panel {
+      margin: 12px 14px 0;
       border: 1px solid #2a2a3a;
       border-radius: 8px;
       background: #141420;
+      overflow: hidden;
+    }
+
+    .combo-save-toggle {
+      width: 100%;
+      border: none;
+      border-bottom: 1px solid transparent;
+      background: #191927;
+      color: #bbb;
+      font-size: 0.78rem;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      padding: 10px 12px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      cursor: pointer;
+    }
+
+    .combo-save-toggle:hover {
+      background: #202033;
+    }
+
+    .combo-save-panel.collapsed .combo-save-toggle {
+      border-bottom-color: transparent;
+    }
+
+    .combo-save-body {
       padding: 10px;
+      border-top: 1px solid #2a2a3a;
       display: flex;
       flex-direction: column;
       gap: 8px;
-      min-height: 0;
-      flex: 1;
+    }
+
+    .combo-save-panel.collapsed .combo-save-body {
+      display: none;
     }
 
     .combo-filter-wrap {
+      border-top: 1px solid #2a2a3a;
+      padding-top: 8px;
       margin-top: 2px;
     }
 
     /* ── Right Panel: Composer ── */
     .panel-composer {
       flex: 1;
-      height: 100%;
       background: #11111a;
       display: flex;
       flex-direction: column;
@@ -701,14 +591,20 @@
       display: flex;
       gap: 8px;
       align-items: center;
-      flex-wrap: nowrap;
+      flex-wrap: wrap;
       margin-left: 12px;
     }
 
-    .combo-save-row select {
+    .combo-save-row label {
+      margin: 0;
+      font-size: 0.74rem;
+      color: #777;
+      white-space: nowrap;
+    }
+
+    .combo-save-row input {
       width: 170px;
       max-width: 100%;
-      flex: 0 0 auto;
     }
 
     .combo-load-list {
@@ -722,8 +618,7 @@
 
     .combo-load-item {
       display: flex;
-      flex-direction: column;
-      align-items: stretch;
+      align-items: flex-start;
       gap: 6px;
       border: 1px solid #2a2a3a;
       border-radius: 7px;
@@ -741,8 +636,7 @@
 
     .combo-load-item .meta .cat {
       font-size: 0.7rem;
-      color: #8ab4ff;
-      font-weight: 700;
+      color: #c084fc;
     }
 
     .combo-load-item .meta .text {
@@ -754,14 +648,9 @@
     }
 
     .combo-load-actions {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
+      display: flex;
       gap: 6px;
-      width: 100%;
-    }
-
-    .combo-load-actions .btn {
-      width: 100%;
+      flex-shrink: 0;
     }
 
     .combo-load-empty {
@@ -834,92 +723,11 @@
   <!-- Left: Add + CSV -->
   <div class="panel-add" id="panel-add">
     <div class="panel-header">
-      <span class="title">필터 / 커스텀 조합</span>
-      <button class="panel-toggle-btn" id="toggle-add-panel" onclick="toggleAddPanel()" title="접기" aria-label="필터 및 커스텀 조합 패널 접기">◀</button>
+      <span class="title">새 프롬프트 추가</span>
+      <button class="panel-toggle-btn" id="toggle-add-panel" onclick="toggleAddPanel()" title="접기" aria-label="새 프롬프트 추가 패널 접기">◀</button>
     </div>
     <div class="panel-add-body" id="panel-add-body">
-      <div class="panel-mode-toggle">
-        <button class="mode-toggle-btn active" id="mode-btn-filter" type="button" onclick="setPanelMode('filter')">중분류 선택</button>
-        <button class="mode-toggle-btn" id="mode-btn-combo" type="button" onclick="setPanelMode('combo')">커스텀 조합</button>
-      </div>
-
-      <div class="panel-mode-view" id="panel-view-combo">
-        <div class="combo-section">
-          <div class="combo-save-body">
-            <div class="combo-filter-wrap">
-              <div class="filter-row" id="combo-filter"></div>
-            </div>
-            <div class="combo-load-list" id="combo-load-list"></div>
-          </div>
-
-          <div class="csv-section" style="margin-top:0">
-            <div class="section-label">CSV 가져오기 / 내보내기</div>
-            <button class="btn btn-secondary btn-sm" onclick="exportCSV()">📤 CSV 내보내기</button>
-            <label class="btn btn-secondary btn-sm" style="text-align:center;cursor:pointer">
-              📥 CSV 가져오기
-              <input type="file" accept=".csv" id="csv-import-combo" style="display:none" onchange="importCSV(event)" />
-            </label>
-          </div>
-        </div>
-      </div>
-
-      <div class="panel-mode-view panel-filter-view" id="panel-view-filter">
-        <div class="filter-section">
-          <div class="filter-row" id="main-filter"></div>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- Center: Library -->
-  <div class="panel-library">
-    <div class="panel-header">
-      <span>저장된 프롬프트</span>
-      <span id="count-badge" style="font-size:0.8rem;color:#c084fc;font-weight:700"></span>
-    </div>
-    <div class="prompt-list" id="prompt-list"></div>
-    <div class="library-footer">
-      <button class="btn btn-primary" type="button" onclick="openAddPromptModal()">+ 새 프롬프트 추가</button>
-    </div>
-  </div>
-
-  <!-- Right: Composer -->
-  <div class="panel-composer">
-    <div class="panel-header" style="padding:14px 16px 10px;font-size:0.78rem;text-transform:uppercase;letter-spacing:.08em;color:#888;border-bottom:1px solid #1e1e2e;display:flex;align-items:center;gap:8px">
-      <span>조합된 프롬프트</span>
-    </div>
-    <div class="selected-chips" id="selected-chips">
-      <span class="empty-state" id="chips-empty">선택된 프롬프트가 없습니다</span>
-    </div>
-    <div class="composer-output">
-      <div class="output-box" id="output-box" onclick="startOutputEdit()" title="터치해서 편집">프롬프트를 선택하면 여기에 표시됩니다.</div>
-      <textarea class="output-editor" id="output-editor"></textarea>
-      <div class="output-edit-actions" id="output-edit-actions">
-        <button class="btn btn-secondary btn-sm" onclick="cancelOutputEdit()">취소</button>
-        <button class="btn btn-primary btn-sm" onclick="applyOutputEdit()">적용</button>
-      </div>
-      <div class="composer-actions">
-        <button class="btn btn-primary" onclick="copyPrompt()">📋 클립보드 복사</button>
-        <button class="btn btn-danger btn-sm" onclick="clearCurrentComposition()">🧹 조합 초기화</button>
-        <div class="combo-save-row">
-          <select id="combo-main-category"></select>
-          <select id="combo-sub-category" disabled></select>
-          <button class="btn btn-secondary btn-sm" onclick="saveComposedPrompt()">💾 조합 저장</button>
-        </div>
-      </div>
-    </div>
-  </div>
-
-</div>
-
-<div class="modal-backdrop" id="add-prompt-modal" onclick="handleAddPromptModalBackdrop(event)">
-  <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="add-prompt-modal-title">
-    <div class="modal-header">
-      <span class="modal-title" id="add-prompt-modal-title">새 프롬프트 추가</span>
-      <button class="modal-close" type="button" onclick="closeAddPromptModal()" aria-label="모달 닫기">×</button>
-    </div>
-    <div class="modal-body">
-      <div class="add-form" style="max-height:none">
+      <div class="add-form">
         <div>
           <label>대분류</label>
           <div class="category-input-wrap">
@@ -939,7 +747,21 @@
         <button class="btn btn-primary" onclick="addPrompt()">+ 저장</button>
       </div>
 
-      <div class="csv-section" style="margin-top:0">
+      <div class="combo-save-panel" id="combo-save-panel">
+        <button class="combo-save-toggle" id="combo-save-toggle" onclick="toggleComboSavePanel()" aria-label="커스텀 조합 저장 섹션 접기">
+          <span>커스텀 조합 불러오기</span>
+          <span id="combo-save-arrow">▼</span>
+        </button>
+        <div class="combo-save-body" id="combo-save-body">
+          <div class="combo-filter-wrap">
+            <div class="filter-title">커스텀 조합 카테고리 필터</div>
+            <div class="filter-row" id="combo-filter"></div>
+          </div>
+          <div class="combo-load-list" id="combo-load-list"></div>
+        </div>
+      </div>
+
+      <div class="csv-section">
         <div class="section-label">CSV 가져오기 / 내보내기</div>
         <button class="btn btn-secondary btn-sm" onclick="exportCSV()">📤 CSV 내보내기</button>
         <label class="btn btn-secondary btn-sm" style="text-align:center;cursor:pointer">
@@ -949,6 +771,47 @@
       </div>
     </div>
   </div>
+
+  <!-- Center: Library -->
+  <div class="panel-library">
+    <div class="panel-header">
+      <span>저장된 프롬프트</span>
+      <span id="count-badge" style="font-size:0.8rem;color:#c084fc;font-weight:700"></span>
+    </div>
+    <div class="filter-section">
+      <div class="filter-row" id="main-filter"></div>
+    </div>
+    <div class="prompt-list" id="prompt-list"></div>
+  </div>
+
+  <!-- Right: Composer -->
+  <div class="panel-composer">
+    <div class="panel-header" style="padding:14px 16px 10px;font-size:0.78rem;text-transform:uppercase;letter-spacing:.08em;color:#888;border-bottom:1px solid #1e1e2e;display:flex;align-items:center;gap:8px">
+      <span>조합된 프롬프트</span>
+      <span style="font-size:0.72rem;color:#555">← 왼쪽 프롬프트를 클릭하면 조합됩니다</span>
+    </div>
+    <div class="selected-chips" id="selected-chips">
+      <span class="empty-state" id="chips-empty">선택된 프롬프트가 없습니다</span>
+    </div>
+    <div class="composer-output">
+      <div class="output-box" id="output-box" onclick="startOutputEdit()" title="터치해서 편집">프롬프트를 선택하면 여기에 표시됩니다.</div>
+      <textarea class="output-editor" id="output-editor"></textarea>
+      <div class="output-edit-actions" id="output-edit-actions">
+        <button class="btn btn-secondary btn-sm" onclick="cancelOutputEdit()">취소</button>
+        <button class="btn btn-primary btn-sm" onclick="applyOutputEdit()">적용</button>
+      </div>
+      <div class="composer-actions">
+        <button class="btn btn-primary" onclick="copyPrompt()">📋 클립보드 복사</button>
+        <button class="btn btn-danger btn-sm" onclick="clearCurrentComposition()">🧹 조합 초기화</button>
+        <div class="combo-save-row">
+          <label for="combo-category">저장 카테고리</label>
+          <input type="text" id="combo-category" value="커스텀 조합" placeholder="예: 커스텀 조합" />
+          <button class="btn btn-secondary btn-sm" onclick="saveComposedPrompt()">💾 조합 저장</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
 </div>
 
 <div id="toast">복사되었습니다!</div>
@@ -957,22 +820,19 @@
   const STORAGE_KEY = 'prompt_repo_v1';
   const COMPOSED_STORAGE_KEY = 'prompt_repo_composed_v1';
   const ADD_PANEL_COLLAPSE_KEY = 'prompt_repo_add_panel_collapsed_v1';
-  const ADD_PANEL_MODE_KEY = 'prompt_repo_add_panel_mode_v1';
+  const COMBO_PANEL_COLLAPSE_KEY = 'prompt_repo_combo_panel_collapsed_v1';
 
   // ── State ──
   let prompts = [];          // [{id, mainCategory, subCategory, content}] 개별 프롬프트
-  let composedPrompts = [];  // [{id, mainCategory, subCategory, items, content}] 조합 저장 프롬프트
+  let composedPrompts = [];  // [{id, category, content}] 조합 저장 프롬프트
   let selected = [];         // [{id, mainCategory, subCategory, content, source}]
   let activeCategoryPrompt = null;
   let activeSubCategoryPrompt = null;
   let activeCategoryComposed = null;
   let isAddPanelCollapsed = false;
-  let addPanelMode = 'filter';
+  let isComboPanelCollapsed = false;
   let isOutputEditing = false;
   let customOutputText = null;
-  let isAddPromptModalOpen = false;
-  let lastAddMainCategory = '';
-  let lastAddSubCategory = '';
 
   const OUTPUT_PLACEHOLDER = '프롬프트를 선택하면 여기에 표시됩니다.';
 
@@ -986,8 +846,7 @@
 
     try {
       const rawComposed = localStorage.getItem(COMPOSED_STORAGE_KEY);
-      const loadedComposed = rawComposed ? JSON.parse(rawComposed) : [];
-      composedPrompts = loadedComposed.map(normalizeComposedPrompt).filter(Boolean);
+      composedPrompts = rawComposed ? JSON.parse(rawComposed) : [];
     } catch { composedPrompts = []; }
   }
 
@@ -1033,44 +892,6 @@
     };
   }
 
-  function normalizeComposedPrompt(item) {
-    if (!item) return null;
-    const mainCategory = (item.mainCategory ?? item.category ?? '').trim() || '커스텀 조합';
-    const subCategory = (item.subCategory ?? item.name ?? '').trim() || '이름없음';
-    let items = Array.isArray(item.items)
-      ? item.items.map(normalizePrompt).filter(Boolean)
-      : [];
-
-    // 이전 포맷({category, content}) 호환: 단일 문자열을 1개 프롬프트 아이템으로 변환
-    if (items.length === 0 && typeof item.content === 'string' && item.content.trim()) {
-      items = [{
-        id: uid(),
-        mainCategory,
-        subCategory,
-        content: item.content.trim(),
-      }];
-    }
-
-    if (items.length === 0) return null;
-
-    return {
-      id: item.id || uid(),
-      mainCategory,
-      subCategory,
-      category: mainCategory,
-      items,
-      content: items.map(p => p.content).join(', '),
-    };
-  }
-
-  function getComposedItemText(item) {
-    if (!item) return '';
-    if (Array.isArray(item.items) && item.items.length > 0) {
-      return item.items.map(p => p.content).join(', ');
-    }
-    return (item.content ?? '').trim();
-  }
-
   // ── Categories ──
   function getCategories() {
     return [...new Set([...prompts, ...composedPrompts].map(p => p.category).filter(Boolean))].sort();
@@ -1086,12 +907,7 @@
   }
 
   function getComposedCategories() {
-    return [...new Set(composedPrompts.map(p => p.mainCategory).filter(Boolean))].sort();
-  }
-
-  function getComposedSubCategories(mainCategory) {
-    const filtered = mainCategory ? composedPrompts.filter(p => p.mainCategory === mainCategory) : composedPrompts;
-    return [...new Set(filtered.map(p => p.subCategory).filter(Boolean))].sort();
+    return [...new Set(composedPrompts.map(p => p.category).filter(Boolean))].sort();
   }
 
   // ── Render ──
@@ -1100,7 +916,6 @@
     renderComposedFilter();
     renderComposedLoadList();
     renderCategorySelectors();
-    renderComposedCategorySelectors();
     syncAddFormSelection();
     renderPromptList();
     renderSelected();
@@ -1110,11 +925,6 @@
   function renderCategorySelectors() {
     renderMainCategorySelect();
     renderSubCategorySelect();
-  }
-
-  function renderComposedCategorySelectors() {
-    renderComposedMainCategorySelect();
-    renderComposedSubCategorySelect();
   }
 
   function syncAddFormSelection() {
@@ -1216,7 +1026,7 @@
   function renderComposedLoadList() {
     const list = document.getElementById('combo-load-list');
     const filteredComposed = activeCategoryComposed
-      ? composedPrompts.filter(p => p.mainCategory === activeCategoryComposed)
+      ? composedPrompts.filter(p => p.category === activeCategoryComposed)
       : composedPrompts;
 
     list.innerHTML = '';
@@ -1230,13 +1040,12 @@
     }
 
     filteredComposed.forEach(p => {
-      const composedText = getComposedItemText(p);
       const item = document.createElement('div');
       item.className = 'combo-load-item';
       item.innerHTML = `
         <div class="meta">
-          <span class="cat">${esc(p.subCategory)}</span>
-          <span class="text" title="${esc(composedText)}">${esc(composedText)}</span>
+          <span class="cat">${esc(p.category)}</span>
+          <span class="text" title="${esc(p.content)}">${esc(p.content)}</span>
         </div>
       `;
 
@@ -1269,12 +1078,9 @@
       return;
     }
     clearOutputOverride();
-    selected = item.items.map(entry => ({ ...normalizeSelected(entry), source: 'prompt' })).filter(entry => entry && entry.content);
+    selected = [{ ...normalizeSelected(item), source: 'composed' }];
     render();
-    const text = getComposedOutputText();
-    copyPromptSilently(text)
-      .then(() => showToast('커스텀 조합을 불러오고 클립보드에 복사했습니다'))
-      .catch(() => showToast('커스텀 조합은 불러왔지만 복사에 실패했습니다'));
+    showToast('커스텀 조합을 불러왔습니다');
   }
 
   function deleteComposedPrompt(id) {
@@ -1291,7 +1097,7 @@
     const list = document.getElementById('prompt-list');
 
     if (!activeCategoryPrompt) {
-      list.innerHTML = '<div class="empty-state">왼쪽 패널의 중분류 선택 탭에서 필터를 선택하세요.</div>';
+      list.innerHTML = '<div class="empty-state">대분류 섹션에서 중분류 칩을 선택하세요.</div>';
       return;
     }
 
@@ -1302,7 +1108,7 @@
     });
 
     if (filteredPrompts.length === 0) {
-      list.innerHTML = '<div class="empty-state">선택한 조건의 프롬프트가 없습니다.<br/>중분류 선택 탭에서 다른 조건을 선택하세요.</div>';
+      list.innerHTML = '<div class="empty-state">선택한 조건의 프롬프트가 없습니다.<br/>다른 중분류를 눌러보세요.</div>';
       return;
     }
 
@@ -1445,10 +1251,14 @@
 
     select.innerHTML = '';
     appendSelectOption(select, '', '대분류 선택');
-    appendSelectOption(select, '__new__', '＋ 새 대분류 추가');
     categories.forEach(category => appendSelectOption(select, category, category));
+    appendSelectOption(select, '__new__', '＋ 새 대분류 추가');
 
-    if (current && [...categories, '__new__'].includes(current)) {
+    if (categories.length === 0) {
+      appendSelectOption(select, '기타', '기타');
+    }
+
+    if (current && [...categories, '기타'].includes(current)) {
       select.value = current;
     }
   }
@@ -1471,43 +1281,6 @@
       }
       select.disabled = false;
       if (current && [...categories, '기타'].includes(current)) {
-        select.value = current;
-      }
-    } else {
-      select.disabled = true;
-    }
-  }
-
-  function renderComposedMainCategorySelect() {
-    const select = document.getElementById('combo-main-category');
-    const categories = getComposedCategories();
-    const current = select.value;
-
-    select.innerHTML = '';
-    appendSelectOption(select, '', '커스텀 대분류 선택');
-    categories.forEach(category => appendSelectOption(select, category, category));
-    appendSelectOption(select, '__new__', '＋ 새 대분류 추가');
-
-    if (current && categories.includes(current)) {
-      select.value = current;
-    }
-  }
-
-  function renderComposedSubCategorySelect() {
-    const mainSelect = document.getElementById('combo-main-category');
-    const select = document.getElementById('combo-sub-category');
-    const mainCategory = mainSelect.value && mainSelect.value !== '__new__' ? mainSelect.value : '';
-    const categories = mainCategory ? getComposedSubCategories(mainCategory) : [];
-    const current = select.value;
-
-    select.innerHTML = '';
-    appendSelectOption(select, '', mainCategory ? '커스텀 이름(중분류) 선택' : '대분류를 먼저 선택');
-
-    if (mainCategory) {
-      categories.forEach(category => appendSelectOption(select, category, category));
-      appendSelectOption(select, '__new__', '＋ 새 이름 추가');
-      select.disabled = false;
-      if (current && categories.includes(current)) {
         select.value = current;
       }
     } else {
@@ -1544,35 +1317,6 @@
     }
   }
 
-  function handleComposedMainCategoryChange() {
-    const select = document.getElementById('combo-main-category');
-    if (select.value === '__new__') {
-      const nextValue = prompt('새 커스텀 대분류 이름을 입력하세요');
-      if (nextValue && nextValue.trim()) {
-        const value = nextValue.trim();
-        appendSelectOption(select, value, value);
-        select.value = value;
-      } else {
-        select.value = '';
-      }
-    }
-    renderComposedSubCategorySelect();
-  }
-
-  function handleComposedSubCategoryChange() {
-    const select = document.getElementById('combo-sub-category');
-    if (select.value === '__new__') {
-      const nextValue = prompt('새 커스텀 이름(중분류)을 입력하세요');
-      if (nextValue && nextValue.trim()) {
-        const value = nextValue.trim();
-        appendSelectOption(select, value, value);
-        select.value = value;
-      } else {
-        select.value = '';
-      }
-    }
-  }
-
   function setAddPanelCollapsed(collapsed) {
     const panel = document.getElementById('panel-add');
     const toggleBtn = document.getElementById('toggle-add-panel');
@@ -1580,7 +1324,7 @@
     panel.classList.toggle('collapsed', collapsed);
     toggleBtn.textContent = collapsed ? '▶' : '◀';
     toggleBtn.title = collapsed ? '펼치기' : '접기';
-    toggleBtn.setAttribute('aria-label', collapsed ? '필터 및 커스텀 조합 패널 펼치기' : '필터 및 커스텀 조합 패널 접기');
+    toggleBtn.setAttribute('aria-label', collapsed ? '새 프롬프트 추가 패널 펼치기' : '새 프롬프트 추가 패널 접기');
   }
 
   function toggleAddPanel() {
@@ -1588,62 +1332,19 @@
     localStorage.setItem(ADD_PANEL_COLLAPSE_KEY, String(isAddPanelCollapsed));
   }
 
-  function setPanelMode(mode) {
-    if (mode !== 'combo' && mode !== 'filter') {
-      addPanelMode = 'filter';
-    } else {
-      addPanelMode = mode;
-    }
-
-    document.getElementById('panel-view-filter').classList.toggle('active', addPanelMode === 'filter');
-    document.getElementById('panel-view-combo').classList.toggle('active', addPanelMode === 'combo');
-
-    document.getElementById('mode-btn-filter').classList.toggle('active', addPanelMode === 'filter');
-    document.getElementById('mode-btn-combo').classList.toggle('active', addPanelMode === 'combo');
-    localStorage.setItem(ADD_PANEL_MODE_KEY, addPanelMode);
+  function setComboSavePanelCollapsed(collapsed) {
+    const panel = document.getElementById('combo-save-panel');
+    const toggle = document.getElementById('combo-save-toggle');
+    const arrow = document.getElementById('combo-save-arrow');
+    isComboPanelCollapsed = collapsed;
+    panel.classList.toggle('collapsed', collapsed);
+    arrow.textContent = collapsed ? '▶' : '▼';
+    toggle.setAttribute('aria-label', collapsed ? '커스텀 조합 불러오기 섹션 펼치기' : '커스텀 조합 불러오기 섹션 접기');
   }
 
-  function openAddPromptModal() {
-    const modal = document.getElementById('add-prompt-modal');
-    const mainSelect = document.getElementById('input-main-category');
-    const subSelect = document.getElementById('input-sub-category');
-
-    isAddPromptModalOpen = true;
-    modal.classList.add('open');
-    document.body.style.overflow = 'hidden';
-
-    renderCategorySelectors();
-
-    const targetMain = activeCategoryPrompt || lastAddMainCategory;
-    if (targetMain && [...getMainCategories(), '__new__'].includes(targetMain)) {
-      mainSelect.value = targetMain;
-    }
-
-    renderSubCategorySelect();
-
-    const targetSub = activeSubCategoryPrompt || lastAddSubCategory;
-    if (targetSub && [...getSubCategories(mainSelect.value), '기타'].includes(targetSub)) {
-      subSelect.value = targetSub;
-    }
-
-    syncAddFormSelection();
-    document.getElementById('input-content').focus();
-  }
-
-    lastAddMainCategory = select.value;
-    lastAddSubCategory = '';
-  function closeAddPromptModal() {
-    const modal = document.getElementById('add-prompt-modal');
-    isAddPromptModalOpen = false;
-    modal.classList.remove('open');
-    document.body.style.overflow = '';
-  }
-
-  function handleAddPromptModalBackdrop(e) {
-    if (e.target && e.target.id === 'add-prompt-modal') {
-      closeAddPromptModal();
-    }
-    lastAddSubCategory = select.value;
+  function toggleComboSavePanel() {
+    setComboSavePanelCollapsed(!isComboPanelCollapsed);
+    localStorage.setItem(COMBO_PANEL_COLLAPSE_KEY, String(isComboPanelCollapsed));
   }
 
   function selectCategory(value) {
@@ -1662,32 +1363,17 @@
 
   // ── Actions ──
   function addPrompt() {
-    const mainSelect = document.getElementById('input-main-category');
-    const subSelect = document.getElementById('input-sub-category');
-    const mainCategory = mainSelect.value.trim();
-    const subCategory = subSelect.value.trim();
-    const contentInput = document.getElementById('input-content');
-    const content = contentInput.value.trim();
+    const mainCategory = document.getElementById('input-main-category').value.trim();
+    const subCategory = document.getElementById('input-sub-category').value.trim();
+    const content = document.getElementById('input-content').value.trim();
     if (!mainCategory) { showToast('대분류를 입력하세요'); return; }
     if (!subCategory) { showToast('중분류를 입력하세요'); return; }
     if (!content) { showToast('프롬프트 내용을 입력하세요'); return; }
-
-    lastAddMainCategory = mainCategory;
-    lastAddSubCategory = subCategory;
-    activeCategoryPrompt = mainCategory;
-    activeSubCategoryPrompt = subCategory;
-
     prompts.push({ id: uid(), mainCategory, subCategory, content });
     save();
-    contentInput.value = '';
-
+    document.getElementById('input-content').value = '';
     renderCategorySelectors();
-    mainSelect.value = mainCategory;
-    renderSubCategorySelect();
-    subSelect.value = subCategory;
-
     render();
-    closeAddPromptModal();
     showToast('저장되었습니다');
   }
 
@@ -1750,46 +1436,16 @@
     });
   }
 
-  function copyPromptSilently(text) {
-    if (!text.trim()) return Promise.resolve(false);
-    return navigator.clipboard.writeText(text).then(() => true).catch(() => {
-      const ta = document.createElement('textarea');
-      ta.value = text;
-      document.body.appendChild(ta);
-      ta.select();
-      document.execCommand('copy');
-      document.body.removeChild(ta);
-      return true;
-    });
-  }
-
   function saveComposedPrompt() {
-    const mainCategoryInput = document.getElementById('combo-main-category');
-    const subCategoryInput = document.getElementById('combo-sub-category');
-    const mainCategory = mainCategoryInput.value.trim();
-    const subCategory = subCategoryInput.value.trim();
-    const items = selected.map(normalizeSelected).filter(item => item && item.content).map(cleanPrompt);
-    if (!mainCategory) {
-      showToast('커스텀 조합 대분류를 입력하세요');
-      return;
-    }
-    if (!subCategory) {
-      showToast('커스텀 조합 이름(중분류)을 입력하세요');
-      return;
-    }
-    if (items.length === 0) {
+    const categoryInput = document.getElementById('combo-category');
+    const category = categoryInput.value.trim() || '커스텀 조합';
+    const content = isOutputEditing ? document.getElementById('output-editor').value : getComposedOutputText();
+    if (!content.trim()) {
       showToast('저장할 조합이 없습니다');
       return;
     }
 
-    composedPrompts.push({
-      id: uid(),
-      mainCategory,
-      subCategory,
-      category: mainCategory,
-      items,
-      content: items.map(p => p.content).join(', '),
-    });
+    composedPrompts.push({ id: uid(), category, content });
     save();
     render();
     showToast('조합 프롬프트가 저장되었습니다');
@@ -1800,7 +1456,7 @@
     if (prompts.length === 0 && composedPrompts.length === 0) { showToast('내보낼 프롬프트가 없습니다'); return; }
     const rows = [['type', 'mainCategory', 'subCategory', 'content']];
     prompts.forEach(p => rows.push(['individual', csvEsc(p.mainCategory), csvEsc(p.subCategory), csvEsc(p.content)]));
-    composedPrompts.forEach(p => rows.push(['composed', csvEsc(p.mainCategory || p.category || '커스텀 조합'), csvEsc(p.subCategory || '이름없음'), csvEsc(p.content)]));
+    composedPrompts.forEach(p => rows.push(['composed', csvEsc(p.category), csvEsc(p.content)]));
     const csv = rows.map(r => r.join(',')).join('\n');
     const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
     const url = URL.createObjectURL(blob);
@@ -1827,12 +1483,7 @@
           const type = parts[0].trim().toLowerCase();
           const item = { id: uid(), mainCategory: parts[1].trim(), subCategory: parts[2].trim(), content: parts[3].trim() };
           if (type === 'composed' || type === 'combo' || type === 'custom') {
-            composedPrompts.push(normalizeComposedPrompt({
-              id: item.id,
-              mainCategory: item.mainCategory,
-              subCategory: item.subCategory,
-              content: item.content,
-            }));
+            composedPrompts.push({ id: item.id, category: item.subCategory, content: item.content });
           } else {
             prompts.push(item);
           }
@@ -1844,12 +1495,7 @@
           const type = parts[0].trim().toLowerCase();
           const item = { id: uid(), mainCategory: parts[1].trim(), subCategory: parts[1].trim(), content: parts[2].trim() };
           if (type === 'composed' || type === 'combo' || type === 'custom') {
-            composedPrompts.push(normalizeComposedPrompt({
-              id: item.id,
-              mainCategory: item.mainCategory,
-              subCategory: item.subCategory,
-              content: item.content,
-            }));
+            composedPrompts.push({ id: item.id, category: item.subCategory, content: item.content });
           } else {
             prompts.push(item);
           }
@@ -1869,10 +1515,6 @@
     };
     reader.readAsText(file, 'UTF-8');
     e.target.value = '';
-    const addImport = document.getElementById('csv-import');
-    const comboImport = document.getElementById('csv-import-combo');
-    if (addImport) addImport.value = '';
-    if (comboImport) comboImport.value = '';
   }
 
   function parseCSVLine(line) {
@@ -1942,26 +1584,16 @@
     if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) addPrompt();
   });
 
-  document.addEventListener('keydown', e => {
-    if (e.key === 'Escape' && isAddPromptModalOpen) {
-      closeAddPromptModal();
-    }
-  });
-
   // ── Category selectors ──
   const categoryInput = document.getElementById('input-main-category');
   const subCategoryInput = document.getElementById('input-sub-category');
-  const comboMainCategoryInput = document.getElementById('combo-main-category');
-  const comboSubCategoryInput = document.getElementById('combo-sub-category');
 
   categoryInput.addEventListener('change', handleMainCategoryChange);
   subCategoryInput.addEventListener('change', handleSubCategoryChange);
-  comboMainCategoryInput.addEventListener('change', handleComposedMainCategoryChange);
-  comboSubCategoryInput.addEventListener('change', handleComposedSubCategoryChange);
 
   // ── Init ──
   setAddPanelCollapsed(localStorage.getItem(ADD_PANEL_COLLAPSE_KEY) === 'true');
-  setPanelMode(localStorage.getItem(ADD_PANEL_MODE_KEY) || 'filter');
+  setComboSavePanelCollapsed(localStorage.getItem(COMBO_PANEL_COLLAPSE_KEY) === 'true');
   load();
   render();
 </script>
