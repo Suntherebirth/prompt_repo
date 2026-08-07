@@ -146,6 +146,11 @@
       display: none;
     }
 
+    .panel-library.preview-level-3-full .library-footer {
+      padding-left: 0;
+      padding-right: 0;
+    }
+
     .prompt-description-preview {
       width: min(100%, var(--prompt-preview-max-width, 380px));
       margin: 0 auto 10px;
@@ -158,6 +163,11 @@
       justify-content: center;
       overflow: hidden;
       padding: 10px;
+    }
+
+    .panel-library.preview-level-3-full .prompt-description-preview {
+      width: 100%;
+      margin: 0 0 10px;
     }
 
     .prompt-description-preview.has-image {
@@ -2071,8 +2081,12 @@
 
   function renderPromptPreviewSizeLevel() {
     const preview = document.getElementById('prompt-description-preview');
+    const panel = document.querySelector('.panel-library');
     if (preview) {
       preview.style.setProperty('--prompt-preview-max-width', PROMPT_PREVIEW_MAX_WIDTH_BY_LEVEL[promptPreviewSizeLevel]);
+    }
+    if (panel) {
+      panel.classList.toggle('preview-level-3-full', promptPreviewSizeLevel === 3);
     }
 
     document.querySelectorAll('[data-preview-size-level]').forEach(button => {
