@@ -31,6 +31,21 @@
     }
     header h1 { font-size: 1.3rem; color: #c084fc; font-weight: 700; }
 
+    .title-manage-btn {
+      background: transparent;
+      border: none;
+      color: inherit;
+      font: inherit;
+      cursor: pointer;
+      padding: 0;
+      text-align: left;
+      transition: color .15s;
+    }
+
+    .title-manage-btn:hover {
+      color: #dfb7ff;
+    }
+
     .main {
       display: flex;
       flex: 1;
@@ -58,7 +73,7 @@
     }
 
     .prompt-description-preview {
-      width: min(100%, 300px);
+      width: min(100%, 380px);
       margin: 0 auto 10px;
       border: 1px dashed #3a3a52;
       border-radius: 10px;
@@ -339,26 +354,54 @@
     }
 
     .prompt-item {
+      position: relative;
       display: flex;
       align-items: stretch;
-      gap: 8px;
       min-height: 58px;
-      padding: 8px 10px;
       border-radius: 8px;
       background: #1a1a26;
       margin-bottom: 6px;
       cursor: pointer;
       border: 1px solid transparent;
       transition: all .15s;
+      overflow: hidden;
+      touch-action: pan-y;
     }
     .prompt-item:hover { border-color: #c084fc55; background: #1e1e30; }
     .prompt-item.selected { border-color: #34d399; background: #16352d; }
     .prompt-item.preview:not(.selected) { border-color: #8ab4ff66; background: #22304a18; }
+    .prompt-item.select-feedback {
+      animation: promptSelectFeedback .28s ease-out;
+    }
+    @keyframes promptSelectFeedback {
+      0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(52, 211, 153, 0); }
+      45% { transform: scale(0.987); box-shadow: 0 0 0 6px rgba(52, 211, 153, 0.2); }
+      100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(52, 211, 153, 0); }
+    }
+    .prompt-item-swipe-content {
+      position: relative;
+      z-index: 2;
+      width: 100%;
+      min-height: 58px;
+      display: flex;
+      align-items: stretch;
+      gap: 8px;
+      padding: 8px 10px;
+      background: inherit;
+      transition: transform .18s ease;
+      will-change: transform;
+      user-select: none;
+    }
+    .prompt-item.actions-open .prompt-item-swipe-content {
+      transform: translateX(-124px);
+    }
     .prompt-item-indicator {
-      width: 18px;
+      width: 0;
       height: 18px;
       border-radius: 50%;
-      margin-top: 3px;
+      margin-top: 0;
+      margin-left: 0;
+      margin-right: 0;
       flex-shrink: 0;
       display: inline-flex;
       align-items: center;
@@ -368,8 +411,12 @@
       color: #86efac;
       background: #1f4a3c;
       visibility: hidden;
+      overflow: hidden;
+      transition: width .12s ease;
     }
     .prompt-item.selected .prompt-item-indicator {
+      width: 18px;
+      margin-left: 8px;
       visibility: visible;
     }
     .prompt-item-body {
@@ -415,46 +462,60 @@
       min-height: 100%;
     }
     .prompt-item-actions {
+      position: absolute;
+      top: 0;
+      right: 0;
+      bottom: 0;
+      width: 124px;
       display: flex;
       align-items: center;
-      gap: 4px;
+      justify-content: stretch;
       flex-shrink: 0;
+      z-index: 1;
+      transform: translateX(124px);
+      transition: transform .18s ease;
+      pointer-events: none;
+    }
+    .prompt-item.actions-open .prompt-item-actions {
+      transform: translateX(0);
+      pointer-events: auto;
     }
     .prompt-item .edit-btn {
-      background: none;
+      background: #173044;
       border: none;
-      color: #7dd3fc;
+      color: #bae6fd;
       cursor: pointer;
-      font-size: 1.1rem;
-      width: 34px;
-      height: 34px;
-      border-radius: 8px;
+      font-size: 0.78rem;
+      font-weight: 700;
+      letter-spacing: 0.01em;
+      width: 62px;
+      height: 100%;
+      border-radius: 0;
       display: flex;
       align-items: center;
       justify-content: center;
       padding: 0;
       line-height: 1;
       flex-shrink: 0;
-      margin-left: 6px;
-      margin-right: 4px;
     }
     .prompt-item .edit-btn:hover { color: #bae6fd; background: #173044; }
     .prompt-item .del-btn {
-      background: none;
+      background: #2a1717;
       border: none;
-      color: #555;
+      color: #fda4af;
       cursor: pointer;
-      font-size: 1.1rem;
-      width: 34px;
-      height: 34px;
-      border-radius: 8px;
+      font-size: 0.78rem;
+      font-weight: 700;
+      letter-spacing: 0.01em;
+      width: 62px;
+      height: 100%;
+      border-radius: 0;
       display: flex;
       align-items: center;
       justify-content: center;
       padding: 0;
       line-height: 1;
       flex-shrink: 0;
-      margin-left: 4px;
     }
     .prompt-item .del-btn:hover { color: #f87171; background: #2a1717; }
 
@@ -938,6 +999,62 @@
       padding: 6px 2px;
     }
 
+    .combo-left-guide {
+      font-size: 0.78rem;
+      color: #8f8fa6;
+      line-height: 1.45;
+      padding: 6px 2px;
+    }
+
+    .combo-card-text {
+      min-width: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      justify-content: center;
+    }
+
+    .combo-card-name {
+      font-size: 0.94rem;
+      color: #e8e8f2;
+      font-weight: 700;
+      line-height: 1.35;
+      word-break: break-all;
+    }
+
+    .combo-card-preview {
+      font-size: 0.76rem;
+      color: #9ea1b8;
+      line-height: 1.35;
+      display: -webkit-box;
+      line-clamp: 2;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+      word-break: break-all;
+    }
+
+    .prompt-item.combo-card-item {
+      min-height: 124px;
+    }
+
+    .prompt-item.combo-card-item .prompt-item-swipe-content {
+      min-height: 124px;
+      padding: 16px 14px;
+    }
+
+    .prompt-item.combo-card-item .prompt-item-body {
+      display: block;
+    }
+
+    #combo-filter .cat-chip {
+      padding: 10px 18px;
+      font-size: 0.98rem;
+      font-weight: 700;
+      border-radius: 999px;
+      border-width: 2px;
+    }
+
     /* Scrollbar */
     ::-webkit-scrollbar { width: 6px; }
     ::-webkit-scrollbar-track { background: transparent; }
@@ -1041,13 +1158,74 @@
       padding: 0 14px 14px;
     }
 
+    .category-manage-main-list {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .category-manage-main-item {
+      border: 1px solid #2a2a3a;
+      border-radius: 10px;
+      background: #171724;
+      padding: 10px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .category-manage-main-top {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      justify-content: space-between;
+      flex-wrap: wrap;
+    }
+
+    .category-manage-main-title {
+      color: #ece1ff;
+      font-weight: 700;
+      font-size: 0.86rem;
+    }
+
+    .category-manage-actions {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+
+    .category-manage-sub-list {
+      border-top: 1px solid #232336;
+      padding-top: 10px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .category-manage-sub-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      background: #141420;
+      border: 1px solid #222235;
+      border-radius: 8px;
+      padding: 8px 10px;
+    }
+
+    .category-manage-empty {
+      color: #777;
+      font-size: 0.8rem;
+    }
+
   </style>
 </head>
 <body>
 
 <header>
   <span style="font-size:1.4rem">✨</span>
-  <h1>프롬프트 저장소</h1>
+  <h1><button class="title-manage-btn" id="title-manage-btn" type="button" onclick="openCategoryManageModal()">프롬프트 저장소</button></h1>
 </header>
 
 <div class="main">
@@ -1091,7 +1269,7 @@
   <!-- Center: Library -->
   <div class="panel-library">
     <div class="panel-header">
-      <span>개별 프롬프트</span>
+      <span id="library-title">개별 프롬프트</span>
       <span id="count-badge" style="font-size:0.8rem;color:#c084fc;font-weight:700"></span>
     </div>
     <div class="prompt-list" id="prompt-list"></div>
@@ -1212,12 +1390,28 @@
   </div>
 </div>
 
+<div class="modal" id="category-manage-modal" onclick="handleCategoryManageModalBackdrop(event)">
+  <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="category-manage-title">
+    <div class="modal-header">
+      <h2 id="category-manage-title">카테고리 관리</h2>
+      <button class="btn btn-secondary btn-sm" type="button" onclick="closeCategoryManageModal()">닫기</button>
+    </div>
+    <div class="modal-body">
+      <div class="category-manage-main-list" id="category-manage-main-list"></div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-primary" type="button" onclick="closeCategoryManageModal()">완료</button>
+    </div>
+  </div>
+</div>
+
 <div id="toast">복사되었습니다!</div>
 
 <script>
   const STORAGE_KEY = 'prompt_repo_v1';
   const COMPOSED_STORAGE_KEY = 'prompt_repo_composed_v1';
   const LEFT_PANEL_TAB_KEY = 'prompt_repo_left_panel_tab_v1';
+  const CATEGORY_CONFIG_KEY = 'prompt_repo_category_config_v1';
   const HIDDEN_MAIN_CATEGORIES_KEY = 'prompt_repo_hidden_main_categories_v1';
 
   // ── State ──
@@ -1229,6 +1423,7 @@
   let activeCategoryComposed = null;
   let leftPanelTab = 'prompt';
   let hiddenMainCategories = new Set();
+  let categoryConfig = createDefaultCategoryConfig();
   let openedHiddenMainCategories = new Set();
   let isOutputEditing = false;
   let customOutputText = null;
@@ -1237,8 +1432,75 @@
   let editingPromptId = null;
   let editingPromptImageData = '';
   let activePromptPreviewId = null;
+  let selectingFromPreviewId = null;
+  const PROMPT_SWIPE_ACTION_WIDTH = 124;
 
   const OUTPUT_PLACEHOLDER = '프롬프트를 선택하면 여기에 표시됩니다.';
+
+  function createDefaultCategoryConfig() {
+    return {
+      mainOrder: [],
+      mains: {},
+    };
+  }
+
+  function uniqueInOrder(values) {
+    const seen = new Set();
+    const result = [];
+    values.forEach(value => {
+      if (!value || seen.has(value)) return;
+      seen.add(value);
+      result.push(value);
+    });
+    return result;
+  }
+
+  function ensureMainCategoryConfig(mainCategory) {
+    if (!mainCategory) return null;
+    if (!categoryConfig.mains[mainCategory]) {
+      categoryConfig.mains[mainCategory] = {
+        hiddenByDefault: false,
+        subOrder: [],
+      };
+    }
+    return categoryConfig.mains[mainCategory];
+  }
+
+  function getMainCategoryConfig(mainCategory) {
+    if (!mainCategory) return { hiddenByDefault: false, subOrder: [] };
+    const found = categoryConfig.mains[mainCategory];
+    if (found) return found;
+    return { hiddenByDefault: false, subOrder: [] };
+  }
+
+  function ensureCategoryConfigConsistency() {
+    const promptMainOrder = uniqueInOrder(prompts.map(p => p.mainCategory).filter(Boolean));
+    const configuredMainKeys = Object.keys(categoryConfig.mains || {});
+    categoryConfig.mainOrder = uniqueInOrder([...(categoryConfig.mainOrder || []), ...configuredMainKeys, ...promptMainOrder]);
+
+    categoryConfig.mainOrder.forEach(mainCategory => {
+      const mainConfig = ensureMainCategoryConfig(mainCategory);
+      const promptSubOrder = uniqueInOrder(
+        prompts
+          .filter(p => p.mainCategory === mainCategory)
+          .map(p => p.subCategory)
+          .filter(Boolean)
+      );
+      mainConfig.subOrder = uniqueInOrder([...(mainConfig.subOrder || []), ...promptSubOrder]);
+      if (typeof mainConfig.hiddenByDefault !== 'boolean') {
+        mainConfig.hiddenByDefault = false;
+      }
+    });
+
+    hiddenMainCategories.forEach(mainCategory => {
+      const mainConfig = ensureMainCategoryConfig(mainCategory);
+      mainConfig.hiddenByDefault = true;
+    });
+
+    hiddenMainCategories = new Set(
+      categoryConfig.mainOrder.filter(mainCategory => getMainCategoryConfig(mainCategory).hiddenByDefault)
+    );
+  }
 
   // ── Persistence ──
   function load() {
@@ -1260,12 +1522,37 @@
       hiddenMainCategories = new Set(Array.isArray(loadedHidden) ? loadedHidden.filter(Boolean) : []);
     } catch { hiddenMainCategories = new Set(); }
 
+    try {
+      const rawCategoryConfig = localStorage.getItem(CATEGORY_CONFIG_KEY);
+      const parsed = rawCategoryConfig ? JSON.parse(rawCategoryConfig) : null;
+      if (parsed && typeof parsed === 'object') {
+        const mainOrder = Array.isArray(parsed.mainOrder) ? parsed.mainOrder.filter(Boolean) : [];
+        const mains = parsed.mains && typeof parsed.mains === 'object' ? parsed.mains : {};
+        categoryConfig = createDefaultCategoryConfig();
+        categoryConfig.mainOrder = uniqueInOrder(mainOrder);
+        Object.entries(mains).forEach(([key, value]) => {
+          if (!key || !value || typeof value !== 'object') return;
+          categoryConfig.mains[key] = {
+            hiddenByDefault: !!value.hiddenByDefault,
+            subOrder: uniqueInOrder(Array.isArray(value.subOrder) ? value.subOrder.filter(Boolean) : []),
+          };
+        });
+      } else {
+        categoryConfig = createDefaultCategoryConfig();
+      }
+    } catch {
+      categoryConfig = createDefaultCategoryConfig();
+    }
+
+    ensureCategoryConfigConsistency();
+
   }
 
   function save() {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(prompts));
     localStorage.setItem(COMPOSED_STORAGE_KEY, JSON.stringify(composedPrompts));
     localStorage.setItem(HIDDEN_MAIN_CATEGORIES_KEY, JSON.stringify([...hiddenMainCategories]));
+    localStorage.setItem(CATEGORY_CONFIG_KEY, JSON.stringify(categoryConfig));
   }
 
   function uid() {
@@ -1415,7 +1702,7 @@
     }
     subSelect.value = prompt.subCategory || '';
     contentInput.value = prompt.content || '';
-    hiddenCheckbox.checked = prompt.mainCategory ? hiddenMainCategories.has(prompt.mainCategory) : false;
+    hiddenCheckbox.checked = prompt.mainCategory ? getMainCategoryConfig(prompt.mainCategory).hiddenByDefault : false;
   }
 
   function openEditPromptModal(id, e) {
@@ -1512,12 +1799,368 @@
   }
 
   function getMainCategories() {
-    return [...new Set(prompts.map(p => p.mainCategory).filter(Boolean))].sort();
+    ensureCategoryConfigConsistency();
+    return [...categoryConfig.mainOrder];
   }
 
   function getSubCategories(mainCategory) {
-    const filtered = mainCategory ? prompts.filter(p => p.mainCategory === mainCategory) : prompts;
-    return [...new Set(filtered.map(p => p.subCategory).filter(Boolean))].sort();
+    if (!mainCategory) return [];
+    ensureCategoryConfigConsistency();
+    const mainConfig = getMainCategoryConfig(mainCategory);
+    return uniqueInOrder(mainConfig.subOrder || []);
+  }
+
+  function setMainCategoryHidden(mainCategory, hiddenByDefault) {
+    if (!mainCategory) return;
+    const mainConfig = ensureMainCategoryConfig(mainCategory);
+    mainConfig.hiddenByDefault = !!hiddenByDefault;
+    hiddenMainCategories = new Set(
+      getMainCategories().filter(category => getMainCategoryConfig(category).hiddenByDefault)
+    );
+  }
+
+  function moveArrayItem(items, fromIndex, toIndex) {
+    if (!Array.isArray(items)) return;
+    if (fromIndex < 0 || toIndex < 0 || fromIndex >= items.length || toIndex >= items.length || fromIndex === toIndex) return;
+    const [moved] = items.splice(fromIndex, 1);
+    items.splice(toIndex, 0, moved);
+  }
+
+  function moveMainCategory(mainCategory, direction) {
+    const order = categoryConfig.mainOrder;
+    const index = order.indexOf(mainCategory);
+    if (index < 0) return;
+    const nextIndex = direction === 'up' ? index - 1 : index + 1;
+    moveArrayItem(order, index, nextIndex);
+    save();
+    render();
+    renderCategoryManageList();
+  }
+
+  function moveSubCategory(mainCategory, subCategory, direction) {
+    const mainConfig = ensureMainCategoryConfig(mainCategory);
+    const order = mainConfig.subOrder || [];
+    const index = order.indexOf(subCategory);
+    if (index < 0) return;
+    const nextIndex = direction === 'up' ? index - 1 : index + 1;
+    moveArrayItem(order, index, nextIndex);
+    mainConfig.subOrder = order;
+    save();
+    render();
+    renderCategoryManageList();
+  }
+
+  function renameMainCategory(mainCategory) {
+    if (!mainCategory) return;
+    const nextValue = prompt('새 대분류 이름을 입력하세요', mainCategory);
+    if (!nextValue) return;
+    const nextMainCategory = nextValue.trim();
+    if (!nextMainCategory) {
+      showToast('대분류 이름이 비어 있습니다');
+      return;
+    }
+    if (nextMainCategory === mainCategory) return;
+    if (getMainCategories().includes(nextMainCategory)) {
+      showToast('이미 존재하는 대분류 이름입니다');
+      return;
+    }
+
+    prompts = prompts.map(promptItem => {
+      if (promptItem.mainCategory !== mainCategory) return promptItem;
+      return { ...promptItem, mainCategory: nextMainCategory };
+    });
+
+    selected = selected.map(item => {
+      if (item.mainCategory !== mainCategory) return item;
+      return { ...item, mainCategory: nextMainCategory };
+    });
+
+    const prevConfig = getMainCategoryConfig(mainCategory);
+    delete categoryConfig.mains[mainCategory];
+    categoryConfig.mains[nextMainCategory] = {
+      hiddenByDefault: !!prevConfig.hiddenByDefault,
+      subOrder: uniqueInOrder(Array.isArray(prevConfig.subOrder) ? prevConfig.subOrder : []),
+    };
+    categoryConfig.mainOrder = categoryConfig.mainOrder.map(category => category === mainCategory ? nextMainCategory : category);
+
+    if (activeCategoryPrompt === mainCategory) activeCategoryPrompt = nextMainCategory;
+    if (hiddenMainCategories.has(mainCategory)) {
+      hiddenMainCategories.delete(mainCategory);
+      hiddenMainCategories.add(nextMainCategory);
+    }
+    if (openedHiddenMainCategories.has(mainCategory)) {
+      openedHiddenMainCategories.delete(mainCategory);
+      openedHiddenMainCategories.add(nextMainCategory);
+    }
+
+    ensureCategoryConfigConsistency();
+    save();
+    render();
+    renderCategoryManageList();
+    showToast('대분류 이름이 변경되었습니다');
+  }
+
+  function deleteMainCategory(mainCategory) {
+    if (!mainCategory) return;
+    const count = prompts.filter(promptItem => promptItem.mainCategory === mainCategory).length;
+    if (!confirm(`대분류 "${mainCategory}"를 삭제하면 해당 프롬프트 ${count}개가 함께 삭제됩니다. 계속하시겠습니까?`)) {
+      return;
+    }
+
+    const deletedPromptIds = new Set(
+      prompts.filter(promptItem => promptItem.mainCategory === mainCategory).map(promptItem => promptItem.id)
+    );
+    prompts = prompts.filter(promptItem => promptItem.mainCategory !== mainCategory);
+    selected = selected.filter(item => !deletedPromptIds.has(item.id));
+
+    categoryConfig.mainOrder = categoryConfig.mainOrder.filter(category => category !== mainCategory);
+    delete categoryConfig.mains[mainCategory];
+    hiddenMainCategories.delete(mainCategory);
+    openedHiddenMainCategories.delete(mainCategory);
+
+    if (activeCategoryPrompt === mainCategory) {
+      activeCategoryPrompt = null;
+      activeSubCategoryPrompt = null;
+    }
+    if (activePromptPreviewId && deletedPromptIds.has(activePromptPreviewId)) {
+      activePromptPreviewId = null;
+    }
+
+    ensureCategoryConfigConsistency();
+    save();
+    render();
+    renderCategoryManageList();
+    showToast('대분류가 삭제되었습니다');
+  }
+
+  function renameSubCategory(mainCategory, subCategory) {
+    if (!mainCategory || !subCategory) return;
+    const nextValue = prompt('새 중분류 이름을 입력하세요', subCategory);
+    if (!nextValue) return;
+    const nextSubCategory = nextValue.trim();
+    if (!nextSubCategory) {
+      showToast('중분류 이름이 비어 있습니다');
+      return;
+    }
+    if (nextSubCategory === subCategory) return;
+
+    const sameMainSubs = getSubCategories(mainCategory);
+    if (sameMainSubs.includes(nextSubCategory)) {
+      showToast('이미 존재하는 중분류 이름입니다');
+      return;
+    }
+
+    prompts = prompts.map(promptItem => {
+      if (promptItem.mainCategory !== mainCategory || promptItem.subCategory !== subCategory) return promptItem;
+      return { ...promptItem, subCategory: nextSubCategory };
+    });
+
+    selected = selected.map(item => {
+      if (item.mainCategory !== mainCategory || item.subCategory !== subCategory) return item;
+      return { ...item, subCategory: nextSubCategory };
+    });
+
+    const mainConfig = ensureMainCategoryConfig(mainCategory);
+    mainConfig.subOrder = (mainConfig.subOrder || []).map(value => value === subCategory ? nextSubCategory : value);
+
+    if (activeCategoryPrompt === mainCategory && activeSubCategoryPrompt === subCategory) {
+      activeSubCategoryPrompt = nextSubCategory;
+    }
+
+    ensureCategoryConfigConsistency();
+    save();
+    render();
+    renderCategoryManageList();
+    showToast('중분류 이름이 변경되었습니다');
+  }
+
+  function deleteSubCategory(mainCategory, subCategory) {
+    if (!mainCategory || !subCategory) return;
+    const count = prompts.filter(promptItem => promptItem.mainCategory === mainCategory && promptItem.subCategory === subCategory).length;
+    if (!confirm(`중분류 "${subCategory}"를 삭제하면 해당 프롬프트 ${count}개가 함께 삭제됩니다. 계속하시겠습니까?`)) {
+      return;
+    }
+
+    const deletedPromptIds = new Set(
+      prompts
+        .filter(promptItem => promptItem.mainCategory === mainCategory && promptItem.subCategory === subCategory)
+        .map(promptItem => promptItem.id)
+    );
+    prompts = prompts.filter(promptItem => !(promptItem.mainCategory === mainCategory && promptItem.subCategory === subCategory));
+    selected = selected.filter(item => !deletedPromptIds.has(item.id));
+
+    const mainConfig = ensureMainCategoryConfig(mainCategory);
+    mainConfig.subOrder = (mainConfig.subOrder || []).filter(value => value !== subCategory);
+
+    if (activeCategoryPrompt === mainCategory && activeSubCategoryPrompt === subCategory) {
+      activeSubCategoryPrompt = null;
+    }
+    if (activePromptPreviewId && deletedPromptIds.has(activePromptPreviewId)) {
+      activePromptPreviewId = null;
+    }
+
+    ensureCategoryConfigConsistency();
+    save();
+    render();
+    renderCategoryManageList();
+    showToast('중분류가 삭제되었습니다');
+  }
+
+  function toggleMainCategoryHidden(mainCategory, checked) {
+    setMainCategoryHidden(mainCategory, checked);
+    save();
+    render();
+    renderCategoryManageList();
+  }
+
+  function openCategoryManageModal() {
+    const modal = document.getElementById('category-manage-modal');
+    if (!modal) return;
+    renderCategoryManageList();
+    modal.classList.add('open');
+  }
+
+  function closeCategoryManageModal() {
+    const modal = document.getElementById('category-manage-modal');
+    if (!modal) return;
+    modal.classList.remove('open');
+  }
+
+  function handleCategoryManageModalBackdrop(e) {
+    if (e.target.id === 'category-manage-modal') {
+      closeCategoryManageModal();
+    }
+  }
+
+  function renderCategoryManageList() {
+    const list = document.getElementById('category-manage-main-list');
+    if (!list) return;
+
+    const mainCategories = getMainCategories();
+    list.innerHTML = '';
+
+    if (mainCategories.length === 0) {
+      list.innerHTML = '<div class="category-manage-empty">관리할 대분류가 없습니다.</div>';
+      return;
+    }
+
+    mainCategories.forEach((mainCategory, mainIndex) => {
+      const mainConfig = getMainCategoryConfig(mainCategory);
+      const mainItem = document.createElement('div');
+      mainItem.className = 'category-manage-main-item';
+
+      const top = document.createElement('div');
+      top.className = 'category-manage-main-top';
+
+      const title = document.createElement('span');
+      title.className = 'category-manage-main-title';
+      title.textContent = mainCategory;
+
+      const actions = document.createElement('div');
+      actions.className = 'category-manage-actions';
+
+      const hiddenLabel = document.createElement('label');
+      hiddenLabel.className = 'hidden-option-row';
+      hiddenLabel.style.marginTop = '0';
+      hiddenLabel.innerHTML = '<input type="checkbox" /><span>기본 숨김</span>';
+      const hiddenInput = hiddenLabel.querySelector('input');
+      hiddenInput.checked = !!mainConfig.hiddenByDefault;
+      hiddenInput.onchange = () => toggleMainCategoryHidden(mainCategory, hiddenInput.checked);
+
+      const upBtn = document.createElement('button');
+      upBtn.type = 'button';
+      upBtn.className = 'btn btn-secondary btn-sm';
+      upBtn.textContent = '↑ 위로';
+      upBtn.disabled = mainIndex === 0;
+      upBtn.onclick = () => moveMainCategory(mainCategory, 'up');
+
+      const downBtn = document.createElement('button');
+      downBtn.type = 'button';
+      downBtn.className = 'btn btn-secondary btn-sm';
+      downBtn.textContent = '↓ 아래로';
+      downBtn.disabled = mainIndex === mainCategories.length - 1;
+      downBtn.onclick = () => moveMainCategory(mainCategory, 'down');
+
+      const renameBtn = document.createElement('button');
+      renameBtn.type = 'button';
+      renameBtn.className = 'btn btn-secondary btn-sm';
+      renameBtn.textContent = '이름변경';
+      renameBtn.onclick = () => renameMainCategory(mainCategory);
+
+      const deleteBtn = document.createElement('button');
+      deleteBtn.type = 'button';
+      deleteBtn.className = 'btn btn-danger btn-sm';
+      deleteBtn.textContent = '삭제';
+      deleteBtn.onclick = () => deleteMainCategory(mainCategory);
+
+      actions.appendChild(hiddenLabel);
+      actions.appendChild(upBtn);
+      actions.appendChild(downBtn);
+      actions.appendChild(renameBtn);
+      actions.appendChild(deleteBtn);
+      top.appendChild(title);
+      top.appendChild(actions);
+
+      const subList = document.createElement('div');
+      subList.className = 'category-manage-sub-list';
+      const subCategories = getSubCategories(mainCategory);
+
+      if (subCategories.length === 0) {
+        const empty = document.createElement('div');
+        empty.className = 'category-manage-empty';
+        empty.textContent = '중분류가 없습니다.';
+        subList.appendChild(empty);
+      } else {
+        subCategories.forEach((subCategory, subIndex) => {
+          const subItem = document.createElement('div');
+          subItem.className = 'category-manage-sub-item';
+
+          const subTitle = document.createElement('span');
+          subTitle.textContent = subCategory;
+
+          const subActions = document.createElement('div');
+          subActions.className = 'category-manage-actions';
+
+          const subUpBtn = document.createElement('button');
+          subUpBtn.type = 'button';
+          subUpBtn.className = 'btn btn-secondary btn-sm';
+          subUpBtn.textContent = '↑';
+          subUpBtn.disabled = subIndex === 0;
+          subUpBtn.onclick = () => moveSubCategory(mainCategory, subCategory, 'up');
+
+          const subDownBtn = document.createElement('button');
+          subDownBtn.type = 'button';
+          subDownBtn.className = 'btn btn-secondary btn-sm';
+          subDownBtn.textContent = '↓';
+          subDownBtn.disabled = subIndex === subCategories.length - 1;
+          subDownBtn.onclick = () => moveSubCategory(mainCategory, subCategory, 'down');
+
+          const subRenameBtn = document.createElement('button');
+          subRenameBtn.type = 'button';
+          subRenameBtn.className = 'btn btn-secondary btn-sm';
+          subRenameBtn.textContent = '이름변경';
+          subRenameBtn.onclick = () => renameSubCategory(mainCategory, subCategory);
+
+          const subDeleteBtn = document.createElement('button');
+          subDeleteBtn.type = 'button';
+          subDeleteBtn.className = 'btn btn-danger btn-sm';
+          subDeleteBtn.textContent = '삭제';
+          subDeleteBtn.onclick = () => deleteSubCategory(mainCategory, subCategory);
+
+          subActions.appendChild(subUpBtn);
+          subActions.appendChild(subDownBtn);
+          subActions.appendChild(subRenameBtn);
+          subActions.appendChild(subDeleteBtn);
+          subItem.appendChild(subTitle);
+          subItem.appendChild(subActions);
+          subList.appendChild(subItem);
+        });
+      }
+
+      mainItem.appendChild(top);
+      mainItem.appendChild(subList);
+      list.appendChild(mainItem);
+    });
   }
 
   function getComposedCategories() {
@@ -1536,13 +2179,31 @@
     renderAddFilterTabs();
     renderComposedFilter();
     renderComposedLoadList();
+    renderLibraryHeader();
     renderCategorySelectors();
     renderComposedCategorySelectors();
     syncAddFormSelection();
     renderPromptList();
     renderSelected();
     renderPromptDescriptionPreview();
-    document.getElementById('count-badge').textContent = prompts.length ? `(${prompts.length})` : '';
+    if (document.getElementById('category-manage-modal')?.classList.contains('open')) {
+      renderCategoryManageList();
+    }
+    const countBadge = document.getElementById('count-badge');
+    if (leftPanelTab === 'combo') {
+      const count = activeCategoryComposed
+        ? composedPrompts.filter(item => item.mainCategory === activeCategoryComposed).length
+        : 0;
+      countBadge.textContent = count ? `(${count})` : '';
+    } else {
+      countBadge.textContent = prompts.length ? `(${prompts.length})` : '';
+    }
+  }
+
+  function renderLibraryHeader() {
+    const title = document.getElementById('library-title');
+    if (!title) return;
+    title.textContent = leftPanelTab === 'combo' ? '커스텀 조합 카드' : '개별 프롬프트';
   }
 
   function ensureActiveCategoryState() {
@@ -1647,7 +2308,7 @@
     }
 
     const currentMainCategory = mainSelect.value && mainSelect.value !== '__new__' ? mainSelect.value : '';
-    hiddenCheckbox.checked = currentMainCategory ? hiddenMainCategories.has(currentMainCategory) : false;
+    hiddenCheckbox.checked = currentMainCategory ? getMainCategoryConfig(currentMainCategory).hiddenByDefault : false;
   }
 
   function renderMainCategoryFilter() {
@@ -1664,7 +2325,7 @@
 
     mainCategories.forEach(mainCategory => {
       const subCategories = getSubCategories(mainCategory);
-      const hideByDefault = hiddenMainCategories.has(mainCategory);
+      const hideByDefault = getMainCategoryConfig(mainCategory).hiddenByDefault;
       const isHiddenOpen = openedHiddenMainCategories.has(mainCategory);
       const group = document.createElement('div');
       group.className = 'main-category-filter-group';
@@ -1756,51 +2417,31 @@
 
   function renderComposedLoadList() {
     const list = document.getElementById('combo-load-list');
+    if (!list) return;
+
     const filteredComposed = activeCategoryComposed
       ? composedPrompts.filter(p => p.mainCategory === activeCategoryComposed)
       : [];
 
     list.innerHTML = '';
 
-    if (filteredComposed.length === 0) {
-      const empty = document.createElement('div');
-      empty.className = 'combo-load-empty';
-      empty.textContent = '불러올 커스텀 조합이 없습니다.';
-      list.appendChild(empty);
+    if (leftPanelTab !== 'combo') {
       return;
     }
 
-    filteredComposed.forEach(p => {
-      const composedText = getComposedItemText(p);
-      const item = document.createElement('div');
-      item.className = 'combo-load-item';
-      item.innerHTML = `
-        <div class="meta">
-          <span class="cat">${esc(p.subCategory)}</span>
-          <span class="text" title="${esc(composedText)}">${esc(composedText)}</span>
-        </div>
-      `;
+    if (!activeCategoryComposed) {
+      list.innerHTML = '';
+      return;
+    }
 
-      const actions = document.createElement('div');
-      actions.className = 'combo-load-actions';
-
-      const loadBtn = document.createElement('button');
-      loadBtn.className = 'btn btn-secondary btn-sm';
-      loadBtn.type = 'button';
-      loadBtn.textContent = '불러오기';
-      loadBtn.onclick = () => loadComposedPrompt(p.id);
-
-      const deleteBtn = document.createElement('button');
-      deleteBtn.className = 'btn btn-danger btn-sm';
-      deleteBtn.type = 'button';
-      deleteBtn.textContent = '삭제';
-      deleteBtn.onclick = () => deleteComposedPrompt(p.id);
-
-      actions.appendChild(loadBtn);
-      actions.appendChild(deleteBtn);
-      item.appendChild(actions);
-      list.appendChild(item);
-    });
+    if (filteredComposed.length === 0) {
+      const empty = document.createElement('div');
+      empty.className = 'combo-load-empty';
+      empty.textContent = '선택한 대분류에 커스텀 조합이 없습니다.';
+      list.appendChild(empty);
+      return;
+    }
+    list.innerHTML = '';
   }
 
   function loadComposedPrompt(id) {
@@ -1828,8 +2469,144 @@
     showToast('커스텀 조합이 삭제되었습니다');
   }
 
+  function closeAllPromptSwipeActions(exceptPromptId = null) {
+    const items = document.querySelectorAll('.prompt-item.actions-open');
+    items.forEach(item => {
+      if (exceptPromptId && item.dataset.promptId === exceptPromptId) return;
+      item.classList.remove('actions-open');
+      const swipeContent = item.querySelector('.prompt-item-swipe-content');
+      if (swipeContent) swipeContent.style.transform = '';
+    });
+  }
+
+  function bindPromptItemSwipe(item, promptData) {
+    const swipeContent = item.querySelector('.prompt-item-swipe-content');
+    if (!swipeContent) return;
+
+    const closedX = 0;
+    const openedX = -PROMPT_SWIPE_ACTION_WIDTH;
+    let pointerId = null;
+    let tracking = false;
+    let swiping = false;
+    let startX = 0;
+    let startY = 0;
+    let baseX = 0;
+    let currentX = 0;
+
+    const setSwipeX = (x) => {
+      currentX = Math.min(closedX, Math.max(openedX, x));
+      swipeContent.style.transform = `translateX(${currentX}px)`;
+    };
+
+    const openActions = () => {
+      closeAllPromptSwipeActions(promptData.id);
+      item.classList.add('actions-open');
+      swipeContent.style.transition = '';
+      setSwipeX(openedX);
+    };
+
+    const closeActions = () => {
+      item.classList.remove('actions-open');
+      swipeContent.style.transition = '';
+      setSwipeX(closedX);
+    };
+
+    item.addEventListener('pointerdown', (e) => {
+      if (e.pointerType === 'mouse' && e.button !== 0) return;
+      if (e.target.closest('.prompt-item-actions')) return;
+
+      pointerId = e.pointerId;
+      tracking = true;
+      swiping = false;
+      startX = e.clientX;
+      startY = e.clientY;
+      baseX = item.classList.contains('actions-open') ? openedX : closedX;
+      currentX = baseX;
+      swipeContent.style.transition = 'none';
+      try { item.setPointerCapture(pointerId); } catch {}
+    });
+
+    item.addEventListener('pointermove', (e) => {
+      if (!tracking || e.pointerId !== pointerId) return;
+
+      const dx = e.clientX - startX;
+      const dy = e.clientY - startY;
+
+      if (!swiping) {
+        if (Math.abs(dx) < 8) return;
+        if (Math.abs(dx) <= Math.abs(dy)) {
+          tracking = false;
+          swipeContent.style.transition = '';
+          return;
+        }
+        swiping = true;
+      }
+
+      e.preventDefault();
+      setSwipeX(baseX + dx);
+    });
+
+    const onPointerEnd = (e) => {
+      if (!tracking || e.pointerId !== pointerId) return;
+      tracking = false;
+      swipeContent.style.transition = '';
+
+      if (swiping) {
+        if (currentX <= openedX / 2) openActions();
+        else closeActions();
+        return;
+      }
+
+      if (item.classList.contains('actions-open')) {
+        closeActions();
+        return;
+      }
+
+      closeAllPromptSwipeActions();
+      handlePromptTap(promptData);
+    };
+
+    item.addEventListener('pointerup', onPointerEnd);
+    item.addEventListener('pointercancel', onPointerEnd);
+  }
+
   function renderPromptList() {
     const list = document.getElementById('prompt-list');
+
+    if (leftPanelTab === 'combo') {
+      if (!activeCategoryComposed) {
+        list.innerHTML = '<div class="empty-state">좌측에서 대분류를 선택하면 커스텀 조합 카드가 표시됩니다.</div>';
+        return;
+      }
+
+      const filteredComposed = composedPrompts.filter(item => item.mainCategory === activeCategoryComposed);
+      if (filteredComposed.length === 0) {
+        list.innerHTML = '<div class="empty-state">선택한 대분류에 표시할 커스텀 조합 카드가 없습니다.</div>';
+        return;
+      }
+
+      list.innerHTML = '';
+      filteredComposed.forEach(item => {
+        const composedText = getComposedItemText(item);
+        const card = document.createElement('div');
+        card.className = 'prompt-item combo-card-item';
+        card.title = '클릭하면 현재 조합으로 불러옵니다';
+        card.innerHTML = `
+          <div class="prompt-item-swipe-content">
+            <div class="prompt-item-body">
+              <div class="combo-card-text">
+                <span class="combo-card-name">${esc(item.subCategory || '이름없음')}</span>
+                <span class="combo-card-preview" title="${esc(composedText)}">${esc(composedText)}</span>
+              </div>
+            </div>
+          </div>
+        `;
+        card.addEventListener('click', () => loadComposedPrompt(item.id));
+        list.appendChild(card);
+      });
+      return;
+    }
+
     if (!activeCategoryPrompt || !activeSubCategoryPrompt) {
       list.innerHTML = '<div class="empty-state">중분류 칩을 선택하면 개별 프롬프트가 표시됩니다.</div>';
       return;
@@ -1852,25 +2629,38 @@
       const isSelected = selected.some(s => s.id === p.id && s.source === 'prompt');
       const isPreview = activePromptPreviewId === p.id;
       const item = document.createElement('div');
-      item.className = 'prompt-item' + (isSelected ? ' selected' : '') + (isPreview ? ' preview' : '');
+      item.dataset.promptId = p.id;
+      item.className = 'prompt-item'
+        + (isSelected ? ' selected' : '')
+        + (isPreview ? ' preview' : '')
+        + (selectingFromPreviewId === p.id ? ' select-feedback' : '');
       item.innerHTML = `
-        <span class="prompt-item-indicator">✓</span>
-        <div class="prompt-item-body">
-          <div class="prompt-item-meta">
-            <span class="cat-badge">${esc(p.mainCategory)}</span>
-            <span class="cat-badge sub">${esc(p.subCategory)}</span>
+        <div class="prompt-item-swipe-content">
+          <div class="prompt-item-body">
+            <div class="prompt-item-meta">
+              <span class="cat-badge">${esc(p.mainCategory)}</span>
+              <span class="cat-badge sub">${esc(p.subCategory)}</span>
+            </div>
+            <span class="content">${esc(p.content)}</span>
           </div>
-          <span class="content">${esc(p.content)}</span>
+          <span class="prompt-item-indicator">✓</span>
         </div>
         <div class="prompt-item-actions">
-          <button class="edit-btn" title="편집" onclick="openEditPromptModal('${p.id}', event)">✎</button>
-          <button class="del-btn" title="삭제" onclick="deletePrompt('${p.id}','prompt',event)">×</button>
+          <button class="edit-btn" title="편집" type="button">편집</button>
+          <button class="del-btn" title="삭제" type="button">삭제</button>
         </div>
       `;
-      item.onclick = (e) => {
-        if (e.target.classList.contains('del-btn')) return;
-        handlePromptTap(p);
-      };
+
+      const editBtn = item.querySelector('.edit-btn');
+      const delBtn = item.querySelector('.del-btn');
+      if (editBtn) {
+        editBtn.addEventListener('click', (e) => openEditPromptModal(p.id, e));
+      }
+      if (delBtn) {
+        delBtn.addEventListener('click', (e) => deletePrompt(p.id, 'prompt', e));
+      }
+
+      bindPromptItemSwipe(item, p);
       list.appendChild(item);
     });
   }
@@ -2071,6 +2861,8 @@
       const nextValue = prompt('새 대분류 이름을 입력하세요');
       if (nextValue && nextValue.trim()) {
         const value = nextValue.trim();
+        ensureMainCategoryConfig(value);
+        categoryConfig.mainOrder = uniqueInOrder([...(categoryConfig.mainOrder || []), value]);
         appendSelectOption(select, value, value);
         select.value = value;
       } else {
@@ -2079,16 +2871,21 @@
     }
     renderSubCategorySelect();
     const mainCategory = select.value && select.value !== '__new__' ? select.value : '';
-    hiddenCheckbox.checked = mainCategory ? hiddenMainCategories.has(mainCategory) : false;
+    hiddenCheckbox.checked = mainCategory ? getMainCategoryConfig(mainCategory).hiddenByDefault : false;
     renderPendingPromptImagePreview();
   }
 
   function handleSubCategoryChange() {
     const select = document.getElementById('input-sub-category');
+    const mainCategory = document.getElementById('input-main-category').value.trim();
     if (select.value === '__new__') {
       const nextValue = prompt('새 중분류 이름을 입력하세요');
       if (nextValue && nextValue.trim()) {
         const value = nextValue.trim();
+        if (mainCategory) {
+          const mainConfig = ensureMainCategoryConfig(mainCategory);
+          mainConfig.subOrder = uniqueInOrder([...(mainConfig.subOrder || []), value]);
+        }
         appendSelectOption(select, value, value);
         select.value = value;
       } else {
@@ -2135,6 +2932,7 @@
     document.getElementById('mode-btn-prompt').classList.toggle('active', isPromptTab);
     document.getElementById('mode-btn-combo').classList.toggle('active', !isPromptTab);
     localStorage.setItem(LEFT_PANEL_TAB_KEY, leftPanelTab);
+    render();
   }
 
   function openAddPromptModal() {
@@ -2204,8 +3002,11 @@
     if (!subCategory) { showToast('중분류를 입력하세요'); return; }
     if (!content) { showToast('프롬프트 내용을 입력하세요'); return; }
 
-    if (hiddenMain) hiddenMainCategories.add(mainCategory);
-    else hiddenMainCategories.delete(mainCategory);
+    ensureMainCategoryConfig(mainCategory);
+    categoryConfig.mainOrder = uniqueInOrder([...(categoryConfig.mainOrder || []), mainCategory]);
+    const mainConfig = ensureMainCategoryConfig(mainCategory);
+    mainConfig.subOrder = uniqueInOrder([...(mainConfig.subOrder || []), subCategory]);
+    setMainCategoryHidden(mainCategory, hiddenMain);
 
     const nextImageData = pendingPromptImage?.dataUrl || editingPromptImageData || '';
     const nextPrompt = {
@@ -2222,6 +3023,7 @@
     } else {
       prompts.push(nextPrompt);
     }
+    ensureCategoryConfigConsistency();
     save();
     document.getElementById('input-content').value = '';
     document.getElementById('input-main-hidden').checked = false;
@@ -2241,6 +3043,7 @@
       composedPrompts = composedPrompts.filter(p => p.id !== id);
     } else {
       prompts = prompts.filter(p => p.id !== id);
+      ensureCategoryConfigConsistency();
     }
     selected = selected.filter(s => !(s.id === id && s.source === source));
     save();
@@ -2263,8 +3066,14 @@
     }
 
     clearOutputOverride();
+    selectingFromPreviewId = p.id;
     selected.push({ ...p, source: 'prompt' });
     render();
+    setTimeout(() => {
+      if (selectingFromPreviewId !== p.id) return;
+      selectingFromPreviewId = null;
+      renderPromptList();
+    }, 300);
   }
 
   function removeSelected(i) {
@@ -2351,6 +3160,16 @@
   function exportJSONBackup() {
     if (prompts.length === 0 && composedPrompts.length === 0) { showToast('내보낼 프롬프트가 없습니다'); return; }
 
+    const defaultFileName = 'prompt_backup_' + new Date().toISOString().slice(0, 10) + '.json';
+    const inputName = prompt('내보낼 JSON 파일 이름을 입력하세요', defaultFileName);
+    if (inputName === null) {
+      showToast('JSON 내보내기가 취소되었습니다');
+      return;
+    }
+
+    let fileName = inputName.trim() || defaultFileName;
+    if (!/\.json$/i.test(fileName)) fileName += '.json';
+
     const backup = {
       version: 1,
       exportedAt: new Date().toISOString(),
@@ -2363,6 +3182,7 @@
         items: Array.isArray(item.items) ? item.items.map(cleanPrompt) : [],
         content: item.content,
       })),
+      categoryConfig,
       hiddenMainCategories: [...hiddenMainCategories],
       leftPanelTab,
     };
@@ -2371,7 +3191,7 @@
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = 'prompt_backup_' + new Date().toISOString().slice(0, 10) + '.json';
+    a.download = fileName;
     a.click();
     URL.revokeObjectURL(url);
     showToast('JSON 내보내기 완료');
@@ -2387,6 +3207,7 @@
         const nextPrompts = Array.isArray(parsed.prompts) ? parsed.prompts.map(normalizePrompt).filter(Boolean) : [];
         const nextComposed = Array.isArray(parsed.composedPrompts) ? parsed.composedPrompts.map(normalizeComposedPrompt).filter(Boolean) : [];
         const nextHidden = Array.isArray(parsed.hiddenMainCategories) ? parsed.hiddenMainCategories.filter(Boolean) : [];
+        const nextCategoryConfig = parsed.categoryConfig && typeof parsed.categoryConfig === 'object' ? parsed.categoryConfig : null;
 
         if (nextPrompts.length === 0 && nextComposed.length === 0) {
           showToast('가져올 데이터가 없습니다');
@@ -2400,6 +3221,21 @@
         prompts = nextPrompts;
         composedPrompts = nextComposed;
         hiddenMainCategories = new Set(nextHidden);
+        if (nextCategoryConfig) {
+          categoryConfig = createDefaultCategoryConfig();
+          categoryConfig.mainOrder = uniqueInOrder(Array.isArray(nextCategoryConfig.mainOrder) ? nextCategoryConfig.mainOrder.filter(Boolean) : []);
+          const mains = nextCategoryConfig.mains && typeof nextCategoryConfig.mains === 'object' ? nextCategoryConfig.mains : {};
+          Object.entries(mains).forEach(([key, value]) => {
+            if (!key || !value || typeof value !== 'object') return;
+            categoryConfig.mains[key] = {
+              hiddenByDefault: !!value.hiddenByDefault,
+              subOrder: uniqueInOrder(Array.isArray(value.subOrder) ? value.subOrder.filter(Boolean) : []),
+            };
+          });
+        } else {
+          categoryConfig = createDefaultCategoryConfig();
+        }
+        ensureCategoryConfigConsistency();
         activePromptPreviewId = prompts[0]?.id || null;
         save();
         render();
@@ -2480,6 +3316,7 @@
     if (e.key === 'Escape') {
       closeAddPromptModal();
       closeSaveComposedModal();
+      closeCategoryManageModal();
     }
   });
 
