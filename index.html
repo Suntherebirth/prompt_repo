@@ -613,6 +613,33 @@
     .prompt-item.select-feedback {
       animation: promptSelectFeedback .28s ease-out;
     }
+    .prompt-item.random-card {
+      border-color: #f59e0b55;
+      background: linear-gradient(135deg, rgba(245, 158, 11, 0.18), rgba(192, 132, 252, 0.15));
+      box-shadow: inset 0 0 0 1px rgba(245, 158, 11, 0.16);
+    }
+    .prompt-item.random-card .prompt-item-body {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      min-width: 0;
+    }
+    .prompt-item.random-card .random-content {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      color: #fef3c7;
+      font-size: 0.95rem;
+      font-weight: 600;
+      line-height: 1.4;
+      width: 100%;
+    }
+    .prompt-item.random-card .random-content .random-icon {
+      font-size: 1rem;
+      line-height: 1;
+    }
     @keyframes promptSelectFeedback {
       0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(52, 211, 153, 0); }
       45% { transform: scale(0.987); box-shadow: 0 0 0 6px rgba(52, 211, 153, 0.2); }
@@ -2282,16 +2309,47 @@
       categoryConfig.mains[mainCategory] = {
         hiddenByDefault: false,
         subOrder: [],
+        subSettings: {},
       };
+    }
+    if (!categoryConfig.mains[mainCategory].subSettings || typeof categoryConfig.mains[mainCategory].subSettings !== 'object') {
+      categoryConfig.mains[mainCategory].subSettings = {};
     }
     return categoryConfig.mains[mainCategory];
   }
 
   function getMainCategoryConfig(mainCategory) {
-    if (!mainCategory) return { hiddenByDefault: false, subOrder: [] };
+    if (!mainCategory) return { hiddenByDefault: false, subOrder: [], subSettings: {} };
     const found = categoryConfig.mains[mainCategory];
-    if (found) return found;
-    return { hiddenByDefault: false, subOrder: [] };
+    if (found) {
+      if (!found.subSettings || typeof found.subSettings !== 'object') {
+        found.subSettings = {};
+      }
+      return found;
+    }
+    return { hiddenByDefault: false, subOrder: [], subSettings: {} };
+  }
+
+  function getSubCategoryConfig(mainCategory, subCategory) {
+    const mainConfig = getMainCategoryConfig(mainCategory);
+    if (!subCategory) return { randomSelection: false };
+    const found = mainConfig.subSettings?.[subCategory];
+    if (found && typeof found === 'object') return found;
+    return { randomSelection: false };
+  }
+
+  function isSubCategoryRandomSelectionEnabled(mainCategory, subCategory) {
+    return !!getSubCategoryConfig(mainCategory, subCategory).randomSelection;
+  }
+
+  function setSubCategoryRandomSelection(mainCategory, subCategory, enabled) {
+    if (!mainCategory || !subCategory) return;
+    const mainConfig = ensureMainCategoryConfig(mainCategory);
+    mainConfig.subSettings = mainConfig.subSettings || {};
+    mainConfig.subSettings[subCategory] = {
+      ...(mainConfig.subSettings[subCategory] || {}),
+      randomSelection: !!enabled,
+    };
   }
 
   function ensureCategoryConfigConsistency() {
@@ -2308,6 +2366,9 @@
           .filter(Boolean)
       );
       mainConfig.subOrder = uniqueInOrder([...(mainConfig.subOrder || []), ...promptSubOrder]);
+      if (!mainConfig.subSettings || typeof mainConfig.subSettings !== 'object') {
+        mainConfig.subSettings = {};
+      }
       if (typeof mainConfig.hiddenByDefault !== 'boolean') {
         mainConfig.hiddenByDefault = false;
       }
@@ -2387,6 +2448,9 @@
           categoryConfig.mains[key] = {
             hiddenByDefault: !!value.hiddenByDefault,
             subOrder: uniqueInOrder(Array.isArray(value.subOrder) ? value.subOrder.filter(Boolean) : []),
+            subSettings: Object.fromEntries(
+              Object.entries((value.subSettings && typeof value.subSettings === 'object') ? value.subSettings : {}).map(([subKey, subValue]) => [subKey, { ...(subValue || {}) }])
+            ),
           };
         });
       } else {
@@ -3175,6 +3239,9 @@
     categoryConfig.mains[nextMainCategory] = {
       hiddenByDefault: !!prevConfig.hiddenByDefault,
       subOrder: uniqueInOrder(Array.isArray(prevConfig.subOrder) ? prevConfig.subOrder : []),
+      subSettings: Object.fromEntries(
+        Object.entries(prevConfig.subSettings || {}).map(([subKey, subValue]) => [subKey, { ...(subValue || {}) }])
+      ),
     };
     categoryConfig.mainOrder = categoryConfig.mainOrder.map(category => category === mainCategory ? nextMainCategory : category);
 
@@ -3257,6 +3324,10 @@
 
     const mainConfig = ensureMainCategoryConfig(mainCategory);
     mainConfig.subOrder = (mainConfig.subOrder || []).map(value => value === subCategory ? nextSubCategory : value);
+    if (mainConfig.subSettings?.[subCategory]) {
+      mainConfig.subSettings[nextSubCategory] = { ...mainConfig.subSettings[subCategory] };
+      delete mainConfig.subSettings[subCategory];
+    }
 
     if (activeCategoryPrompt === mainCategory && activeSubCategoryPrompt === subCategory) {
       activeSubCategoryPrompt = nextSubCategory;
@@ -3286,6 +3357,9 @@
 
     const mainConfig = ensureMainCategoryConfig(mainCategory);
     mainConfig.subOrder = (mainConfig.subOrder || []).filter(value => value !== subCategory);
+    if (mainConfig.subSettings) {
+      delete mainConfig.subSettings[subCategory];
+    }
 
     if (activeCategoryPrompt === mainCategory && activeSubCategoryPrompt === subCategory) {
       activeSubCategoryPrompt = null;
@@ -3525,6 +3599,13 @@
     renderCategoryManageList();
   }
 
+  function toggleSubCategoryRandomSelection(mainCategory, subCategory, checked) {
+    setSubCategoryRandomSelection(mainCategory, subCategory, checked);
+    save();
+    render();
+    renderCategoryManageList();
+  }
+
   function toggleComposedMainCategoryEditOnly(mainCategory, checked) {
     setComposedMainCategoryEditOnly(mainCategory, checked);
     save();
@@ -3666,6 +3747,14 @@
           const subActions = document.createElement('div');
           subActions.className = 'category-manage-actions';
 
+          const randomLabel = document.createElement('label');
+          randomLabel.className = 'hidden-option-row';
+          randomLabel.style.marginTop = '0';
+          randomLabel.innerHTML = '<input type="checkbox" /><span>무작위 선택</span>';
+          const randomInput = randomLabel.querySelector('input');
+          randomInput.checked = isSubCategoryRandomSelectionEnabled(mainCategory, subCategory);
+          randomInput.onchange = () => toggleSubCategoryRandomSelection(mainCategory, subCategory, randomInput.checked);
+
           const subUpBtn = document.createElement('button');
           subUpBtn.type = 'button';
           subUpBtn.className = 'btn btn-secondary btn-sm';
@@ -3692,6 +3781,7 @@
           subDeleteBtn.textContent = '삭제';
           subDeleteBtn.onclick = () => deleteSubCategory(mainCategory, subCategory);
 
+          subActions.appendChild(randomLabel);
           subActions.appendChild(subUpBtn);
           subActions.appendChild(subDownBtn);
           subActions.appendChild(subRenameBtn);
@@ -3837,7 +3927,7 @@
   }
 
   function getComposedCategories() {
-    return getStandardComposedCategories();
+    return getComposedMainCategoryOrder();
   }
 
   function getComposedSubCategories(mainCategory) {
@@ -4594,6 +4684,75 @@
     }
 
     list.innerHTML = '';
+
+    const randomSelectionEnabled = isSubCategoryRandomSelectionEnabled(activeCategoryPrompt, activeSubCategoryPrompt);
+    if (randomSelectionEnabled && filteredPrompts.length > 0) {
+      const randomCard = document.createElement('div');
+      randomCard.dataset.promptId = `__random__:${activeCategoryPrompt || ''}:${activeSubCategoryPrompt || ''}`;
+      randomCard.className = 'prompt-item random-card' + (activePromptPreviewId === randomCard.dataset.promptId ? ' preview' : '') + (selectingFromPreviewId === randomCard.dataset.promptId ? ' select-feedback' : '');
+      randomCard.innerHTML = `
+        <div class="prompt-item-swipe-content">
+          <div class="prompt-item-body">
+            <span class="random-content"><span class="random-icon">🎲</span><span>무작위로 선택</span></span>
+          </div>
+        </div>
+      `;
+
+      const applyRandomSelection = () => {
+        const previousSelections = selected.filter(item => item.source === 'prompt' && item.mainCategory === activeCategoryPrompt && item.subCategory === activeSubCategoryPrompt);
+        if (previousSelections.length > 0) {
+          selected = selected.filter(item => !(item.source === 'prompt' && item.mainCategory === activeCategoryPrompt && item.subCategory === activeSubCategoryPrompt));
+        }
+
+        const availablePrompts = filteredPrompts.filter(p => !selected.some(s => s.id === p.id && s.source === 'prompt'));
+        const targetPrompt = availablePrompts.length > 0
+          ? availablePrompts[Math.floor(Math.random() * availablePrompts.length)]
+          : null;
+        if (!targetPrompt) {
+          showToast('선택 가능한 프롬프트가 없습니다');
+          return;
+        }
+        addPromptToComposition(targetPrompt);
+      };
+
+      const handleRandomCardTap = () => {
+        if (isDoubleTapTouchCooldownActive()) {
+          return;
+        }
+
+        isPromptPreviewSuppressed = false;
+
+        if (tapComposeMode === PROMPT_ADD_MODE.TAP) {
+          applyRandomSelection();
+          return;
+        }
+
+        if (tapComposeMode === PROMPT_ADD_MODE.DOUBLE_TAP_PREVIEW) {
+          if (activePromptPreviewId === randomCard.dataset.promptId) {
+            applyRandomSelection();
+            activateDoubleTapTouchCooldown();
+            return;
+          }
+
+          activePromptPreviewId = randomCard.dataset.promptId;
+          render();
+          return;
+        }
+
+        if (activePromptPreviewId === randomCard.dataset.promptId) {
+          activePromptPreviewId = null;
+        } else {
+          activePromptPreviewId = randomCard.dataset.promptId;
+        }
+        render();
+      };
+
+      bindPromptItemSwipe(randomCard, { id: randomCard.dataset.promptId, content: '무작위로 선택' }, {
+        onTap: handleRandomCardTap,
+        onSwipeCommit: applyRandomSelection,
+      });
+      list.appendChild(randomCard);
+    }
 
     filteredPrompts.forEach(p => {
       const isSelected = selected.some(s => s.id === p.id && s.source === 'prompt');
