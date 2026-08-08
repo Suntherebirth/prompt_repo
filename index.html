@@ -210,12 +210,35 @@
       animation: previewClearFeedback .32s ease-out;
     }
 
-    .prompt-description-preview img {
+    .prompt-description-preview .preview-image-shell {
+      width: 100%;
+      height: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+      border-radius: 8px;
+      will-change: transform;
+    }
+
+    .prompt-description-preview .preview-image-shell img {
       display: block;
       width: 100%;
       height: 100%;
       object-fit: cover;
       border-radius: 8px;
+    }
+
+    .prompt-description-preview.preview-animation-level-1 .preview-image-shell {
+      animation: previewBreathingWeak 5.8s ease-in-out infinite;
+    }
+
+    .prompt-description-preview.preview-animation-level-2 .preview-image-shell {
+      animation: previewBreathing 3.4s ease-in-out infinite;
+    }
+
+    .prompt-description-preview.preview-animation-level-3 .preview-image-shell {
+      animation: previewBreathingStrong 2.4s ease-in-out infinite;
     }
 
     .prompt-description-preview img.preview-image-enter {
@@ -233,6 +256,33 @@
         opacity: 1;
         transform: scale(1);
         filter: saturate(1) blur(0);
+      }
+    }
+
+    @keyframes previewBreathingWeak {
+      0%, 100% {
+        transform: scale(1) translateY(0);
+      }
+      50% {
+        transform: scale(1.004) translateY(-1px);
+      }
+    }
+
+    @keyframes previewBreathing {
+      0%, 100% {
+        transform: scale(1) translateY(0);
+      }
+      50% {
+        transform: scale(1.012) translateY(-3px);
+      }
+    }
+
+    @keyframes previewBreathingStrong {
+      0%, 100% {
+        transform: scale(1) translateY(0);
+      }
+      50% {
+        transform: scale(1.024) translateY(-5px);
       }
     }
 
@@ -273,6 +323,12 @@
       }
 
       .prompt-description-preview img.preview-image-enter {
+        animation: none;
+      }
+
+      .prompt-description-preview.preview-animation-level-1 .preview-image-shell,
+      .prompt-description-preview.preview-animation-level-2 .preview-image-shell,
+      .prompt-description-preview.preview-animation-level-3 .preview-image-shell {
         animation: none;
       }
     }
@@ -1800,6 +1856,15 @@
           <button class="settings-level-btn" type="button" data-preview-size-level="3" onclick="setPromptPreviewSizeLevel(3, { notify: true })">3</button>
         </div>
       </div>
+      <div class="settings-option-card">
+        <div class="settings-option-title">미리보기 애니메이션</div>
+        <div class="settings-option-description">1은 더 약하게, 2는 기본, 3은 더 강하게 숨 쉬듯 움직입니다. 원하는 강도에 맞춰 선택해 주세요.</div>
+        <div class="settings-level-row" role="group" aria-label="미리보기 애니메이션 강도 선택">
+          <button class="settings-level-btn" type="button" data-preview-animation-level="1" onclick="setPreviewAnimationLevel(1, { notify: true })">1</button>
+          <button class="settings-level-btn" type="button" data-preview-animation-level="2" onclick="setPreviewAnimationLevel(2, { notify: true })">2</button>
+          <button class="settings-level-btn" type="button" data-preview-animation-level="3" onclick="setPreviewAnimationLevel(3, { notify: true })">3</button>
+        </div>
+      </div>
     </div>
   </div>
 </div>
@@ -1822,6 +1887,7 @@
   const CATEGORY_CONFIG_KEY = 'prompt_repo_category_config_v1';
   const HIDDEN_MAIN_CATEGORIES_KEY = 'prompt_repo_hidden_main_categories_v1';
   const TAP_COMPOSE_MODE_KEY = 'prompt_repo_tap_compose_mode_v1';
+  const PREVIEW_ANIMATION_KEY = 'prompt_repo_preview_animation_v1';
   const PROMPT_ADD_MODE = {
     SWIPE: 'swipe',
     TAP: 'tap',
@@ -1864,6 +1930,7 @@
   let shouldAnimatePromptPreviewClear = false;
   let isSettingsDrawerOpen = false;
   let promptPreviewSizeLevel = 2;
+  let previewAnimationLevel = 2;
   let activeImageViewer = null;
   let imageViewerScale = 1;
   let imageViewerTranslateX = 0;
@@ -2189,6 +2256,13 @@
       categoryConfig = createDefaultCategoryConfig();
     }
 
+    try {
+      const storedPreviewAnimation = localStorage.getItem(PREVIEW_ANIMATION_KEY);
+      previewAnimationLevel = normalizePreviewAnimationLevel(storedPreviewAnimation);
+    } catch {
+      previewAnimationLevel = 2;
+    }
+
     ensureCategoryConfigConsistency();
 
   }
@@ -2498,6 +2572,11 @@
         || selected.find(item => item.source === 'prompt' && item.imageData)
         || selected.find(item => item.source === 'prompt'));
 
+    preview.classList.toggle('preview-animation-level-1', previewAnimationLevel === 1);
+    preview.classList.toggle('preview-animation-level-2', previewAnimationLevel === 2);
+    preview.classList.toggle('preview-animation-level-3', previewAnimationLevel === 3);
+    preview.classList.toggle('preview-animation-enabled', previewAnimationLevel > 0);
+
     const imageSrc = getPromptImageSource(prompt);
     if (imageSrc) {
       const altText = prompt.imageName || getPromptDisplayName(prompt.mainCategory, prompt.subCategory);
@@ -2508,7 +2587,7 @@
       preview.classList.remove('image-clear-feedback');
       preview.classList.remove('image-switch-feedback');
       preview.title = '터치하면 이미지를 크게 봅니다';
-      preview.innerHTML = `<img class="${shouldAnimateTransition ? 'preview-image-enter' : ''}" src="${imageSrc}" alt="${esc(altText)}" />`;
+      preview.innerHTML = `<div class="preview-image-shell"><img class="${shouldAnimateTransition ? 'preview-image-enter' : ''}" src="${imageSrc}" alt="${esc(altText)}" /></div>`;
       if (shouldAnimateTransition) {
         // 클래스를 다시 붙여 연속 전환에서도 피드백 애니메이션이 반복 실행되도록 한다.
         void preview.offsetWidth;
@@ -2541,6 +2620,11 @@
     const preview = document.getElementById('composed-description-preview');
     if (!preview) return;
 
+    preview.classList.toggle('preview-animation-level-1', previewAnimationLevel === 1);
+    preview.classList.toggle('preview-animation-level-2', previewAnimationLevel === 2);
+    preview.classList.toggle('preview-animation-level-3', previewAnimationLevel === 3);
+    preview.classList.toggle('preview-animation-enabled', previewAnimationLevel > 0);
+
     const composed = getActiveComposedPreviewItem();
     const imageSrc = getPromptImageSource(composed);
     if (imageSrc) {
@@ -2550,7 +2634,7 @@
       preview.classList.add('has-image');
       preview.classList.remove('image-switch-feedback');
       preview.title = '터치하면 이미지를 크게 봅니다';
-      preview.innerHTML = `<img class="${shouldAnimateTransition ? 'preview-image-enter' : ''}" src="${imageSrc}" alt="${esc(altText)}" />`;
+      preview.innerHTML = `<div class="preview-image-shell"><img class="${shouldAnimateTransition ? 'preview-image-enter' : ''}" src="${imageSrc}" alt="${esc(altText)}" /></div>`;
       if (shouldAnimateTransition) {
         void preview.offsetWidth;
         preview.classList.add('image-switch-feedback');
@@ -3526,6 +3610,7 @@
   // ── Render ──
   function render() {
     renderTapComposeToggle();
+    renderPreviewAnimationLevel();
     renderPromptPreviewSizeLevel();
     ensureActiveCategoryState();
     renderMainCategoryFilter();
@@ -3554,6 +3639,36 @@
     } else {
       countBadge.textContent = prompts.length ? `(${prompts.length})` : '';
     }
+  }
+
+  function normalizePreviewAnimationLevel(value) {
+    if (value === true || value === 'true' || value === '1') return 2;
+    if (value === false || value === '0') return 1;
+    const level = Number(value);
+    if (Number.isInteger(level) && level >= 1 && level <= 3) return level;
+    return 2;
+  }
+
+  function renderPreviewAnimationLevel() {
+    const buttons = document.querySelectorAll('[data-preview-animation-level]');
+    buttons.forEach(button => {
+      const level = Number(button.getAttribute('data-preview-animation-level'));
+      const isActive = previewAnimationLevel === level;
+      button.classList.toggle('active', isActive);
+      button.title = getPreviewAnimationLevelLabel(level);
+    });
+  }
+
+  function getPreviewAnimationLevelLabel(level) {
+    if (level === 1) return '미리보기 애니메이션: 더 약하게';
+    if (level === 3) return '미리보기 애니메이션: 더 강하게';
+    return '미리보기 애니메이션: 기본';
+  }
+
+  function getPreviewAnimationLevelText(level) {
+    if (level === 1) return '더 약하게';
+    if (level === 3) return '더 강하게';
+    return '기본';
   }
 
   function renderTapComposeToggle() {
@@ -3658,6 +3773,22 @@
     if (options.notify) {
       showToast(`이미지 영역 크기를 ${getPromptPreviewSizeLabel(promptPreviewSizeLevel)}로 변경했습니다`);
     }
+  }
+
+  function setPreviewAnimationLevel(level, options = {}) {
+    previewAnimationLevel = normalizePreviewAnimationLevel(level);
+    localStorage.setItem(PREVIEW_ANIMATION_KEY, String(previewAnimationLevel));
+    renderPreviewAnimationLevel();
+    renderPromptDescriptionPreview();
+    renderComposedDescriptionPreview();
+    if (options.notify) {
+      showToast(`미리보기 애니메이션을 ${getPreviewAnimationLevelText(previewAnimationLevel)}로 변경했습니다`);
+    }
+  }
+
+  function togglePreviewAnimation() {
+    const nextLevel = previewAnimationLevel >= 3 ? 1 : previewAnimationLevel + 1;
+    setPreviewAnimationLevel(nextLevel, { notify: true });
   }
 
   function openSettingsDrawer() {
@@ -5250,6 +5381,7 @@
   preventSafariDoubleTapZoom();
   setTapComposeMode(localStorage.getItem(TAP_COMPOSE_MODE_KEY));
   setPromptPreviewSizeLevel(localStorage.getItem(PROMPT_PREVIEW_SIZE_LEVEL_KEY) || 2);
+  setPreviewAnimationLevel(localStorage.getItem(PREVIEW_ANIMATION_KEY));
   renderSettingsDrawer();
   renderImageViewer();
   setLeftPanelTab(localStorage.getItem(LEFT_PANEL_TAB_KEY) || 'prompt');
