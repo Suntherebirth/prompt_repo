@@ -146,7 +146,25 @@
       display: none;
     }
 
+    .combo-library-footer {
+      display: none;
+      padding: 10px 12px 12px;
+      border-top: 1px solid #1e1e2e;
+      background: #13131c;
+    }
+
+    .panel-library.combo-mode .combo-library-footer {
+      display: block;
+    }
+
     .panel-library.preview-level-3-full .library-footer {
+      margin-top: 8px;
+      padding-top: 0;
+      padding-left: 0;
+      padding-right: 0;
+    }
+
+    .panel-library.preview-level-3-full .combo-library-footer {
       margin-top: 8px;
       padding-top: 0;
       padding-left: 0;
@@ -188,6 +206,10 @@
       animation: previewSwitchFeedback .36s ease-out;
     }
 
+    .prompt-description-preview.image-clear-feedback {
+      animation: previewClearFeedback .32s ease-out;
+    }
+
     .prompt-description-preview img {
       display: block;
       width: 100%;
@@ -226,8 +248,27 @@
       }
     }
 
+    @keyframes previewClearFeedback {
+      0% {
+        box-shadow: 0 0 0 0 rgba(248, 113, 113, 0);
+        opacity: 1;
+      }
+      35% {
+        box-shadow: 0 0 0 2px rgba(248, 113, 113, 0.3);
+        opacity: 0.7;
+      }
+      100% {
+        box-shadow: 0 0 0 0 rgba(248, 113, 113, 0);
+        opacity: 1;
+      }
+    }
+
     @media (prefers-reduced-motion: reduce) {
       .prompt-description-preview.image-switch-feedback {
+        animation: none;
+      }
+
+      .prompt-description-preview.image-clear-feedback {
         animation: none;
       }
 
@@ -1462,6 +1503,10 @@
       gap: 10px;
     }
 
+    .category-manage-tab-toggle {
+      margin-bottom: 10px;
+    }
+
     .category-manage-main-item {
       border: 1px solid #2a2a3a;
       border-radius: 10px;
@@ -1592,6 +1637,11 @@
       </div>
       <button class="btn btn-primary" style="width:100%" type="button" onclick="openAddPromptModal()">+ 새 프롬프트</button>
     </div>
+    <div class="combo-library-footer">
+      <div class="prompt-description-preview" id="composed-description-preview">
+        <span class="empty-state">선택한 커스텀 조합의 설명 이미지가 표시됩니다.</span>
+      </div>
+    </div>
   </div>
 
   <!-- Right: Composer -->
@@ -1690,6 +1740,17 @@
             <select id="combo-sub-category" class="sub-field-select" disabled></select>
           </div>
         </div>
+        <div class="prompt-image-block">
+          <label>설명 이미지</label>
+          <div class="prompt-image-row">
+            <input id="combo-image-file" type="file" accept="image/*" />
+            <input id="combo-image-name" type="text" placeholder="자동 생성된 이미지 이름" readonly />
+          </div>
+          <div class="prompt-image-preview" id="combo-image-preview">
+            <span class="empty-state" style="padding:0">선택한 설명 이미지가 여기에 표시됩니다.</span>
+          </div>
+          <div class="prompt-image-meta" id="combo-image-meta">커스텀 대분류와 이름을 기준으로 이미지 이름이 자동 생성됩니다.</div>
+        </div>
       </div>
     </div>
     <div class="modal-actions">
@@ -1706,6 +1767,10 @@
       <button class="btn btn-secondary btn-sm" type="button" onclick="closeCategoryManageModal()">닫기</button>
     </div>
     <div class="modal-body">
+      <div class="panel-mode-toggle category-manage-tab-toggle">
+        <button class="mode-toggle-btn active" id="category-manage-tab-prompt" type="button" onclick="setCategoryManageTab('prompt')">개별 프롬프트</button>
+        <button class="mode-toggle-btn" id="category-manage-tab-combo" type="button" onclick="setCategoryManageTab('combo')">커스텀 조합</button>
+      </div>
       <div class="category-manage-main-list" id="category-manage-main-list"></div>
     </div>
     <div class="modal-actions">
@@ -1774,6 +1839,7 @@
   let activeSubCategoryPrompt = null;
   let activeCategoryComposed = null;
   let leftPanelTab = 'prompt';
+  let categoryManageTab = 'prompt';
   let hiddenMainCategories = new Set();
   let categoryConfig = createDefaultCategoryConfig();
   let openedHiddenMainCategories = new Set();
@@ -1781,14 +1847,21 @@
   let customOutputText = null;
   let tapComposeMode = PROMPT_ADD_MODE.SWIPE;
   let pendingPromptImage = null;
+  let pendingComposedImage = null;
   let promptFormMode = 'add';
   let editingPromptId = null;
   let editingPromptImageId = '';
   let editingPromptImageData = '';
   let editingComposedPromptId = null;
+  let editingComposedImageId = '';
+  let editingComposedImageData = '';
   let activePromptPreviewId = null;
+  let activeComposedPreviewId = null;
   let selectingFromPreviewId = null;
   let lastRenderedPromptPreviewImageKey = '';
+  let lastRenderedComposedPreviewImageKey = '';
+  let isPromptPreviewSuppressed = false;
+  let shouldAnimatePromptPreviewClear = false;
   let isSettingsDrawerOpen = false;
   let promptPreviewSizeLevel = 2;
   let activeImageViewer = null;
@@ -2001,6 +2074,7 @@
       if (item?.imageId) ids.add(item.imageId);
     });
     composedPrompts.forEach((composed) => {
+      if (composed?.imageId) ids.add(composed.imageId);
       if (!Array.isArray(composed?.items)) return;
       composed.items.forEach((item) => {
         if (item?.imageId) ids.add(item.imageId);
@@ -2128,6 +2202,9 @@
       category: item.category,
       items: Array.isArray(item.items) ? item.items.map(cleanPrompt) : [],
       content: item.content,
+      imageId: item.imageId || '',
+      imageData: !item.imageId && item.imageData ? item.imageData : '',
+      imageName: item.imageName || '',
     }));
 
     localStorage.setItem(STORAGE_KEY, JSON.stringify(promptPayload));
@@ -2192,6 +2269,15 @@
     return fileName.length > 120 ? fileName.slice(0, 120).trim() : fileName;
   }
 
+  function buildComposedImageName(mainCategory, subCategory, content) {
+    const parts = [mainCategory, subCategory, content]
+      .map(sanitizePromptImageNamePart)
+      .filter(Boolean);
+    if (parts.length === 0) return '커스텀 조합 설명 이미지';
+    const fileName = parts.join(' - ');
+    return fileName.length > 120 ? fileName.slice(0, 120).trim() : fileName;
+  }
+
   function readFileAsDataUrl(file) {
     return new Promise((resolve, reject) => {
       const reader = new FileReader();
@@ -2246,11 +2332,63 @@
     renderPendingPromptImagePreview();
   }
 
+  function renderPendingComposedImagePreview() {
+    const preview = document.getElementById('combo-image-preview');
+    const nameInput = document.getElementById('combo-image-name');
+    const meta = document.getElementById('combo-image-meta');
+    if (!preview || !nameInput || !meta) return;
+
+    const mainCategory = document.getElementById('combo-main-category')?.value?.trim() || '';
+    const subCategory = document.getElementById('combo-sub-category')?.value?.trim() || '';
+    const content = getComposedOutputText();
+    const imageName = buildComposedImageName(mainCategory, subCategory, content);
+    nameInput.value = imageName;
+
+    if (pendingComposedImage?.dataUrl) {
+      preview.innerHTML = `<img src="${pendingComposedImage.dataUrl}" alt="${esc(imageName)}" />`;
+      meta.textContent = pendingComposedImage.fileName
+        ? `${imageName} · ${pendingComposedImage.fileName}`
+        : imageName;
+      return;
+    }
+
+    preview.innerHTML = '<span class="empty-state" style="padding:0">선택한 설명 이미지가 여기에 표시됩니다.</span>';
+    meta.textContent = `${imageName} 이름으로 저장됩니다.`;
+  }
+
+  function setPendingComposedImage(file, dataUrl) {
+    if (!file || !dataUrl) {
+      pendingComposedImage = null;
+      renderPendingComposedImagePreview();
+      return;
+    }
+
+    pendingComposedImage = {
+      dataUrl,
+      fileName: file.name || '',
+      mimeType: file.type || '',
+      file,
+      imageName: buildComposedImageName(
+        document.getElementById('combo-main-category')?.value?.trim(),
+        document.getElementById('combo-sub-category')?.value?.trim(),
+        getComposedOutputText(),
+      ),
+    };
+    renderPendingComposedImagePreview();
+  }
+
   function clearPendingPromptImage() {
     pendingPromptImage = null;
     const fileInput = document.getElementById('input-image-file');
     if (fileInput) fileInput.value = '';
     renderPendingPromptImagePreview();
+  }
+
+  function clearPendingComposedImage() {
+    pendingComposedImage = null;
+    const fileInput = document.getElementById('combo-image-file');
+    if (fileInput) fileInput.value = '';
+    renderPendingComposedImagePreview();
   }
 
   function resetPromptFormToAdd() {
@@ -2288,6 +2426,7 @@
       .then((url) => {
         if (!url) return;
         renderPromptDescriptionPreview();
+        renderComposedDescriptionPreview();
         if (activeImageViewer?.imageId === prompt.imageId && activeImageViewer.src !== url) {
           activeImageViewer = { ...activeImageViewer, src: url };
           renderImageViewer();
@@ -2340,20 +2479,33 @@
     document.getElementById('input-content').focus();
   }
 
+  function clearPromptDescriptionPreview(options = {}) {
+    activePromptPreviewId = null;
+    selectingFromPreviewId = null;
+    isPromptPreviewSuppressed = true;
+    if (options.feedback) {
+      shouldAnimatePromptPreviewClear = true;
+    }
+  }
+
   function renderPromptDescriptionPreview() {
     const preview = document.getElementById('prompt-description-preview');
     if (!preview) return;
 
-    const prompt = prompts.find(item => item.id === activePromptPreviewId)
-      || selected.find(item => item.source === 'prompt' && item.imageData)
-      || selected.find(item => item.source === 'prompt');
+    const prompt = isPromptPreviewSuppressed
+      ? null
+      : (prompts.find(item => item.id === activePromptPreviewId)
+        || selected.find(item => item.source === 'prompt' && item.imageData)
+        || selected.find(item => item.source === 'prompt'));
 
     const imageSrc = getPromptImageSource(prompt);
     if (imageSrc) {
       const altText = prompt.imageName || getPromptDisplayName(prompt.mainCategory, prompt.subCategory);
       const nextImageKey = `${prompt.id || ''}:${imageSrc}`;
       const shouldAnimateTransition = nextImageKey !== lastRenderedPromptPreviewImageKey;
+      shouldAnimatePromptPreviewClear = false;
       preview.classList.add('has-image');
+      preview.classList.remove('image-clear-feedback');
       preview.classList.remove('image-switch-feedback');
       preview.title = '터치하면 이미지를 크게 봅니다';
       preview.innerHTML = `<img class="${shouldAnimateTransition ? 'preview-image-enter' : ''}" src="${imageSrc}" alt="${esc(altText)}" />`;
@@ -2370,9 +2522,49 @@
 
     preview.classList.remove('has-image');
     preview.classList.remove('image-switch-feedback');
+    preview.classList.remove('image-clear-feedback');
+    if (shouldAnimatePromptPreviewClear) {
+      void preview.offsetWidth;
+      preview.classList.add('image-clear-feedback');
+      shouldAnimatePromptPreviewClear = false;
+    }
     preview.title = '';
     preview.innerHTML = '<span class="empty-state">설명 이미지가 표시됩니다.</span>';
     lastRenderedPromptPreviewImageKey = '';
+  }
+
+  function getActiveComposedPreviewItem() {
+    return composedPrompts.find(item => item.id === activeComposedPreviewId) || null;
+  }
+
+  function renderComposedDescriptionPreview() {
+    const preview = document.getElementById('composed-description-preview');
+    if (!preview) return;
+
+    const composed = getActiveComposedPreviewItem();
+    const imageSrc = getPromptImageSource(composed);
+    if (imageSrc) {
+      const altText = composed.imageName || getPromptDisplayName(composed.mainCategory, composed.subCategory);
+      const nextImageKey = `${composed.id || ''}:${imageSrc}`;
+      const shouldAnimateTransition = nextImageKey !== lastRenderedComposedPreviewImageKey;
+      preview.classList.add('has-image');
+      preview.classList.remove('image-switch-feedback');
+      preview.title = '터치하면 이미지를 크게 봅니다';
+      preview.innerHTML = `<img class="${shouldAnimateTransition ? 'preview-image-enter' : ''}" src="${imageSrc}" alt="${esc(altText)}" />`;
+      if (shouldAnimateTransition) {
+        void preview.offsetWidth;
+        preview.classList.add('image-switch-feedback');
+      }
+      lastRenderedComposedPreviewImageKey = nextImageKey;
+      return;
+    }
+
+    queuePromptImageLoad(composed);
+    preview.classList.remove('has-image');
+    preview.classList.remove('image-switch-feedback');
+    preview.title = '';
+    preview.innerHTML = '<span class="empty-state">선택한 커스텀 조합의 설명 이미지가 표시됩니다.</span>';
+    lastRenderedComposedPreviewImageKey = '';
   }
 
   function getActivePromptPreviewImage() {
@@ -2392,6 +2584,20 @@
     };
   }
 
+  function getActiveComposedPreviewImage() {
+    const composed = getActiveComposedPreviewItem();
+    const imageSrc = getPromptImageSource(composed);
+    if (!imageSrc) {
+      queuePromptImageLoad(composed);
+      return null;
+    }
+    return {
+      src: imageSrc,
+      imageId: composed.imageId || '',
+      alt: composed.imageName || getPromptDisplayName(composed.mainCategory, composed.subCategory),
+    };
+  }
+
   function normalizePromptPreviewSizeLevel(level) {
     const value = Number(level);
     return value === 1 || value === 2 || value === 3 ? value : 2;
@@ -2404,11 +2610,10 @@
   }
 
   function renderPromptPreviewSizeLevel() {
-    const preview = document.getElementById('prompt-description-preview');
     const panel = document.querySelector('.panel-library');
-    if (preview) {
+    document.querySelectorAll('.prompt-description-preview').forEach((preview) => {
       preview.style.setProperty('--prompt-preview-max-width', PROMPT_PREVIEW_MAX_WIDTH_BY_LEVEL[promptPreviewSizeLevel]);
-    }
+    });
     if (panel) {
       panel.classList.toggle('preview-level-3-full', promptPreviewSizeLevel === 3);
     }
@@ -2592,6 +2797,10 @@
       category: mainCategory,
       items,
       content: items.map(p => p.content).join(', '),
+      imageId: (item.imageId ?? '').trim(),
+      // 레거시 데이터 호환용. 새 저장에서는 사용하지 않는다.
+      imageData: (item.imageData ?? '').trim(),
+      imageName: (item.imageName ?? '').trim(),
     };
   }
 
@@ -2816,6 +3025,194 @@
     showToast('중분류가 삭제되었습니다');
   }
 
+  function getComposedMainCategoryOrder() {
+    return uniqueInOrder(composedPrompts.map(item => item.mainCategory).filter(Boolean));
+  }
+
+  function getComposedSubCategoryOrder(mainCategory) {
+    if (!mainCategory) return [];
+    return uniqueInOrder(
+      composedPrompts
+        .filter(item => item.mainCategory === mainCategory)
+        .map(item => item.subCategory)
+        .filter(Boolean)
+    );
+  }
+
+  function moveComposedMainCategory(mainCategory, direction) {
+    const order = getComposedMainCategoryOrder();
+    const index = order.indexOf(mainCategory);
+    if (index < 0) return;
+    const nextIndex = direction === 'up' ? index - 1 : index + 1;
+    if (nextIndex < 0 || nextIndex >= order.length) return;
+    moveArrayItem(order, index, nextIndex);
+
+    const grouped = new Map();
+    composedPrompts.forEach((item) => {
+      const key = item.mainCategory;
+      if (!grouped.has(key)) grouped.set(key, []);
+      grouped.get(key).push(item);
+    });
+
+    composedPrompts = order.flatMap(category => grouped.get(category) || []);
+    save();
+    render();
+    renderCategoryManageList();
+  }
+
+  function moveComposedSubCategory(mainCategory, subCategory, direction) {
+    if (!mainCategory || !subCategory) return;
+    const subOrder = getComposedSubCategoryOrder(mainCategory);
+    const index = subOrder.indexOf(subCategory);
+    if (index < 0) return;
+    const nextIndex = direction === 'up' ? index - 1 : index + 1;
+    if (nextIndex < 0 || nextIndex >= subOrder.length) return;
+    moveArrayItem(subOrder, index, nextIndex);
+
+    const rank = new Map(subOrder.map((value, idx) => [value, idx]));
+    const targetItems = composedPrompts
+      .filter(item => item.mainCategory === mainCategory)
+      .map((item, idx) => ({ item, idx }))
+      .sort((a, b) => {
+        const aRank = rank.has(a.item.subCategory) ? rank.get(a.item.subCategory) : Number.MAX_SAFE_INTEGER;
+        const bRank = rank.has(b.item.subCategory) ? rank.get(b.item.subCategory) : Number.MAX_SAFE_INTEGER;
+        if (aRank !== bRank) return aRank - bRank;
+        return a.idx - b.idx;
+      })
+      .map(entry => entry.item);
+
+    let pointer = 0;
+    composedPrompts = composedPrompts.map(item => {
+      if (item.mainCategory !== mainCategory) return item;
+      const nextItem = targetItems[pointer];
+      pointer += 1;
+      return nextItem || item;
+    });
+
+    save();
+    render();
+    renderCategoryManageList();
+  }
+
+  function renameComposedMainCategory(mainCategory) {
+    if (!mainCategory) return;
+    const nextValue = prompt('새 커스텀 대분류 이름을 입력하세요', mainCategory);
+    if (!nextValue) return;
+    const nextMainCategory = nextValue.trim();
+    if (!nextMainCategory) {
+      showToast('대분류 이름이 비어 있습니다');
+      return;
+    }
+    if (nextMainCategory === mainCategory) return;
+    if (getComposedMainCategoryOrder().includes(nextMainCategory)) {
+      showToast('이미 존재하는 커스텀 대분류 이름입니다');
+      return;
+    }
+
+    composedPrompts = composedPrompts.map(item => {
+      if (item.mainCategory !== mainCategory) return item;
+      return {
+        ...item,
+        mainCategory: nextMainCategory,
+        category: nextMainCategory,
+      };
+    });
+
+    if (activeCategoryComposed === mainCategory) {
+      activeCategoryComposed = nextMainCategory;
+    }
+
+    save();
+    render();
+    renderCategoryManageList();
+    showToast('커스텀 대분류 이름이 변경되었습니다');
+  }
+
+  async function deleteComposedMainCategory(mainCategory) {
+    if (!mainCategory) return;
+    const count = composedPrompts.filter(item => item.mainCategory === mainCategory).length;
+    if (!confirm(`커스텀 대분류 "${mainCategory}"를 삭제하면 해당 조합 ${count}개가 함께 삭제됩니다. 계속하시겠습니까?`)) {
+      return;
+    }
+
+    const removedImageIds = composedPrompts
+      .filter(item => item.mainCategory === mainCategory)
+      .map(item => item.imageId)
+      .filter(Boolean);
+
+    composedPrompts = composedPrompts.filter(item => item.mainCategory !== mainCategory);
+    if (activeCategoryComposed === mainCategory) {
+      activeCategoryComposed = null;
+    }
+    if (activeComposedPreviewId && !composedPrompts.some(item => item.id === activeComposedPreviewId)) {
+      activeComposedPreviewId = null;
+    }
+
+    for (const imageId of removedImageIds) {
+      await deleteImageIfOrphaned(imageId);
+    }
+
+    save();
+    render();
+    renderCategoryManageList();
+    showToast('커스텀 대분류가 삭제되었습니다');
+  }
+
+  function renameComposedSubCategory(mainCategory, subCategory) {
+    if (!mainCategory || !subCategory) return;
+    const nextValue = prompt('새 커스텀 이름(중분류)을 입력하세요', subCategory);
+    if (!nextValue) return;
+    const nextSubCategory = nextValue.trim();
+    if (!nextSubCategory) {
+      showToast('중분류 이름이 비어 있습니다');
+      return;
+    }
+    if (nextSubCategory === subCategory) return;
+
+    const sameMainSubs = getComposedSubCategoryOrder(mainCategory);
+    if (sameMainSubs.includes(nextSubCategory)) {
+      showToast('이미 존재하는 커스텀 이름입니다');
+      return;
+    }
+
+    composedPrompts = composedPrompts.map(item => {
+      if (item.mainCategory !== mainCategory || item.subCategory !== subCategory) return item;
+      return { ...item, subCategory: nextSubCategory };
+    });
+
+    save();
+    render();
+    renderCategoryManageList();
+    showToast('커스텀 이름이 변경되었습니다');
+  }
+
+  async function deleteComposedSubCategory(mainCategory, subCategory) {
+    if (!mainCategory || !subCategory) return;
+    const count = composedPrompts.filter(item => item.mainCategory === mainCategory && item.subCategory === subCategory).length;
+    if (!confirm(`커스텀 이름 "${subCategory}"를 삭제하면 해당 조합 ${count}개가 함께 삭제됩니다. 계속하시겠습니까?`)) {
+      return;
+    }
+
+    const removedImageIds = composedPrompts
+      .filter(item => item.mainCategory === mainCategory && item.subCategory === subCategory)
+      .map(item => item.imageId)
+      .filter(Boolean);
+
+    composedPrompts = composedPrompts.filter(item => !(item.mainCategory === mainCategory && item.subCategory === subCategory));
+    if (activeComposedPreviewId && !composedPrompts.some(item => item.id === activeComposedPreviewId)) {
+      activeComposedPreviewId = null;
+    }
+
+    for (const imageId of removedImageIds) {
+      await deleteImageIfOrphaned(imageId);
+    }
+
+    save();
+    render();
+    renderCategoryManageList();
+    showToast('커스텀 이름이 삭제되었습니다');
+  }
+
   function toggleMainCategoryHidden(mainCategory, checked) {
     setMainCategoryHidden(mainCategory, checked);
     save();
@@ -2823,9 +3220,26 @@
     renderCategoryManageList();
   }
 
+  function setCategoryManageTab(tab) {
+    categoryManageTab = tab === 'combo' ? 'combo' : 'prompt';
+    renderCategoryManageTabs();
+    renderCategoryManageList();
+  }
+
+  function renderCategoryManageTabs() {
+    const promptBtn = document.getElementById('category-manage-tab-prompt');
+    const comboBtn = document.getElementById('category-manage-tab-combo');
+    if (!promptBtn || !comboBtn) return;
+    const isPrompt = categoryManageTab === 'prompt';
+    promptBtn.classList.toggle('active', isPrompt);
+    comboBtn.classList.toggle('active', !isPrompt);
+  }
+
   function openCategoryManageModal() {
     const modal = document.getElementById('category-manage-modal');
     if (!modal) return;
+    categoryManageTab = leftPanelTab === 'combo' ? 'combo' : 'prompt';
+    renderCategoryManageTabs();
     renderCategoryManageList();
     modal.classList.add('open');
   }
@@ -2846,6 +3260,15 @@
     const list = document.getElementById('category-manage-main-list');
     if (!list) return;
 
+    if (categoryManageTab === 'combo') {
+      renderCategoryManageComposedList(list);
+      return;
+    }
+
+    renderCategoryManagePromptList(list);
+  }
+
+  function renderCategoryManagePromptList(list) {
     const mainCategories = getMainCategories();
     list.innerHTML = '';
 
@@ -2973,13 +3396,131 @@
     });
   }
 
+  function renderCategoryManageComposedList(list) {
+    const mainCategories = getComposedMainCategoryOrder();
+    list.innerHTML = '';
+
+    if (mainCategories.length === 0) {
+      list.innerHTML = '<div class="category-manage-empty">관리할 커스텀 대분류가 없습니다.</div>';
+      return;
+    }
+
+    mainCategories.forEach((mainCategory, mainIndex) => {
+      const mainItem = document.createElement('div');
+      mainItem.className = 'category-manage-main-item';
+
+      const top = document.createElement('div');
+      top.className = 'category-manage-main-top';
+
+      const title = document.createElement('span');
+      title.className = 'category-manage-main-title';
+      title.textContent = mainCategory;
+
+      const actions = document.createElement('div');
+      actions.className = 'category-manage-actions';
+
+      const upBtn = document.createElement('button');
+      upBtn.type = 'button';
+      upBtn.className = 'btn btn-secondary btn-sm';
+      upBtn.textContent = '↑ 위로';
+      upBtn.disabled = mainIndex === 0;
+      upBtn.onclick = () => moveComposedMainCategory(mainCategory, 'up');
+
+      const downBtn = document.createElement('button');
+      downBtn.type = 'button';
+      downBtn.className = 'btn btn-secondary btn-sm';
+      downBtn.textContent = '↓ 아래로';
+      downBtn.disabled = mainIndex === mainCategories.length - 1;
+      downBtn.onclick = () => moveComposedMainCategory(mainCategory, 'down');
+
+      const renameBtn = document.createElement('button');
+      renameBtn.type = 'button';
+      renameBtn.className = 'btn btn-secondary btn-sm';
+      renameBtn.textContent = '이름변경';
+      renameBtn.onclick = () => renameComposedMainCategory(mainCategory);
+
+      const deleteBtn = document.createElement('button');
+      deleteBtn.type = 'button';
+      deleteBtn.className = 'btn btn-danger btn-sm';
+      deleteBtn.textContent = '삭제';
+      deleteBtn.onclick = () => deleteComposedMainCategory(mainCategory);
+
+      actions.appendChild(upBtn);
+      actions.appendChild(downBtn);
+      actions.appendChild(renameBtn);
+      actions.appendChild(deleteBtn);
+      top.appendChild(title);
+      top.appendChild(actions);
+
+      const subList = document.createElement('div');
+      subList.className = 'category-manage-sub-list';
+      const subCategories = getComposedSubCategoryOrder(mainCategory);
+
+      if (subCategories.length === 0) {
+        const empty = document.createElement('div');
+        empty.className = 'category-manage-empty';
+        empty.textContent = '커스텀 이름(중분류)이 없습니다.';
+        subList.appendChild(empty);
+      } else {
+        subCategories.forEach((subCategory, subIndex) => {
+          const subItem = document.createElement('div');
+          subItem.className = 'category-manage-sub-item';
+
+          const subTitle = document.createElement('span');
+          subTitle.textContent = subCategory;
+
+          const subActions = document.createElement('div');
+          subActions.className = 'category-manage-actions';
+
+          const subUpBtn = document.createElement('button');
+          subUpBtn.type = 'button';
+          subUpBtn.className = 'btn btn-secondary btn-sm';
+          subUpBtn.textContent = '↑';
+          subUpBtn.disabled = subIndex === 0;
+          subUpBtn.onclick = () => moveComposedSubCategory(mainCategory, subCategory, 'up');
+
+          const subDownBtn = document.createElement('button');
+          subDownBtn.type = 'button';
+          subDownBtn.className = 'btn btn-secondary btn-sm';
+          subDownBtn.textContent = '↓';
+          subDownBtn.disabled = subIndex === subCategories.length - 1;
+          subDownBtn.onclick = () => moveComposedSubCategory(mainCategory, subCategory, 'down');
+
+          const subRenameBtn = document.createElement('button');
+          subRenameBtn.type = 'button';
+          subRenameBtn.className = 'btn btn-secondary btn-sm';
+          subRenameBtn.textContent = '이름변경';
+          subRenameBtn.onclick = () => renameComposedSubCategory(mainCategory, subCategory);
+
+          const subDeleteBtn = document.createElement('button');
+          subDeleteBtn.type = 'button';
+          subDeleteBtn.className = 'btn btn-danger btn-sm';
+          subDeleteBtn.textContent = '삭제';
+          subDeleteBtn.onclick = () => deleteComposedSubCategory(mainCategory, subCategory);
+
+          subActions.appendChild(subUpBtn);
+          subActions.appendChild(subDownBtn);
+          subActions.appendChild(subRenameBtn);
+          subActions.appendChild(subDeleteBtn);
+          subItem.appendChild(subTitle);
+          subItem.appendChild(subActions);
+          subList.appendChild(subItem);
+        });
+      }
+
+      mainItem.appendChild(top);
+      mainItem.appendChild(subList);
+      list.appendChild(mainItem);
+    });
+  }
+
   function getComposedCategories() {
-    return [...new Set(composedPrompts.map(p => p.mainCategory).filter(Boolean))].sort();
+    return uniqueInOrder(composedPrompts.map(p => p.mainCategory).filter(Boolean));
   }
 
   function getComposedSubCategories(mainCategory) {
     const filtered = mainCategory ? composedPrompts.filter(p => p.mainCategory === mainCategory) : composedPrompts;
-    return [...new Set(filtered.map(p => p.subCategory).filter(Boolean))].sort();
+    return uniqueInOrder(filtered.map(p => p.subCategory).filter(Boolean));
   }
 
   // ── Render ──
@@ -2999,7 +3540,9 @@
     renderPromptList();
     renderSelected();
     renderPromptDescriptionPreview();
+    renderComposedDescriptionPreview();
     if (document.getElementById('category-manage-modal')?.classList.contains('open')) {
+      renderCategoryManageTabs();
       renderCategoryManageList();
     }
     const countBadge = document.getElementById('count-badge');
@@ -3087,7 +3630,9 @@
   }
 
   function openImageViewer() {
-    const image = getActivePromptPreviewImage();
+    const image = leftPanelTab === 'combo'
+      ? getActiveComposedPreviewImage()
+      : getActivePromptPreviewImage();
     if (!image) return;
     activeImageViewer = image;
     imageViewerLastGestureAt = 0;
@@ -3215,6 +3760,7 @@
       btn.className = 'tab-btn' + (activeSubCategoryPrompt === subCategory ? ' active' : '');
       btn.textContent = subCategory;
       btn.onclick = () => {
+        clearPromptDescriptionPreview({ feedback: true });
         activeSubCategoryPrompt = subCategory;
         render();
       };
@@ -3322,6 +3868,7 @@
           chip.className = 'cat-chip' + (used ? ' used' : '') + (activeCategoryPrompt === mainCategory && activeSubCategoryPrompt === subCategory ? ' active' : '');
           chip.innerHTML = `<span class="cat-chip-mark${used ? '' : ' hidden'}">✓</span>${esc(subCategory)}`;
           chip.onclick = () => {
+            clearPromptDescriptionPreview({ feedback: true });
             activeCategoryPrompt = mainCategory;
             activeSubCategoryPrompt = subCategory;
             render();
@@ -3348,7 +3895,11 @@
       const chip = document.createElement('span');
       chip.className = 'cat-chip' + (activeCategoryComposed === c ? ' active' : '');
       chip.textContent = c;
-      chip.onclick = () => { activeCategoryComposed = (activeCategoryComposed === c) ? null : c; render(); };
+      chip.onclick = () => {
+        activeCategoryComposed = (activeCategoryComposed === c) ? null : c;
+        activeComposedPreviewId = null;
+        render();
+      };
       el.appendChild(chip);
     });
   }
@@ -3388,6 +3939,7 @@
       showToast('불러올 조합을 찾지 못했습니다');
       return;
     }
+    activeComposedPreviewId = id;
     clearOutputOverride();
     selected = item.items.map(entry => ({ ...normalizeSelected(entry), source: 'prompt' })).filter(entry => entry && entry.content);
     render();
@@ -3397,12 +3949,20 @@
       .catch(() => showToast('커스텀 조합은 불러왔지만 복사에 실패했습니다'));
   }
 
-  function deleteComposedPrompt(id, e) {
+  async function deleteComposedPrompt(id, e) {
     if (e) e.stopPropagation();
     if (!confirm('정말 삭제하시겠습니까?')) return;
     clearOutputOverride();
+    const removed = composedPrompts.find(p => p.id === id);
+    const removedImageId = removed?.imageId || '';
     composedPrompts = composedPrompts.filter(p => p.id !== id);
+    if (activeComposedPreviewId === id) {
+      activeComposedPreviewId = null;
+    }
     selected = selected.filter(s => !(s.id === id && s.source === 'composed'));
+    if (removedImageId) {
+      await deleteImageIfOrphaned(removedImageId);
+    }
     save();
     render();
     showToast('커스텀 조합이 삭제되었습니다');
@@ -3579,9 +4139,10 @@
       list.innerHTML = '';
       filteredComposed.forEach(item => {
         const composedText = getComposedItemText(item);
+        const isPreview = activeComposedPreviewId === item.id;
         const card = document.createElement('div');
         card.dataset.promptId = item.id;
-        card.className = 'prompt-item combo-card-item';
+        card.className = 'prompt-item combo-card-item' + (isPreview ? ' preview' : '');
         card.title = '클릭하면 현재 조합으로 불러옵니다';
         card.innerHTML = `
           <div class="prompt-item-swipe-content">
@@ -3625,6 +4186,10 @@
       if (activeCategoryPrompt && p.mainCategory !== activeCategoryPrompt) return false;
       if (activeSubCategoryPrompt && p.subCategory !== activeSubCategoryPrompt) return false;
       return true;
+    }).sort((a, b) => {
+      const byContent = String(a.content || '').localeCompare(String(b.content || ''), 'ko');
+      if (byContent !== 0) return byContent;
+      return String(a.id || '').localeCompare(String(b.id || ''), 'ko');
     });
 
     if (filteredPrompts.length === 0) {
@@ -3914,6 +4479,7 @@
       }
     }
     renderComposedSubCategorySelect();
+    renderPendingComposedImagePreview();
   }
 
   function handleComposedSubCategoryChange() {
@@ -3928,10 +4494,15 @@
         select.value = '';
       }
     }
+    renderPendingComposedImagePreview();
   }
 
   function setLeftPanelTab(tab) {
+    const previousTab = leftPanelTab;
     leftPanelTab = tab === 'combo' ? 'combo' : 'prompt';
+    if (previousTab !== leftPanelTab) {
+      clearPromptDescriptionPreview({ feedback: true });
+    }
     const isPromptTab = leftPanelTab === 'prompt';
     document.getElementById('panel-view-prompt').classList.toggle('active', isPromptTab);
     document.getElementById('panel-view-combo').classList.toggle('active', !isPromptTab);
@@ -3967,8 +4538,11 @@
 
   function openSaveComposedModal() {
     editingComposedPromptId = null;
+    editingComposedImageId = '';
+    editingComposedImageData = '';
     renderSaveComposedModalMode();
     renderComposedCategorySelectors();
+    clearPendingComposedImage();
     const modal = document.getElementById('save-composed-modal');
     modal.classList.add('open');
     document.getElementById('combo-main-category').focus();
@@ -3978,6 +4552,9 @@
     const modal = document.getElementById('save-composed-modal');
     modal.classList.remove('open');
     editingComposedPromptId = null;
+    editingComposedImageId = '';
+    editingComposedImageData = '';
+    clearPendingComposedImage();
     renderSaveComposedModalMode();
   }
 
@@ -3993,7 +4570,7 @@
     }
   }
 
-  function openEditComposedPromptModal(id, e) {
+  async function openEditComposedPromptModal(id, e) {
     if (e) e.stopPropagation();
     const target = composedPrompts.find(item => item.id === id);
     if (!target) {
@@ -4028,6 +4605,22 @@
       }
       subSelect.value = target.subCategory || '';
     }
+
+    editingComposedImageId = target.imageId || '';
+    editingComposedImageData = target.imageData || '';
+    let editImageDataUrl = editingComposedImageData;
+    if (!editImageDataUrl && target.imageId) {
+      const imageUrl = await getPromptImageObjectUrl(target.imageId);
+      editImageDataUrl = imageUrl || '';
+    }
+    pendingComposedImage = editImageDataUrl ? {
+      dataUrl: editImageDataUrl,
+      fileName: target.imageName || '',
+      mimeType: '',
+      file: null,
+      imageName: target.imageName || buildComposedImageName(target.mainCategory, target.subCategory, getComposedItemText(target)),
+    } : null;
+    renderPendingComposedImagePreview();
 
     const modal = document.getElementById('save-composed-modal');
     modal.classList.add('open');
@@ -4154,6 +4747,8 @@
       return;
     }
 
+    isPromptPreviewSuppressed = false;
+
     const idx = selected.findIndex(s => s.id === p.id && s.source === 'prompt');
     if (idx >= 0) {
       clearOutputOverride();
@@ -4182,6 +4777,7 @@
   }
 
   function addPromptToComposition(p) {
+    isPromptPreviewSuppressed = false;
     const idx = selected.findIndex(s => s.id === p.id && s.source === 'prompt');
     if (idx >= 0) {
       showToast('이미 조합에 추가된 프롬프트입니다');
@@ -4252,13 +4848,17 @@
     });
   }
 
-  function saveComposedPrompt() {
+  async function saveComposedPrompt() {
     const mainCategoryInput = document.getElementById('combo-main-category');
     const subCategoryInput = document.getElementById('combo-sub-category');
     const isEditMode = !!editingComposedPromptId;
     const mainCategory = mainCategoryInput.value.trim();
     const subCategory = subCategoryInput.value.trim();
     const items = selected.map(normalizeSelected).filter(item => item && item.content).map(cleanPrompt);
+    const previousComposed = isEditMode ? composedPrompts.find(item => item.id === editingComposedPromptId) : null;
+    const previousImageId = previousComposed?.imageId || editingComposedImageId || '';
+    let nextImageId = previousImageId;
+
     if (!mainCategory) {
       showToast('커스텀 조합 대분류를 입력하세요');
       return;
@@ -4272,6 +4872,29 @@
       return;
     }
 
+    try {
+      if (pendingComposedImage?.file instanceof File) {
+        nextImageId = await saveImageBlobRecord({
+          blob: pendingComposedImage.file,
+          mimeType: pendingComposedImage.mimeType || pendingComposedImage.file.type || '',
+          fileName: pendingComposedImage.fileName || pendingComposedImage.file.name || '',
+        });
+      } else if (!previousImageId && pendingComposedImage?.dataUrl?.startsWith('data:')) {
+        const blob = dataUrlToBlob(pendingComposedImage.dataUrl);
+        nextImageId = await saveImageBlobRecord({
+          blob,
+          mimeType: pendingComposedImage.mimeType || blob.type || '',
+          fileName: pendingComposedImage.fileName || '',
+        });
+      }
+    } catch {
+      showToast('이미지 저장 중 오류가 발생했습니다');
+      return;
+    }
+
+    const imageName = pendingComposedImage?.imageName
+      || buildComposedImageName(mainCategory, subCategory, items.map(p => p.content).join(', '));
+
     const nextComposed = {
       id: editingComposedPromptId || uid(),
       mainCategory,
@@ -4279,6 +4902,9 @@
       category: mainCategory,
       items,
       content: items.map(p => p.content).join(', '),
+      imageId: nextImageId,
+      imageData: nextImageId ? '' : (pendingComposedImage?.dataUrl || editingComposedImageData || ''),
+      imageName,
     };
 
     if (isEditMode) {
@@ -4289,6 +4915,10 @@
       });
     } else {
       composedPrompts.push(nextComposed);
+    }
+
+    if (isEditMode && previousImageId && previousImageId !== nextImageId) {
+      await deleteImageIfOrphaned(previousImageId);
     }
 
     save();
@@ -4310,6 +4940,9 @@
         category: item.category,
         items: Array.isArray(item.items) ? item.items.map(cleanPrompt) : [],
         content: item.content,
+        imageId: item.imageId || '',
+        imageData: !item.imageId && item.imageData ? item.imageData : '',
+        imageName: item.imageName || '',
       })),
       categoryConfig,
       hiddenMainCategories: [...hiddenMainCategories],
@@ -4560,6 +5193,23 @@
     }
   });
 
+  document.getElementById('combo-image-file').addEventListener('change', async e => {
+    const file = e.target.files && e.target.files[0];
+    if (!file) {
+      clearPendingComposedImage();
+      return;
+    }
+
+    try {
+      const dataUrl = await readFileAsDataUrl(file);
+      setPendingComposedImage(file, dataUrl);
+    } catch {
+      pendingComposedImage = null;
+      renderPendingComposedImagePreview();
+      showToast('이미지를 읽지 못했습니다');
+    }
+  });
+
   document.addEventListener('keydown', e => {
     if (e.key === 'Escape') {
       closeAddPromptModal();
@@ -4571,6 +5221,10 @@
   });
 
   document.getElementById('prompt-description-preview').addEventListener('click', () => {
+    openImageViewer();
+  });
+
+  document.getElementById('composed-description-preview').addEventListener('click', () => {
     openImageViewer();
   });
 
