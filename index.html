@@ -1047,6 +1047,30 @@
       gap: 10px;
     }
 
+    .combo-pane {
+      display: flex;
+      flex-direction: column;
+      flex: 1;
+      min-height: 0;
+    }
+
+    .combo-pane-title {
+      font-size: 0.78rem;
+      font-weight: 700;
+      color: #b7b9cf;
+      margin: 0 0 8px;
+      letter-spacing: 0.02em;
+    }
+
+    .combo-edit-pane {
+      border: 1px solid #2a2a3a;
+      border-radius: 8px;
+      background: #141420;
+      padding: 10px;
+      flex: 0 0 calc(50% - 5px);
+      min-height: 0;
+    }
+
     .combo-save-body {
       border: 1px solid #2a2a3a;
       border-radius: 8px;
@@ -1055,8 +1079,45 @@
       display: flex;
       flex-direction: column;
       gap: 8px;
+      flex: 0 0 calc(50% - 5px);
       min-height: 0;
+    }
+
+    .combo-edit-load-list {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
       flex: 1;
+      min-height: 0;
+      overflow-y: auto;
+      padding-right: 2px;
+    }
+
+    .combo-edit-chip-list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-bottom: 8px;
+    }
+
+    .combo-edit-items {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      padding: 2px 0 0;
+    }
+
+    .combo-load-group {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .combo-load-group-title {
+      font-size: 0.72rem;
+      color: #8ab4ff;
+      font-weight: 700;
+      padding: 0 2px;
     }
 
     .combo-filter-wrap {
@@ -1179,25 +1240,37 @@
     }
 
     .combo-load-list {
-      display: flex;
-      flex-direction: column;
-      gap: 6px;
-      flex: 1;
-      min-height: 0;
-      overflow-y: auto;
-      padding-right: 2px;
+      display: none;
     }
 
     .combo-load-item {
       display: flex;
       flex-direction: column;
       align-items: stretch;
-      gap: 10px;
+      gap: 6px;
       border: 1px solid #2a2a3a;
       border-radius: 7px;
       background: #171724;
-      padding: 12px;
-      min-height: 120px;
+      padding: 10px 11px;
+    }
+
+    .combo-load-item.active {
+      border-color: #c084fc;
+      box-shadow: inset 0 0 0 1px #c084fc33;
+    }
+
+    .combo-load-item.clickable {
+      cursor: pointer;
+      transition: border-color .15s, background .15s, transform .15s;
+    }
+
+    .combo-load-item.clickable:hover {
+      border-color: #c084fc66;
+      background: #1b1b2a;
+    }
+
+    .combo-load-item.clickable:active {
+      transform: scale(0.992);
     }
 
     .combo-load-item .meta {
@@ -1205,7 +1278,7 @@
       flex: 1;
       display: flex;
       flex-direction: column;
-      gap: 6px;
+      gap: 4px;
     }
 
     .combo-load-item .meta .cat {
@@ -1214,11 +1287,18 @@
       font-weight: 700;
     }
 
+    .combo-load-item .meta .title {
+      font-size: 0.86rem;
+      color: #ececf8;
+      font-weight: 700;
+      line-height: 1.35;
+      word-break: break-all;
+    }
+
     .combo-load-item .meta .text {
       font-size: 0.78rem;
       color: #c9c9d9;
       line-height: 1.45;
-      min-height: 2.9em;
       display: -webkit-box;
       line-clamp: 2;
       -webkit-line-clamp: 2;
@@ -1252,12 +1332,25 @@
       padding: 6px 2px;
     }
 
+    .combo-load-guide {
+      font-size: 0.78rem;
+      color: #8f8fa6;
+      line-height: 1.45;
+      padding: 6px 2px;
+    }
+
+    .combo-load-empty-block {
+      font-size: 0.78rem;
+      color: #777;
+      padding: 10px 2px;
+    }
+
     .combo-card-text {
       min-width: 0;
       display: flex;
       flex-direction: column;
       gap: 4px;
-      justify-content: center;
+      justify-content: flex-start;
     }
 
     .combo-card-name {
@@ -1281,19 +1374,20 @@
     }
 
     .prompt-item.combo-card-item {
-      min-height: 124px;
+      min-height: 0;
     }
 
     .prompt-item.combo-card-item .prompt-item-swipe-content {
-      min-height: 124px;
-      padding: 16px 14px;
+      min-height: 0;
+      padding: 12px 14px;
     }
 
     .prompt-item.combo-card-item .prompt-item-body {
       display: block;
     }
 
-    #combo-filter .cat-chip {
+    #combo-filter .cat-chip,
+    #combo-edit-load-list .cat-chip {
       padding: 10px 18px;
       font-size: 0.98rem;
       font-weight: 700;
@@ -1666,14 +1760,9 @@
             </div>
             <div class="combo-load-list" id="combo-load-list"></div>
           </div>
-
-          <div class="csv-section" style="margin-top:0">
-            <div class="section-label">ZIP 백업 / 복원</div>
-            <button class="btn btn-secondary btn-sm" onclick="exportJSONBackup()">📤 ZIP 내보내기</button>
-            <label class="btn btn-secondary btn-sm" style="text-align:center;cursor:pointer">
-              📥 ZIP/JSON 가져오기
-              <input type="file" accept="application/zip,.zip,application/json,.json" id="json-import" style="display:none" onchange="importJSONBackup(event)" />
-            </label>
+          <div class="combo-pane combo-edit-pane">
+            <div class="combo-pane-title">편집용 조합</div>
+            <div class="combo-edit-load-list" id="combo-edit-load-list"></div>
           </div>
         </div>
       </div>
@@ -1865,6 +1954,17 @@
           <button class="settings-level-btn" type="button" data-preview-animation-level="3" onclick="setPreviewAnimationLevel(3, { notify: true })">3</button>
         </div>
       </div>
+      <div class="settings-option-card">
+        <div class="settings-option-title">백업 / 복원</div>
+        <div class="settings-option-description">프롬프트와 커스텀 조합 데이터를 ZIP 또는 JSON으로 내보내거나 가져옵니다.</div>
+        <div class="settings-level-row" role="group" aria-label="백업 및 복원">
+          <button class="btn btn-secondary btn-sm" type="button" onclick="exportJSONBackup()">📤 ZIP 내보내기</button>
+          <label class="btn btn-secondary btn-sm" style="text-align:center;cursor:pointer">
+            📥 ZIP/JSON 가져오기
+            <input type="file" accept="application/zip,.zip,application/json,.json" id="json-import" style="display:none" onchange="importJSONBackup(event)" />
+          </label>
+        </div>
+      </div>
     </div>
   </div>
 </div>
@@ -1885,7 +1985,9 @@
   const COMPOSED_STORAGE_KEY = 'prompt_repo_composed_v1';
   const LEFT_PANEL_TAB_KEY = 'prompt_repo_left_panel_tab_v1';
   const CATEGORY_CONFIG_KEY = 'prompt_repo_category_config_v1';
+  const COMPOSED_CATEGORY_CONFIG_KEY = 'prompt_repo_composed_category_config_v1';
   const HIDDEN_MAIN_CATEGORIES_KEY = 'prompt_repo_hidden_main_categories_v1';
+  const SETTINGS_STORAGE_KEY = 'prompt_repo_settings_v1';
   const TAP_COMPOSE_MODE_KEY = 'prompt_repo_tap_compose_mode_v1';
   const PREVIEW_ANIMATION_KEY = 'prompt_repo_preview_animation_v1';
   const PROMPT_ADD_MODE = {
@@ -1908,6 +2010,7 @@
   let categoryManageTab = 'prompt';
   let hiddenMainCategories = new Set();
   let categoryConfig = createDefaultCategoryConfig();
+  let composedCategoryConfig = createDefaultComposedCategoryConfig();
   let openedHiddenMainCategories = new Set();
   let isOutputEditing = false;
   let customOutputText = null;
@@ -1959,6 +2062,12 @@
   function createDefaultCategoryConfig() {
     return {
       mainOrder: [],
+      mains: {},
+    };
+  }
+
+  function createDefaultComposedCategoryConfig() {
+    return {
       mains: {},
     };
   }
@@ -2214,6 +2323,37 @@
     );
   }
 
+  function ensureComposedMainCategoryConfig(mainCategory) {
+    if (!mainCategory) return null;
+    if (!composedCategoryConfig.mains[mainCategory]) {
+      composedCategoryConfig.mains[mainCategory] = {
+        editOnly: false,
+      };
+    }
+    return composedCategoryConfig.mains[mainCategory];
+  }
+
+  function getComposedMainCategoryConfig(mainCategory) {
+    if (!mainCategory) return { editOnly: false };
+    return composedCategoryConfig.mains[mainCategory] || { editOnly: false };
+  }
+
+  function ensureComposedCategoryConfigConsistency() {
+    const mainCategories = uniqueInOrder(composedPrompts.map(item => item.mainCategory).filter(Boolean));
+    const nextMains = {};
+    mainCategories.forEach((mainCategory) => {
+      const prev = composedCategoryConfig.mains?.[mainCategory];
+      nextMains[mainCategory] = {
+        editOnly: !!prev?.editOnly,
+      };
+    });
+    composedCategoryConfig.mains = nextMains;
+
+    if (activeCategoryComposed && !mainCategories.includes(activeCategoryComposed)) {
+      activeCategoryComposed = null;
+    }
+  }
+
   // ── Persistence ──
   function load() {
     try {
@@ -2257,6 +2397,25 @@
     }
 
     try {
+      const rawComposedCategoryConfig = localStorage.getItem(COMPOSED_CATEGORY_CONFIG_KEY);
+      const parsed = rawComposedCategoryConfig ? JSON.parse(rawComposedCategoryConfig) : null;
+      if (parsed && typeof parsed === 'object') {
+        const mains = parsed.mains && typeof parsed.mains === 'object' ? parsed.mains : {};
+        composedCategoryConfig = createDefaultComposedCategoryConfig();
+        Object.entries(mains).forEach(([key, value]) => {
+          if (!key || !value || typeof value !== 'object') return;
+          composedCategoryConfig.mains[key] = {
+            editOnly: !!value.editOnly,
+          };
+        });
+      } else {
+        composedCategoryConfig = createDefaultComposedCategoryConfig();
+      }
+    } catch {
+      composedCategoryConfig = createDefaultComposedCategoryConfig();
+    }
+
+    try {
       const storedPreviewAnimation = localStorage.getItem(PREVIEW_ANIMATION_KEY);
       previewAnimationLevel = normalizePreviewAnimationLevel(storedPreviewAnimation);
     } catch {
@@ -2264,6 +2423,7 @@
     }
 
     ensureCategoryConfigConsistency();
+    ensureComposedCategoryConfigConsistency();
 
   }
 
@@ -2285,6 +2445,38 @@
     localStorage.setItem(COMPOSED_STORAGE_KEY, JSON.stringify(composedPayload));
     localStorage.setItem(HIDDEN_MAIN_CATEGORIES_KEY, JSON.stringify([...hiddenMainCategories]));
     localStorage.setItem(CATEGORY_CONFIG_KEY, JSON.stringify(categoryConfig));
+    localStorage.setItem(COMPOSED_CATEGORY_CONFIG_KEY, JSON.stringify(composedCategoryConfig));
+  }
+
+  function getSettingsPayload() {
+    return {
+      tapComposeMode,
+      promptPreviewSizeLevel,
+      previewAnimationLevel,
+    };
+  }
+
+  function saveSettings() {
+    const payload = getSettingsPayload();
+    localStorage.setItem(SETTINGS_STORAGE_KEY, JSON.stringify(payload));
+    localStorage.setItem(TAP_COMPOSE_MODE_KEY, payload.tapComposeMode);
+    localStorage.setItem(PROMPT_PREVIEW_SIZE_LEVEL_KEY, String(payload.promptPreviewSizeLevel));
+    localStorage.setItem(PREVIEW_ANIMATION_KEY, String(payload.previewAnimationLevel));
+  }
+
+  function loadSettings() {
+    let storedSettings = null;
+    try {
+      const rawSettings = localStorage.getItem(SETTINGS_STORAGE_KEY);
+      storedSettings = rawSettings ? JSON.parse(rawSettings) : null;
+    } catch {
+      storedSettings = null;
+    }
+
+    setTapComposeMode(storedSettings?.tapComposeMode ?? localStorage.getItem(TAP_COMPOSE_MODE_KEY));
+    setPromptPreviewSizeLevel(storedSettings?.promptPreviewSizeLevel ?? localStorage.getItem(PROMPT_PREVIEW_SIZE_LEVEL_KEY) ?? 2);
+    setPreviewAnimationLevel(storedSettings?.previewAnimationLevel ?? localStorage.getItem(PREVIEW_ANIMATION_KEY));
+    saveSettings();
   }
 
   function uid() {
@@ -3110,6 +3302,7 @@
   }
 
   function getComposedMainCategoryOrder() {
+    ensureComposedCategoryConfigConsistency();
     return uniqueInOrder(composedPrompts.map(item => item.mainCategory).filter(Boolean));
   }
 
@@ -3121,6 +3314,24 @@
         .map(item => item.subCategory)
         .filter(Boolean)
     );
+  }
+
+  function getComposedEditOnlyMainCategories() {
+    return getComposedMainCategoryOrder().filter(mainCategory => getComposedMainCategoryConfig(mainCategory).editOnly);
+  }
+
+  function getStandardComposedCategories() {
+    return getComposedMainCategoryOrder().filter(mainCategory => !getComposedMainCategoryConfig(mainCategory).editOnly);
+  }
+
+  function setComposedMainCategoryEditOnly(mainCategory, editOnly) {
+    if (!mainCategory) return;
+    const mainConfig = ensureComposedMainCategoryConfig(mainCategory);
+    mainConfig.editOnly = !!editOnly;
+    if (mainConfig.editOnly && activeCategoryComposed === mainCategory) {
+      activeCategoryComposed = null;
+    }
+    ensureComposedCategoryConfigConsistency();
   }
 
   function moveComposedMainCategory(mainCategory, direction) {
@@ -3139,6 +3350,7 @@
     });
 
     composedPrompts = order.flatMap(category => grouped.get(category) || []);
+    ensureComposedCategoryConfigConsistency();
     save();
     render();
     renderCategoryManageList();
@@ -3206,6 +3418,12 @@
       activeCategoryComposed = nextMainCategory;
     }
 
+    const prevConfig = getComposedMainCategoryConfig(mainCategory);
+    delete composedCategoryConfig.mains[mainCategory];
+    composedCategoryConfig.mains[nextMainCategory] = {
+      editOnly: !!prevConfig.editOnly,
+    };
+
     save();
     render();
     renderCategoryManageList();
@@ -3225,6 +3443,7 @@
       .filter(Boolean);
 
     composedPrompts = composedPrompts.filter(item => item.mainCategory !== mainCategory);
+    delete composedCategoryConfig.mains[mainCategory];
     if (activeCategoryComposed === mainCategory) {
       activeCategoryComposed = null;
     }
@@ -3236,6 +3455,7 @@
       await deleteImageIfOrphaned(imageId);
     }
 
+    ensureComposedCategoryConfigConsistency();
     save();
     render();
     renderCategoryManageList();
@@ -3291,6 +3511,7 @@
       await deleteImageIfOrphaned(imageId);
     }
 
+    ensureComposedCategoryConfigConsistency();
     save();
     render();
     renderCategoryManageList();
@@ -3299,6 +3520,13 @@
 
   function toggleMainCategoryHidden(mainCategory, checked) {
     setMainCategoryHidden(mainCategory, checked);
+    save();
+    render();
+    renderCategoryManageList();
+  }
+
+  function toggleComposedMainCategoryEditOnly(mainCategory, checked) {
+    setComposedMainCategoryEditOnly(mainCategory, checked);
     save();
     render();
     renderCategoryManageList();
@@ -3490,6 +3718,7 @@
     }
 
     mainCategories.forEach((mainCategory, mainIndex) => {
+      const mainConfig = getComposedMainCategoryConfig(mainCategory);
       const mainItem = document.createElement('div');
       mainItem.className = 'category-manage-main-item';
 
@@ -3502,6 +3731,14 @@
 
       const actions = document.createElement('div');
       actions.className = 'category-manage-actions';
+
+      const editOnlyLabel = document.createElement('label');
+      editOnlyLabel.className = 'hidden-option-row';
+      editOnlyLabel.style.marginTop = '0';
+      editOnlyLabel.innerHTML = '<input type="checkbox" /><span>편집용</span>';
+      const editOnlyInput = editOnlyLabel.querySelector('input');
+      editOnlyInput.checked = !!mainConfig.editOnly;
+      editOnlyInput.onchange = () => toggleComposedMainCategoryEditOnly(mainCategory, editOnlyInput.checked);
 
       const upBtn = document.createElement('button');
       upBtn.type = 'button';
@@ -3529,6 +3766,7 @@
       deleteBtn.textContent = '삭제';
       deleteBtn.onclick = () => deleteComposedMainCategory(mainCategory);
 
+      actions.appendChild(editOnlyLabel);
       actions.appendChild(upBtn);
       actions.appendChild(downBtn);
       actions.appendChild(renameBtn);
@@ -3599,7 +3837,7 @@
   }
 
   function getComposedCategories() {
-    return uniqueInOrder(composedPrompts.map(p => p.mainCategory).filter(Boolean));
+    return getStandardComposedCategories();
   }
 
   function getComposedSubCategories(mainCategory) {
@@ -3722,7 +3960,7 @@
 
   function setTapComposeMode(mode, options = {}) {
     tapComposeMode = normalizeTapComposeMode(mode);
-    localStorage.setItem(TAP_COMPOSE_MODE_KEY, tapComposeMode);
+    saveSettings();
     renderTapComposeToggle();
     if (options.notify) {
       if (tapComposeMode === PROMPT_ADD_MODE.TAP) {
@@ -3768,7 +4006,7 @@
 
   function setPromptPreviewSizeLevel(level, options = {}) {
     promptPreviewSizeLevel = normalizePromptPreviewSizeLevel(level);
-    localStorage.setItem(PROMPT_PREVIEW_SIZE_LEVEL_KEY, String(promptPreviewSizeLevel));
+    saveSettings();
     renderPromptPreviewSizeLevel();
     if (options.notify) {
       showToast(`이미지 영역 크기를 ${getPromptPreviewSizeLabel(promptPreviewSizeLevel)}로 변경했습니다`);
@@ -3777,7 +4015,7 @@
 
   function setPreviewAnimationLevel(level, options = {}) {
     previewAnimationLevel = normalizePreviewAnimationLevel(level);
-    localStorage.setItem(PREVIEW_ANIMATION_KEY, String(previewAnimationLevel));
+    saveSettings();
     renderPreviewAnimationLevel();
     renderPromptDescriptionPreview();
     renderComposedDescriptionPreview();
@@ -3998,12 +4236,12 @@
           const chip = document.createElement('span');
           chip.className = 'cat-chip' + (used ? ' used' : '') + (activeCategoryPrompt === mainCategory && activeSubCategoryPrompt === subCategory ? ' active' : '');
           chip.innerHTML = `<span class="cat-chip-mark${used ? '' : ' hidden'}">✓</span>${esc(subCategory)}`;
-          chip.onclick = () => {
+          bindPressAction(chip, () => {
             clearPromptDescriptionPreview({ feedback: true });
             activeCategoryPrompt = mainCategory;
             activeSubCategoryPrompt = subCategory;
             render();
-          };
+          });
           body.appendChild(chip);
         });
       }
@@ -4020,48 +4258,74 @@
     const el = document.getElementById('combo-filter');
     el.innerHTML = '';
 
-    if (cats.length === 0) return;
+    if (cats.length === 0) {
+      el.innerHTML = '<div class="combo-load-guide">일반 조합으로 표시할 커스텀 대분류가 없습니다.</div>';
+      return;
+    }
 
     cats.forEach(c => {
       const chip = document.createElement('span');
       chip.className = 'cat-chip' + (activeCategoryComposed === c ? ' active' : '');
       chip.textContent = c;
-      chip.onclick = () => {
+      bindPressAction(chip, () => {
         activeCategoryComposed = (activeCategoryComposed === c) ? null : c;
         activeComposedPreviewId = null;
         render();
-      };
+      });
       el.appendChild(chip);
     });
   }
 
   function renderComposedLoadList() {
     const list = document.getElementById('combo-load-list');
-    if (!list) return;
+    const editList = document.getElementById('combo-edit-load-list');
+    if (!list || !editList) return;
 
-    const filteredComposed = activeCategoryComposed
-      ? composedPrompts.filter(p => p.mainCategory === activeCategoryComposed)
-      : [];
+    const editOnlyCategoryOrder = getComposedEditOnlyMainCategories();
 
     list.innerHTML = '';
+    editList.innerHTML = '';
 
     if (leftPanelTab !== 'combo') {
       return;
     }
 
-    if (!activeCategoryComposed) {
-      list.innerHTML = '';
+    if (editOnlyCategoryOrder.length === 0) {
+      const empty = document.createElement('div');
+      empty.className = 'combo-load-empty-block';
+      empty.textContent = '편집용으로 표시된 커스텀 대분류가 없습니다.';
+      editList.appendChild(empty);
       return;
     }
 
-    if (filteredComposed.length === 0) {
-      const empty = document.createElement('div');
-      empty.className = 'combo-load-empty';
-      empty.textContent = '선택한 대분류에 커스텀 조합이 없습니다.';
-      list.appendChild(empty);
-      return;
-    }
-    list.innerHTML = '';
+    editOnlyCategoryOrder.forEach(mainCategory => {
+      const chip = document.createElement('span');
+      chip.className = 'cat-chip' + (activeCategoryComposed === mainCategory ? ' active' : '');
+      chip.textContent = mainCategory;
+      bindPressAction(chip, () => {
+        activeCategoryComposed = activeCategoryComposed === mainCategory ? null : mainCategory;
+        activeComposedPreviewId = null;
+        render();
+      });
+      editList.appendChild(chip);
+    });
+  }
+
+  function buildComposedLoadItem(item, options = {}) {
+    const showCategory = options.showCategory !== false;
+    const composedText = getComposedItemText(item);
+    const row = document.createElement('div');
+    row.className = 'combo-load-item clickable' + (activeComposedPreviewId === item.id ? ' active' : '');
+    row.title = '터치하면 현재 조합으로 불러옵니다';
+    row.innerHTML = `
+      <div class="meta">
+        ${showCategory ? `<div class="cat">${esc(item.mainCategory || '')}</div>` : ''}
+        <div class="title">${esc(item.subCategory || '이름없음')}</div>
+        <div class="text">${esc(composedText)}</div>
+      </div>
+    `;
+    bindPressAction(row, () => loadComposedPrompt(item.id));
+    return row;
   }
 
   function loadComposedPrompt(id) {
@@ -4070,6 +4334,7 @@
       showToast('불러올 조합을 찾지 못했습니다');
       return;
     }
+    activeCategoryComposed = item.mainCategory;
     activeComposedPreviewId = id;
     clearOutputOverride();
     selected = item.items.map(entry => ({ ...normalizeSelected(entry), source: 'prompt' })).filter(entry => entry && entry.content);
@@ -5061,7 +5326,7 @@
   // ── ZIP Backup (metadata + images) ──
   function buildBackupPayload() {
     return {
-      version: 2,
+      version: 3,
       exportedAt: new Date().toISOString(),
       prompts: prompts.map(cleanPrompt),
       composedPrompts: composedPrompts.map(item => ({
@@ -5076,6 +5341,7 @@
         imageName: item.imageName || '',
       })),
       categoryConfig,
+      composedCategoryConfig,
       hiddenMainCategories: [...hiddenMainCategories],
       leftPanelTab,
     };
@@ -5086,6 +5352,7 @@
     const nextComposed = Array.isArray(parsed.composedPrompts) ? parsed.composedPrompts.map(normalizeComposedPrompt).filter(Boolean) : [];
     const nextHidden = Array.isArray(parsed.hiddenMainCategories) ? parsed.hiddenMainCategories.filter(Boolean) : [];
     const nextCategoryConfig = parsed.categoryConfig && typeof parsed.categoryConfig === 'object' ? parsed.categoryConfig : null;
+    const nextComposedCategoryConfig = parsed.composedCategoryConfig && typeof parsed.composedCategoryConfig === 'object' ? parsed.composedCategoryConfig : null;
 
     if (nextPrompts.length === 0 && nextComposed.length === 0) {
       throw new Error('EMPTY_DATA');
@@ -5109,7 +5376,21 @@
       categoryConfig = createDefaultCategoryConfig();
     }
 
+    if (nextComposedCategoryConfig) {
+      composedCategoryConfig = createDefaultComposedCategoryConfig();
+      const mains = nextComposedCategoryConfig.mains && typeof nextComposedCategoryConfig.mains === 'object' ? nextComposedCategoryConfig.mains : {};
+      Object.entries(mains).forEach(([key, value]) => {
+        if (!key || !value || typeof value !== 'object') return;
+        composedCategoryConfig.mains[key] = {
+          editOnly: !!value.editOnly,
+        };
+      });
+    } else {
+      composedCategoryConfig = createDefaultComposedCategoryConfig();
+    }
+
     ensureCategoryConfigConsistency();
+    ensureComposedCategoryConfigConsistency();
     activePromptPreviewId = prompts[0]?.id || null;
     save();
     render();
@@ -5279,6 +5560,25 @@
     return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
   }
 
+  function bindPressAction(element, handler) {
+    if (!element || typeof handler !== 'function') return;
+
+    let lastTouchPressAt = 0;
+
+    element.addEventListener('pointerup', (e) => {
+      if (e.pointerType === 'mouse' && e.button !== 0) return;
+      if (e.pointerType !== 'mouse') {
+        lastTouchPressAt = Date.now();
+      }
+      handler(e);
+    });
+
+    element.addEventListener('click', (e) => {
+      if (Date.now() - lastTouchPressAt < 500) return;
+      handler(e);
+    });
+  }
+
   function preventSafariDoubleTapZoom() {
     const DOUBLE_TAP_DELAY = 320;
     let lastTouchEndAt = 0;
@@ -5379,9 +5679,7 @@
 
   // ── Init ──
   preventSafariDoubleTapZoom();
-  setTapComposeMode(localStorage.getItem(TAP_COMPOSE_MODE_KEY));
-  setPromptPreviewSizeLevel(localStorage.getItem(PROMPT_PREVIEW_SIZE_LEVEL_KEY) || 2);
-  setPreviewAnimationLevel(localStorage.getItem(PREVIEW_ANIMATION_KEY));
+  loadSettings();
   renderSettingsDrawer();
   renderImageViewer();
   setLeftPanelTab(localStorage.getItem(LEFT_PANEL_TAB_KEY) || 'prompt');
