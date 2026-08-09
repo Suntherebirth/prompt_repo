@@ -2997,6 +2997,17 @@
     preview.classList.toggle('preview-animation-level-3', previewAnimationLevel === 3);
     preview.classList.toggle('preview-animation-enabled', previewAnimationLevel > 0);
 
+    const hasImageCandidate = Boolean(prompt && (prompt.imageData || prompt.imageId));
+    if (!hasImageCandidate) {
+      preview.classList.remove('has-image');
+      preview.classList.remove('image-switch-feedback');
+      preview.classList.remove('image-clear-feedback');
+      preview.title = '';
+      preview.innerHTML = '<span class="empty-state">설명 이미지가 표시됩니다.</span>';
+      lastRenderedPromptPreviewImageKey = '';
+      return;
+    }
+
     const imageSrc = getPromptImageSource(prompt);
     if (imageSrc) {
       const altText = prompt.imageName || getPromptDisplayName(prompt.mainCategory, prompt.subCategory);
@@ -3031,11 +3042,6 @@
     preview.classList.remove('has-image');
     preview.classList.remove('image-switch-feedback');
     preview.classList.remove('image-clear-feedback');
-    if (shouldAnimatePromptPreviewClear) {
-      void preview.offsetWidth;
-      preview.classList.add('image-clear-feedback');
-      shouldAnimatePromptPreviewClear = false;
-    }
     preview.title = '';
     preview.innerHTML = '<span class="empty-state">설명 이미지가 표시됩니다.</span>';
     lastRenderedPromptPreviewImageKey = '';
@@ -3055,6 +3061,16 @@
     preview.classList.toggle('preview-animation-enabled', previewAnimationLevel > 0);
 
     const composed = getActiveComposedPreviewItem();
+    const hasImageCandidate = Boolean(composed && (composed.imageData || composed.imageId));
+    if (!hasImageCandidate) {
+      preview.classList.remove('has-image');
+      preview.classList.remove('image-switch-feedback');
+      preview.title = '';
+      preview.innerHTML = '<span class="empty-state">선택한 커스텀 조합의 설명 이미지가 표시됩니다.</span>';
+      lastRenderedComposedPreviewImageKey = '';
+      return;
+    }
+
     const imageSrc = getPromptImageSource(composed);
     if (imageSrc) {
       const altText = composed.imageName || getPromptDisplayName(composed.mainCategory, composed.subCategory);
@@ -4683,6 +4699,17 @@
       .catch(() => showToast('커스텀 조합은 불러왔지만 복사에 실패했습니다'));
   }
 
+  function appendRandomPromptToCurrentSelection(targetPrompt) {
+    if (!targetPrompt) return false;
+    const existingSelection = selected.find(item => item.id === targetPrompt.id && item.source === 'prompt');
+    if (existingSelection) return false;
+    selected = [...selected, { ...normalizeSelected(targetPrompt), source: 'prompt' }];
+    renderSelected();
+    renderPromptDescriptionPreview();
+    renderComposedDescriptionPreview();
+    return true;
+  }
+
   async function deleteComposedPrompt(id, e) {
     if (e) e.stopPropagation();
     if (!confirm('정말 삭제하시겠습니까?')) return;
@@ -4728,6 +4755,7 @@
       : () => addPromptToComposition(promptData);
     const allowRightSwipeCommit = options.allowRightSwipeCommit !== false;
     const allowLeftSwipeActions = options.allowLeftSwipeActions !== false;
+    const shouldCommitRightSwipe = options.useRightSwipeCommit === true || (allowRightSwipeCommit && isSwipeComposeMode());
 
     const closedX = 0;
     const openedX = -PROMPT_SWIPE_ACTION_WIDTH;
@@ -4743,7 +4771,7 @@
 
     const setSwipeX = (x) => {
       const minX = allowLeftSwipeActions ? openedX : closedX;
-      const maxX = allowRightSwipeCommit && isSwipeComposeMode() ? rightSwipeLimitX : closedX;
+      const maxX = shouldCommitRightSwipe ? rightSwipeLimitX : (allowRightSwipeCommit ? rightSwipeLimitX : closedX);
       currentX = Math.min(maxX, Math.max(minX, x));
       swipeContent.style.transform = `translateX(${currentX}px)`;
     };
@@ -4833,7 +4861,7 @@
       swipeContent.style.transition = '';
 
       if (swiping) {
-        if (allowRightSwipeCommit && isSwipeComposeMode() && currentX >= rightSwipeCommitX) {
+        if (shouldCommitRightSwipe && currentX >= rightSwipeCommitX) {
           closeAllPromptSwipeActions(promptData.id);
           commitAddAnimation();
           return;
@@ -4919,8 +4947,39 @@
         }
 
         bindPromptItemSwipe(card, item, {
-          allowRightSwipeCommit: false,
+          allowRightSwipeCommit: true,
+          useRightSwipeCommit: true,
           onTap: () => loadComposedPrompt(item.id),
+          onSwipeCommit: () => {
+            setLeftPanelTab('prompt');
+            const coreSelection = findCoreSubCategorySelection();
+            if (coreSelection) {
+              activeCategoryPrompt = coreSelection.mainCategory;
+              activeSubCategoryPrompt = coreSelection.subCategory;
+              if (getMainCategoryConfig(coreSelection.mainCategory).hiddenByDefault) {
+                openedHiddenMainCategories.add(coreSelection.mainCategory);
+              }
+            }
+            render();
+            requestAnimationFrame(() => {
+              const randomCard = document.getElementById('prompt-random-slot')?.querySelector('.random-card')
+                || document.querySelector('.random-card');
+              if (!randomCard) return;
+              const randomCardSwipe = randomCard.dataset.randomActivated === 'true' ? null : randomCard;
+              if (randomCardSwipe) {
+                randomCard.dataset.randomActivated = 'true';
+                const handler = randomCard._randomCardHandler;
+                if (typeof handler === 'function') {
+                  handler();
+                } else {
+                  const selection = randomCard.querySelector('.random-content');
+                  if (selection) {
+                    selection.click();
+                  }
+                }
+              }
+            });
+          },
         });
         list.appendChild(card);
       });
@@ -4964,11 +5023,6 @@
       `;
 
       const applyRandomSelection = () => {
-        const previousSelections = selected.filter(item => item.source === 'prompt' && item.mainCategory === activeCategoryPrompt && item.subCategory === activeSubCategoryPrompt);
-        if (previousSelections.length > 0) {
-          selected = selected.filter(item => !(item.source === 'prompt' && item.mainCategory === activeCategoryPrompt && item.subCategory === activeSubCategoryPrompt));
-        }
-
         const availablePrompts = filteredPrompts.filter(p => !selected.some(s => s.id === p.id && s.source === 'prompt'));
         const targetPrompt = availablePrompts.length > 0
           ? availablePrompts[Math.floor(Math.random() * availablePrompts.length)]
@@ -4977,24 +5031,25 @@
           showToast('선택 가능한 프롬프트가 없습니다');
           return;
         }
-        const added = addPromptToComposition(targetPrompt, { suppressToast: true });
+
+        const added = appendRandomPromptToCurrentSelection(targetPrompt);
         if (!added) {
           return;
         }
 
-        if (isSubCategoryCoreEnabled(activeCategoryPrompt, activeSubCategoryPrompt)) {
-          copyPromptSilently(getComposedOutputText())
-            .then((copied) => {
-              showToast(copied ? '핵심 분류 무작위 선택이 조합에 추가되고 클립보드에 복사되었습니다' : '핵심 분류 무작위 선택은 추가되었지만 복사에 실패했습니다');
-            })
-            .catch(() => showToast('핵심 분류 무작위 선택은 추가되었지만 복사에 실패했습니다'));
-        }
+        copyPromptSilently(getComposedOutputText())
+          .then((copied) => {
+            showToast(copied ? '무작위 선택 프롬프트가 조합 끝에 추가되고 클립보드에 복사되었습니다' : '무작위 선택 프롬프트는 추가되었지만 복사에 실패했습니다');
+          })
+          .catch(() => showToast('무작위 선택 프롬프트는 추가되었지만 복사에 실패했습니다'));
       };
 
       const handleRandomCardTap = () => {
         isPromptPreviewSuppressed = false;
         applyRandomSelection();
       };
+
+      randomCard._randomCardHandler = handleRandomCardTap;
 
       bindPromptItemSwipe(randomCard, { id: randomCard.dataset.promptId, content: '무작위로 선택' }, {
         onTap: handleRandomCardTap,
