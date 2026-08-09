@@ -4845,7 +4845,18 @@
           showToast('선택 가능한 프롬프트가 없습니다');
           return;
         }
-        addPromptToComposition(targetPrompt);
+        const added = addPromptToComposition(targetPrompt, { suppressToast: true });
+        if (!added) {
+          return;
+        }
+
+        if (isSubCategoryCoreEnabled(activeCategoryPrompt, activeSubCategoryPrompt)) {
+          copyPromptSilently(getComposedOutputText())
+            .then((copied) => {
+              showToast(copied ? '핵심 분류 무작위 선택이 조합에 추가되고 클립보드에 복사되었습니다' : '핵심 분류 무작위 선택은 추가되었지만 복사에 실패했습니다');
+            })
+            .catch(() => showToast('핵심 분류 무작위 선택은 추가되었지만 복사에 실패했습니다'));
+        }
       };
 
       const handleRandomCardTap = () => {
@@ -5447,11 +5458,12 @@
     }
   }
 
-  function addPromptToComposition(p) {
+  function addPromptToComposition(p, options = {}) {
     isPromptPreviewSuppressed = false;
+    const suppressToast = !!options.suppressToast;
     const idx = selected.findIndex(s => s.id === p.id && s.source === 'prompt');
     if (idx >= 0) {
-      showToast('이미 조합에 추가된 프롬프트입니다');
+      if (!suppressToast) showToast('이미 조합에 추가된 프롬프트입니다');
       return false;
     }
 
@@ -5463,7 +5475,7 @@
     selectingFromPreviewId = p.id;
     selected.push({ ...p, source: 'prompt' });
     render();
-    showToast('조합에 추가되었습니다');
+    if (!suppressToast) showToast('조합에 추가되었습니다');
     setTimeout(() => {
       if (selectingFromPreviewId !== p.id) return;
       selectingFromPreviewId = null;
