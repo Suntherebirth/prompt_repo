@@ -3019,6 +3019,15 @@
 
     queuePromptImageLoad(prompt);
 
+    const hasExistingRenderedImage = preview.classList.contains('has-image') && !!preview.querySelector('.preview-image-shell img');
+    if (hasExistingRenderedImage) {
+      shouldAnimatePromptPreviewClear = false;
+      preview.classList.remove('image-clear-feedback');
+      preview.classList.remove('image-switch-feedback');
+      preview.title = '터치하면 이미지를 크게 봅니다';
+      return;
+    }
+
     preview.classList.remove('has-image');
     preview.classList.remove('image-switch-feedback');
     preview.classList.remove('image-clear-feedback');
@@ -3064,6 +3073,14 @@
     }
 
     queuePromptImageLoad(composed);
+
+    const hasExistingRenderedImage = preview.classList.contains('has-image') && !!preview.querySelector('.preview-image-shell img');
+    if (hasExistingRenderedImage) {
+      preview.classList.remove('image-switch-feedback');
+      preview.title = '터치하면 이미지를 크게 봅니다';
+      return;
+    }
+
     preview.classList.remove('has-image');
     preview.classList.remove('image-switch-feedback');
     preview.title = '';
