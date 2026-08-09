@@ -261,12 +261,22 @@
       animation: previewBreathingStrong 2.4s ease-in-out infinite;
     }
 
-    .prompt-description-preview img.preview-image-enter {
-      animation: previewImageFadeIn .36s cubic-bezier(0.16, 1, 0.3, 1);
+    .prompt-description-preview.preview-transition-mode-scale img.preview-image-enter {
+      animation: previewImageScaleFadeIn .36s cubic-bezier(0.16, 1, 0.3, 1);
       transform-origin: center;
     }
 
-    @keyframes previewImageFadeIn {
+    .prompt-description-preview.preview-transition-mode-fade img.preview-image-enter {
+      animation: previewImageFadeTransition .68s cubic-bezier(0.16, 0.84, 0.44, 1);
+      transform-origin: center;
+    }
+
+    .prompt-description-preview.preview-transition-mode-cut img.preview-image-enter {
+      animation: previewImageCutTransition .36s cubic-bezier(0.22, 1, 0.36, 1);
+      transform-origin: center;
+    }
+
+    @keyframes previewImageScaleFadeIn {
       0% {
         opacity: 0;
         transform: scale(0.976);
@@ -276,6 +286,50 @@
         opacity: 1;
         transform: scale(1);
         filter: saturate(1) blur(0);
+      }
+    }
+
+    @keyframes previewImageFadeTransition {
+      0% {
+        opacity: 0;
+        transform: translateY(14px) scale(1.06);
+        filter: blur(10px) saturate(0.72) contrast(0.92);
+      }
+      25% {
+        opacity: 0.2;
+        transform: translateY(8px) scale(1.03);
+        filter: blur(5px) saturate(0.86) contrast(0.96);
+      }
+      60% {
+        opacity: 0.78;
+        transform: translateY(3px) scale(1.01);
+        filter: blur(1.2px) saturate(0.96) contrast(1.01);
+      }
+      100% {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+        filter: blur(0) saturate(1) contrast(1);
+      }
+    }
+
+    @keyframes previewImageCutTransition {
+      0% {
+        opacity: 0;
+        transform: scale(1.04) skewX(-4deg);
+        clip-path: inset(8% 8% 8% 8% round 12px);
+        filter: brightness(1.05) contrast(1.1);
+      }
+      45% {
+        opacity: 0.7;
+        transform: scale(1.01) skewX(-1.5deg);
+        clip-path: inset(2% 2% 2% 2% round 8px);
+        filter: brightness(1.02) contrast(1.04);
+      }
+      100% {
+        opacity: 1;
+        transform: scale(1) skewX(0deg);
+        clip-path: inset(0% 0% 0% 0% round 0);
+        filter: brightness(1) contrast(1);
       }
     }
 
@@ -342,7 +396,9 @@
         animation: none;
       }
 
-      .prompt-description-preview img.preview-image-enter {
+      .prompt-description-preview.preview-transition-mode-scale img.preview-image-enter,
+      .prompt-description-preview.preview-transition-mode-fade img.preview-image-enter,
+      .prompt-description-preview.preview-transition-mode-cut img.preview-image-enter {
         animation: none;
       }
 
@@ -2003,6 +2059,15 @@
         </div>
       </div>
       <div class="settings-option-card">
+        <div class="settings-option-title">이미지 전환 효과</div>
+        <div class="settings-option-description">이미지 미리보기의 전환 방식을 선택합니다. 스케일 업은 기본 느낌, 페이드 인/아웃은 부드러운 전환, 컷 전환은 더 abrupt한 느낌을 줍니다.</div>
+        <div class="settings-level-row" role="group" aria-label="이미지 전환 효과 선택">
+          <button class="settings-level-btn" type="button" data-preview-transition-mode="scale" onclick="setPreviewTransitionMode('scale', { notify: true })">스케일 업</button>
+          <button class="settings-level-btn" type="button" data-preview-transition-mode="fade" onclick="setPreviewTransitionMode('fade', { notify: true })">페이드 인/아웃</button>
+          <button class="settings-level-btn" type="button" data-preview-transition-mode="cut" onclick="setPreviewTransitionMode('cut', { notify: true })">컷 전환</button>
+        </div>
+      </div>
+      <div class="settings-option-card">
         <div class="settings-option-title">백업 / 복원</div>
         <div class="settings-option-description">프롬프트와 커스텀 조합 데이터를 ZIP 또는 JSON으로 내보내거나 가져옵니다.</div>
         <div class="settings-level-row" role="group" aria-label="백업 및 복원">
@@ -2038,6 +2103,7 @@
   const SETTINGS_STORAGE_KEY = 'prompt_repo_settings_v1';
   const TAP_COMPOSE_MODE_KEY = 'prompt_repo_tap_compose_mode_v1';
   const PREVIEW_ANIMATION_KEY = 'prompt_repo_preview_animation_v1';
+  const PREVIEW_TRANSITION_MODE_KEY = 'prompt_repo_preview_transition_mode_v1';
   const PROMPT_ADD_MODE = {
     SWIPE: 'swipe',
     TAP: 'tap',
@@ -2083,6 +2149,7 @@
   let isSettingsDrawerOpen = false;
   let promptPreviewSizeLevel = 2;
   let previewAnimationLevel = 2;
+  let previewTransitionMode = 'scale';
   let activeImageViewer = null;
   let imageViewerScale = 1;
   let imageViewerTranslateX = 0;
@@ -2611,6 +2678,7 @@
       tapComposeMode,
       promptPreviewSizeLevel,
       previewAnimationLevel,
+      previewTransitionMode,
     };
   }
 
@@ -2620,6 +2688,7 @@
     localStorage.setItem(TAP_COMPOSE_MODE_KEY, payload.tapComposeMode);
     localStorage.setItem(PROMPT_PREVIEW_SIZE_LEVEL_KEY, String(payload.promptPreviewSizeLevel));
     localStorage.setItem(PREVIEW_ANIMATION_KEY, String(payload.previewAnimationLevel));
+    localStorage.setItem(PREVIEW_TRANSITION_MODE_KEY, payload.previewTransitionMode);
   }
 
   function loadSettings() {
@@ -2634,6 +2703,7 @@
     setTapComposeMode(storedSettings?.tapComposeMode ?? localStorage.getItem(TAP_COMPOSE_MODE_KEY));
     setPromptPreviewSizeLevel(storedSettings?.promptPreviewSizeLevel ?? localStorage.getItem(PROMPT_PREVIEW_SIZE_LEVEL_KEY) ?? 2);
     setPreviewAnimationLevel(storedSettings?.previewAnimationLevel ?? localStorage.getItem(PREVIEW_ANIMATION_KEY));
+    setPreviewTransitionMode(storedSettings?.previewTransitionMode ?? localStorage.getItem(PREVIEW_TRANSITION_MODE_KEY) ?? 'scale');
     saveSettings();
   }
 
@@ -4097,6 +4167,40 @@
     });
   }
 
+  function normalizePreviewTransitionMode(value) {
+    if (value === 'fade') return 'fade';
+    if (value === 'cut') return 'cut';
+    return 'scale';
+  }
+
+  function getPreviewTransitionModeLabel(mode) {
+    if (mode === 'fade') return '페이드 인/아웃';
+    if (mode === 'cut') return '컷 전환';
+    return '스케일 업';
+  }
+
+  function getPreviewTransitionModeText(mode) {
+    if (mode === 'fade') return '페이드 인/아웃';
+    if (mode === 'cut') return '컷 전환';
+    return '스케일 업';
+  }
+
+  function renderPreviewTransitionMode() {
+    document.querySelectorAll('[data-preview-transition-mode]').forEach(button => {
+      const mode = button.getAttribute('data-preview-transition-mode');
+      const isActive = previewTransitionMode === mode;
+      button.classList.toggle('active', isActive);
+      button.setAttribute('aria-pressed', isActive ? 'true' : 'false');
+      button.title = isActive ? `현재 전환 효과: ${getPreviewTransitionModeLabel(mode)}` : `전환 효과를 ${getPreviewTransitionModeLabel(mode)}로 변경`;
+    });
+
+    document.querySelectorAll('.prompt-description-preview').forEach((preview) => {
+      preview.classList.toggle('preview-transition-mode-scale', previewTransitionMode === 'scale');
+      preview.classList.toggle('preview-transition-mode-fade', previewTransitionMode === 'fade');
+      preview.classList.toggle('preview-transition-mode-cut', previewTransitionMode === 'cut');
+    });
+  }
+
   function getPreviewAnimationLevelLabel(level) {
     if (level === 1) return '미리보기 애니메이션: 더 약하게';
     if (level === 3) return '미리보기 애니메이션: 더 강하게';
@@ -4221,6 +4325,17 @@
     renderComposedDescriptionPreview();
     if (options.notify) {
       showToast(`미리보기 애니메이션을 ${getPreviewAnimationLevelText(previewAnimationLevel)}로 변경했습니다`);
+    }
+  }
+
+  function setPreviewTransitionMode(mode, options = {}) {
+    previewTransitionMode = normalizePreviewTransitionMode(mode);
+    saveSettings();
+    renderPreviewTransitionMode();
+    renderPromptDescriptionPreview();
+    renderComposedDescriptionPreview();
+    if (options.notify) {
+      showToast(`이미지 전환 효과를 ${getPreviewTransitionModeText(previewTransitionMode)}로 변경했습니다`);
     }
   }
 
