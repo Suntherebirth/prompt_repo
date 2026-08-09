@@ -4758,21 +4758,6 @@
     } else {
       render();
     }
-
-    const mainCategory = activeCategoryPrompt;
-    const subCategory = activeSubCategoryPrompt;
-    if (!mainCategory || !subCategory) {
-      showToast('프롬프트 탭에서 활성화된 중분류가 없습니다');
-      return;
-    }
-
-    if (!isSubCategoryRandomSelectionEnabled(mainCategory, subCategory)) {
-      showToast('현재 중분류는 무작위 선택 카드가 비활성화되어 있습니다');
-      return;
-    }
-
-    isPromptPreviewSuppressed = false;
-    applyRandomSelectionForSubCategory(mainCategory, subCategory);
   }
 
   function bindPromptItemSwipe(item, promptData, options = {}) {
