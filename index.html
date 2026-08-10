@@ -1319,13 +1319,23 @@
     .composer-actions {
       display: flex;
       gap: 8px;
-      flex-wrap: wrap;
-      align-items: center;
-      justify-content: flex-start;
+      align-items: stretch;
     }
 
-    .composer-actions .btn-save-composed {
-      margin-left: auto;
+    .composer-actions .btn {
+      flex: 2;
+      padding: 13px 10px;
+      font-size: 0.9rem;
+      justify-content: center;
+      display: flex;
+      align-items: center;
+    }
+
+    .composer-actions .btn-secondary,
+    .composer-actions .btn-danger {
+      flex: 1;
+      padding: 10px 6px;
+      font-size: 0.8rem;
     }
 
     .combo-save-row {
@@ -1487,6 +1497,86 @@
 
     .prompt-item.combo-card-item .prompt-item-body {
       display: block;
+    }
+
+    .prompt-item.combo-card-item.core-random-armed {
+      border-color: #f59e0b66;
+      background: linear-gradient(135deg, rgba(90, 59, 15, 0.94), rgba(46, 31, 72, 0.94));
+      box-shadow: inset 0 0 0 1px rgba(245, 158, 11, 0.22);
+    }
+
+    .prompt-item.combo-card-item.core-random-armed .combo-card-random-name {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      color: #fef3c7;
+    }
+
+    .prompt-item.combo-card-item.core-random-armed .combo-card-random-icon {
+      font-size: 1rem;
+      line-height: 1;
+    }
+
+    .prompt-item.combo-card-item.core-random-armed .combo-card-preview {
+      color: #f4d8a5;
+    }
+
+    .prompt-item.combo-card-item.core-random-morph .prompt-item-swipe-content {
+      animation: coreRandomFadeIn .18s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .prompt-item.combo-card-item.core-random-morph .combo-card-text {
+      animation: coreRandomTextFadeIn .16s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .prompt-item.combo-card-item.core-random-fade-out {
+      pointer-events: none;
+    }
+
+    .prompt-item.combo-card-item.core-random-fade-out .prompt-item-swipe-content {
+      animation: coreRandomFadeOut .12s ease forwards;
+    }
+
+    @keyframes coreRandomFadeIn {
+      0% {
+        opacity: 0;
+        transform: translateY(3px);
+        filter: saturate(0.9);
+      }
+      70% {
+        opacity: 1;
+        transform: translateY(0);
+        filter: saturate(1.04);
+      }
+      100% {
+        opacity: 1;
+        transform: translateY(0);
+        filter: saturate(1);
+      }
+    }
+
+    @keyframes coreRandomTextFadeIn {
+      0% {
+        opacity: 0;
+        transform: translateY(2px);
+      }
+      100% {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    @keyframes coreRandomFadeOut {
+      0% {
+        opacity: 1;
+        transform: translateY(0);
+        filter: saturate(1);
+      }
+      100% {
+        opacity: 0;
+        transform: translateY(-2px);
+        filter: saturate(0.92);
+      }
     }
 
     #combo-filter .cat-chip,
@@ -1910,8 +2000,8 @@
       </div>
       <div class="composer-actions">
         <button class="btn btn-primary" onclick="copyPrompt()">📋 클립보드 복사</button>
-        <button class="btn btn-secondary btn-sm btn-save-composed" type="button" onclick="openSaveComposedModal()">💾 새 조합</button>
-        <button class="btn btn-danger btn-sm" onclick="clearCurrentComposition()">🧹 초기화</button>
+        <button class="btn btn-secondary btn-save-composed" type="button" onclick="openSaveComposedModal()">💾 새 조합</button>
+        <button class="btn btn-danger" onclick="clearCurrentComposition()">🧹 초기화</button>
       </div>
     </div>
   </div>
@@ -2140,6 +2230,10 @@
   let editingComposedImageData = '';
   let activePromptPreviewId = null;
   let activeComposedPreviewId = null;
+  let armedCoreRandomComposedId = null;
+  let morphingCoreRandomComposedId = null;
+  let coreRandomMorphTimer = null;
+  let isCoreRandomFadeOutRunning = false;
   let shouldAutoSelectCoreSubCategoryOnPromptTab = false;
   let selectingFromPreviewId = null;
   let lastRenderedPromptPreviewImageKey = '';
@@ -4650,6 +4744,7 @@
       showToast('불러올 조합을 찾지 못했습니다');
       return;
     }
+    clearCoreRandomVisualState();
     const shouldArmCoreSelection = !getComposedMainCategoryConfig(item.mainCategory).editOnly;
     if (shouldArmCoreSelection) {
       shouldAutoSelectCoreSubCategoryOnPromptTab = true;
@@ -4676,6 +4771,9 @@
     composedPrompts = composedPrompts.filter(p => p.id !== id);
     if (activeComposedPreviewId === id) {
       activeComposedPreviewId = null;
+    }
+    if (armedCoreRandomComposedId === id || morphingCoreRandomComposedId === id) {
+      clearCoreRandomVisualState();
     }
     selected = selected.filter(s => !(s.id === id && s.source === 'composed'));
     if (removedImageId) {
@@ -4750,14 +4848,123 @@
     return true;
   }
 
+  function clearCoreRandomVisualState() {
+    armedCoreRandomComposedId = null;
+    morphingCoreRandomComposedId = null;
+    if (coreRandomMorphTimer) {
+      window.clearTimeout(coreRandomMorphTimer);
+      coreRandomMorphTimer = null;
+    }
+    isCoreRandomFadeOutRunning = false;
+  }
+
+  function fadeOutArmedCoreRandomCard(onAfterFade) {
+    const runNext = () => {
+      clearCoreRandomVisualState();
+      if (typeof onAfterFade === 'function') {
+        onAfterFade();
+      }
+    };
+
+    const armedId = armedCoreRandomComposedId;
+    if (!armedId || leftPanelTab !== 'combo') {
+      runNext();
+      return;
+    }
+    if (isCoreRandomFadeOutRunning) return;
+
+    const cards = Array.from(document.querySelectorAll('.prompt-item.combo-card-item'));
+    const armedCard = cards.find(card => card.dataset.promptId === armedId);
+    if (!armedCard) {
+      runNext();
+      return;
+    }
+
+    isCoreRandomFadeOutRunning = true;
+    armedCard.classList.remove('core-random-morph');
+    armedCard.classList.add('core-random-fade-out');
+    window.setTimeout(() => {
+      runNext();
+    }, 120);
+  }
+
+  function armComposedCardCoreRandomShortcut(composedPromptId, options = {}) {
+    const skipFadeOut = options.skipFadeOut === true;
+    const item = composedPrompts.find(p => p.id === composedPromptId);
+    if (!item) {
+      showToast('선택한 커스텀 카드를 찾지 못했습니다');
+      return;
+    }
+
+    if (!skipFadeOut && armedCoreRandomComposedId && armedCoreRandomComposedId !== composedPromptId) {
+      fadeOutArmedCoreRandomCard(() => {
+        armComposedCardCoreRandomShortcut(composedPromptId, { skipFadeOut: true });
+      });
+      return;
+    }
+
+    const shouldArmCoreSelection = !getComposedMainCategoryConfig(item.mainCategory).editOnly;
+    if (shouldArmCoreSelection) {
+      shouldAutoSelectCoreSubCategoryOnPromptTab = true;
+    }
+
+    activeCategoryComposed = item.mainCategory;
+    activeComposedPreviewId = composedPromptId;
+    armedCoreRandomComposedId = composedPromptId;
+    morphingCoreRandomComposedId = composedPromptId;
+    if (coreRandomMorphTimer) {
+      window.clearTimeout(coreRandomMorphTimer);
+    }
+    coreRandomMorphTimer = window.setTimeout(() => {
+      if (morphingCoreRandomComposedId === composedPromptId) {
+        morphingCoreRandomComposedId = null;
+        render();
+      }
+      coreRandomMorphTimer = null;
+    }, 190);
+    render();
+    showToast('핵심 분류 무작위 선택 카드로 전환되었습니다');
+  }
+
   function runComposedSwipeShortcut(composedPromptId) {
+    const item = composedPrompts.find(p => p.id === composedPromptId);
+    if (!item) {
+      showToast('선택한 커스텀 카드를 찾지 못했습니다');
+      return;
+    }
+
     loadComposedPrompt(composedPromptId);
+
+    const coreSelection = findCoreSubCategorySelection();
+    if (!coreSelection) {
+      showToast('핵심 분류가 설정되지 않았습니다');
+      return;
+    }
+
+    activeCategoryPrompt = coreSelection.mainCategory;
+    activeSubCategoryPrompt = coreSelection.subCategory;
+    if (getMainCategoryConfig(coreSelection.mainCategory).hiddenByDefault) {
+      openedHiddenMainCategories.add(coreSelection.mainCategory);
+    }
+
+    if (!isSubCategoryRandomSelectionEnabled(coreSelection.mainCategory, coreSelection.subCategory)) {
+      if (leftPanelTab !== 'prompt') {
+        setLeftPanelTab('prompt');
+      } else {
+        render();
+      }
+      showToast('핵심 분류 중분류의 무작위 선택 카드가 비활성화되어 있습니다');
+      return;
+    }
 
     if (leftPanelTab !== 'prompt') {
       setLeftPanelTab('prompt');
     } else {
       render();
     }
+
+    isPromptPreviewSuppressed = false;
+    applyRandomSelectionForSubCategory(coreSelection.mainCategory, coreSelection.subCategory);
   }
 
   function bindPromptItemSwipe(item, promptData, options = {}) {
@@ -4935,11 +5142,29 @@
       filteredComposed.forEach(item => {
         const composedText = getComposedItemText(item);
         const isPreview = activeComposedPreviewId === item.id;
+        const isArmedRandomCard = armedCoreRandomComposedId === item.id;
+        const isMorphingRandomCard = morphingCoreRandomComposedId === item.id;
         const card = document.createElement('div');
         card.dataset.promptId = item.id;
-        card.className = 'prompt-item combo-card-item' + (isPreview ? ' preview' : '');
-        card.title = '클릭하면 현재 조합으로 불러옵니다';
-        card.innerHTML = `
+        card.className = 'prompt-item combo-card-item'
+          + (isPreview ? ' preview' : '')
+          + (isArmedRandomCard ? ' core-random-armed' : '')
+          + (isMorphingRandomCard ? ' core-random-morph' : '');
+        card.title = isArmedRandomCard
+          ? '탭하면 핵심 분류 무작위 선택을 실행합니다'
+          : '클릭하면 현재 조합으로 불러옵니다';
+        card.innerHTML = isArmedRandomCard
+          ? `
+          <div class="prompt-item-swipe-content">
+            <div class="prompt-item-body">
+              <div class="combo-card-text">
+                <span class="combo-card-name combo-card-random-name"><span class="combo-card-random-icon">🎲</span><span>핵심 분류 무작위 선택</span></span>
+                <span class="combo-card-preview" title="${esc(composedText)}">${esc(composedText)}</span>
+              </div>
+            </div>
+          </div>
+          `
+          : `
           <div class="prompt-item-swipe-content">
             <div class="prompt-item-body">
               <div class="combo-card-text">
@@ -4954,21 +5179,36 @@
           </div>
         `;
 
-        const editBtn = card.querySelector('.edit-btn');
-        const delBtn = card.querySelector('.del-btn');
-        if (editBtn) {
-          editBtn.addEventListener('click', (e) => openEditComposedPromptModal(item.id, e));
-        }
-        if (delBtn) {
-          delBtn.addEventListener('click', (e) => deleteComposedPrompt(item.id, e));
-        }
+        if (isArmedRandomCard) {
+          bindPromptItemSwipe(card, item, {
+            allowRightSwipeCommit: false,
+            allowLeftSwipeActions: false,
+            requireSwipeComposeMode: false,
+            onTap: () => runComposedSwipeShortcut(item.id),
+          });
+        } else {
+          const editBtn = card.querySelector('.edit-btn');
+          const delBtn = card.querySelector('.del-btn');
+          if (editBtn) {
+            editBtn.addEventListener('click', (e) => openEditComposedPromptModal(item.id, e));
+          }
+          if (delBtn) {
+            delBtn.addEventListener('click', (e) => deleteComposedPrompt(item.id, e));
+          }
 
-        bindPromptItemSwipe(card, item, {
-          allowRightSwipeCommit: true,
-          requireSwipeComposeMode: false,
-          onSwipeCommit: () => runComposedSwipeShortcut(item.id),
-          onTap: () => loadComposedPrompt(item.id),
-        });
+          bindPromptItemSwipe(card, item, {
+            allowRightSwipeCommit: true,
+            requireSwipeComposeMode: false,
+            onSwipeCommit: () => armComposedCardCoreRandomShortcut(item.id),
+            onTap: () => {
+              if (armedCoreRandomComposedId && armedCoreRandomComposedId !== item.id) {
+                fadeOutArmedCoreRandomCard(() => loadComposedPrompt(item.id));
+                return;
+              }
+              loadComposedPrompt(item.id);
+            },
+          });
+        }
         list.appendChild(card);
       });
       return;
