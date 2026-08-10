@@ -206,7 +206,7 @@
       border: 0;
       border-radius: 10px;
       background: linear-gradient(180deg, #171723, #14141d);
-      aspect-ratio: 4 / 3;
+      aspect-ratio: var(--preview-aspect-ratio, 4 / 3);
       display: flex;
       align-items: center;
       justify-content: center;
@@ -258,6 +258,29 @@
       border-radius: 8px;
     }
 
+    .preview-render-portrait-mode .prompt-description-preview .preview-image-shell img {
+      object-fit: contain;
+      background: transparent;
+    }
+
+    .preview-render-portrait-mode .prompt-description-preview {
+      padding: 0;
+      margin: 0;
+      border-radius: 0;
+      background: #101018;
+    }
+
+    .preview-render-portrait-mode .prompt-description-preview .preview-image-shell {
+      width: 100%;
+      height: 100%;
+      border-radius: 0;
+      background: #101018;
+    }
+
+    .preview-render-portrait-mode .prompt-description-preview .preview-image-shell img {
+      border-radius: 0;
+    }
+
     .prompt-description-preview.preview-animation-level-1 .preview-image-shell {
       animation: previewBreathingWeak 5.8s ease-in-out infinite;
     }
@@ -282,6 +305,27 @@
 
     .prompt-description-preview.preview-transition-mode-cut img.preview-image-enter {
       animation: previewImageCutTransition .36s cubic-bezier(0.22, 1, 0.36, 1);
+      transform-origin: center;
+    }
+
+    .preview-render-portrait-mode .prompt-description-preview.preview-transition-mode-scale img.preview-image-enter,
+    .preview-render-portrait-mode .prompt-description-preview.preview-transition-mode-fade img.preview-image-enter,
+    .preview-render-portrait-mode .prompt-description-preview.preview-transition-mode-cut img.preview-image-enter {
+      transform-origin: center;
+    }
+
+    .preview-render-portrait-mode .prompt-description-preview.preview-transition-mode-scale img.preview-image-enter {
+      animation: previewImagePortraitScaleIn .3s cubic-bezier(0.16, 1, 0.3, 1);
+      transform-origin: center;
+    }
+
+    .preview-render-portrait-mode .prompt-description-preview.preview-transition-mode-fade img.preview-image-enter {
+      animation: previewImagePortraitFadeIn .34s cubic-bezier(0.16, 0.84, 0.44, 1);
+      transform-origin: center;
+    }
+
+    .preview-render-portrait-mode .prompt-description-preview.preview-transition-mode-cut img.preview-image-enter {
+      animation: previewImagePortraitCutIn .22s steps(1, end);
       transform-origin: center;
     }
 
@@ -339,6 +383,39 @@
         transform: scale(1) skewX(0deg);
         clip-path: inset(0% 0% 0% 0% round 0);
         filter: brightness(1) contrast(1);
+      }
+    }
+
+    @keyframes previewImagePortraitFadeIn {
+      0% {
+        opacity: 0;
+        filter: saturate(0.9) blur(0.5px);
+      }
+      100% {
+        opacity: 1;
+        filter: saturate(1) blur(0);
+      }
+    }
+
+    @keyframes previewImagePortraitScaleIn {
+      0% {
+        opacity: 0;
+        transform: scale(0.986);
+        filter: saturate(0.92) blur(0.4px);
+      }
+      100% {
+        opacity: 1;
+        transform: scale(1);
+        filter: saturate(1) blur(0);
+      }
+    }
+
+    @keyframes previewImagePortraitCutIn {
+      0% {
+        opacity: 0;
+      }
+      100% {
+        opacity: 1;
       }
     }
 
@@ -437,6 +514,36 @@
       gap: 8px;
     }
 
+    .image-orientation-tabs {
+      display: flex;
+      gap: 6px;
+    }
+
+    .image-orientation-tab {
+      flex: 1;
+      border: 1px solid #2a2a3a;
+      border-radius: 8px;
+      background: #1a1a28;
+      color: #a5acc5;
+      font-size: 0.78rem;
+      font-weight: 700;
+      padding: 8px 10px;
+      cursor: pointer;
+      transition: all .14s ease;
+    }
+
+    .image-orientation-tab:hover {
+      border-color: #8ab4ff;
+      color: #eef5ff;
+    }
+
+    .image-orientation-tab.active {
+      border-color: #34d399;
+      background: #183f35;
+      color: #d1fae5;
+      box-shadow: 0 0 0 1px rgba(52, 211, 153, 0.18);
+    }
+
     .prompt-image-row input[type="file"] {
       width: 100%;
       border: 1px solid #2a2a3a;
@@ -449,7 +556,7 @@
 
     .prompt-image-preview {
       width: 100%;
-      aspect-ratio: 4 / 3;
+      aspect-ratio: var(--preview-aspect-ratio, 4 / 3);
       border: 1px dashed #3a3a52;
       border-radius: 10px;
       background: linear-gradient(180deg, #171723, #14141d);
@@ -466,6 +573,16 @@
       object-fit: cover;
       border-radius: 8px;
       display: block;
+    }
+
+    .preview-render-portrait-mode .prompt-image-preview img {
+      object-fit: contain;
+      background: #101018;
+    }
+
+    .prompt-image-preview.orientation-portrait img {
+      object-fit: contain;
+      background: #101018;
     }
 
     .prompt-image-meta {
@@ -902,6 +1019,49 @@
       padding: 12px 14px 0;
     }
 
+    .core-quick-access-row {
+      display: none;
+      gap: 8px;
+      padding: 8px 14px 10px;
+      border-bottom: 1px solid #1e1e2e;
+      flex-wrap: wrap;
+      background: #15151f;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .core-quick-access-row.visible {
+      display: flex;
+    }
+
+    .core-quick-access-btn {
+      border: 1px solid #2f3550;
+      background: #1a1f2f;
+      color: #dbe6ff;
+      border-radius: 999px;
+      padding: 9px 14px;
+      font-size: 0.82rem;
+      font-weight: 700;
+      line-height: 1.2;
+      min-height: 38px;
+      cursor: pointer;
+      transition: all .15s ease;
+      white-space: nowrap;
+    }
+
+    .core-quick-access-btn:hover {
+      border-color: #8ab4ff;
+      background: #202b45;
+      color: #eef5ff;
+    }
+
+    .core-quick-access-btn.active {
+      border-color: #34d399;
+      background: #183f35;
+      color: #d1fae5;
+      box-shadow: 0 0 0 1px rgba(52, 211, 153, 0.18);
+    }
+
     .mode-toggle-btn {
       flex: 1;
       border: 1px solid #2a2a3a;
@@ -1244,6 +1404,206 @@
       display: flex;
       flex-direction: column;
       overflow: hidden;
+    }
+
+    .main.preview-render-portrait {
+      --portrait-left-width: 300px;
+      --portrait-center-width: 420px;
+      --portrait-preview-inner-padding: 6px;
+      display: grid;
+      grid-template-columns: var(--portrait-left-width) var(--portrait-center-width) minmax(0, 1fr);
+      grid-template-rows: minmax(220px, 1fr) minmax(260px, 1fr);
+      gap: 0;
+      position: relative;
+      min-height: 0;
+    }
+
+    .main.preview-render-portrait .panel-add {
+      grid-column: 1;
+      grid-row: 1;
+      width: auto;
+      min-width: 0;
+      height: 100%;
+      border-right: 1px solid #2a2a3a;
+    }
+
+    .main.preview-render-portrait .panel-add .panel-view-prompt {
+      min-height: 0;
+      overflow: hidden;
+    }
+
+    .main.preview-render-portrait .panel-add .prompt-view-filter {
+      flex: 1;
+      min-height: 0;
+      overflow-y: auto;
+      overscroll-behavior: contain;
+      -webkit-overflow-scrolling: touch;
+    }
+
+    .main.preview-render-portrait .panel-library {
+      grid-column: 2;
+      grid-row: 1;
+      width: auto;
+      min-width: 0;
+      height: 100%;
+      border-right: 1px solid #2a2a3a;
+      border-bottom: 0;
+      display: grid;
+      grid-template-columns: minmax(0, 1fr);
+      grid-template-rows: auto auto minmax(0, 1fr) auto;
+      gap: 0;
+      overflow: visible;
+    }
+
+    .main.preview-render-portrait .panel-library > .panel-header {
+      grid-column: 1;
+      grid-row: 1;
+    }
+
+    .main.preview-render-portrait .panel-library > .prompt-random-slot {
+      grid-column: 1;
+      grid-row: 2;
+      border-bottom: 0;
+      border-right: 0;
+    }
+
+    .main.preview-render-portrait .panel-library > .prompt-list {
+      grid-column: 1;
+      grid-row: 3;
+      border-right: 0;
+    }
+
+    .main.preview-render-portrait .panel-library > .library-footer {
+      display: contents;
+    }
+
+    .main.preview-render-portrait .panel-library > .library-footer > .prompt-description-preview {
+      position: absolute;
+      top: 0;
+      right: 0;
+      width: calc(100% - (var(--portrait-left-width) + var(--portrait-center-width)));
+      height: 100%;
+      margin: 0;
+      max-width: none;
+      aspect-ratio: 3 / 4;
+      border-top: 0;
+      border-left: 1px solid #2a2a3a;
+      padding: var(--portrait-preview-inner-padding);
+      z-index: 3;
+    }
+
+    .main.preview-render-portrait .panel-library > .library-footer > .btn {
+      grid-column: 1;
+      grid-row: 4;
+      margin: 0;
+      border-radius: 0;
+      border-top: 1px solid #1e1e2e;
+    }
+
+    .main.preview-render-portrait .panel-library > .combo-library-footer {
+      display: contents;
+    }
+
+    .main.preview-render-portrait .panel-library > .combo-library-footer > .prompt-description-preview {
+      position: absolute;
+      top: 0;
+      right: 0;
+      width: calc(100% - (var(--portrait-left-width) + var(--portrait-center-width)));
+      height: 100%;
+      margin: 0;
+      max-width: none;
+      aspect-ratio: 3 / 4;
+      border-left: 1px solid #2a2a3a;
+      padding: var(--portrait-preview-inner-padding);
+      z-index: 3;
+    }
+
+    .main.preview-render-portrait .prompt-description-preview.preview-animation-level-1 .preview-image-shell {
+      animation: previewBreathingPortraitWeak 6.8s ease-in-out infinite;
+    }
+
+    .main.preview-render-portrait .prompt-description-preview.preview-animation-level-2 .preview-image-shell {
+      animation: previewBreathingPortrait 4.4s ease-in-out infinite;
+    }
+
+    .main.preview-render-portrait .prompt-description-preview.preview-animation-level-3 .preview-image-shell {
+      animation: previewBreathingPortraitStrong 3s ease-in-out infinite;
+    }
+
+    @keyframes previewBreathingPortraitWeak {
+      0%, 100% {
+        transform: translateY(0);
+      }
+      50% {
+        transform: translateY(-0.8px);
+      }
+    }
+
+    @keyframes previewBreathingPortrait {
+      0%, 100% {
+        transform: translateY(0);
+      }
+      50% {
+        transform: translateY(-1.4px);
+      }
+    }
+
+    @keyframes previewBreathingPortraitStrong {
+      0%, 100% {
+        transform: translateY(0);
+      }
+      50% {
+        transform: translateY(-2.1px);
+      }
+    }
+
+    .main.preview-render-portrait .panel-library:not(.combo-mode) > .combo-library-footer {
+      display: none;
+    }
+
+    .main.preview-render-portrait .panel-library.combo-mode > .library-footer {
+      display: none;
+    }
+
+    .main.preview-render-portrait .panel-composer {
+      grid-column: 1 / 3;
+      grid-row: 2;
+      min-width: 0;
+      height: 100%;
+      display: grid;
+      grid-template-columns: var(--portrait-left-width) var(--portrait-center-width);
+      grid-template-rows: auto minmax(0, 1fr);
+      border-top: 0;
+      border-right: 1px solid #2a2a3a;
+      overflow: hidden;
+    }
+
+    .main.preview-render-portrait .panel-composer > .panel-header {
+      display: flex;
+      grid-column: 1 / 3;
+      grid-row: 1;
+    }
+
+    .main.preview-render-portrait .selected-chips {
+      grid-column: 1;
+      grid-row: 2;
+      border-bottom: 0;
+      border-left: 0;
+      border-right: 0;
+      border-bottom: 1px solid #1e1e2e;
+      overflow-y: auto;
+      min-height: 0;
+      align-content: flex-start;
+      padding-top: 12px;
+    }
+
+    .main.preview-render-portrait .composer-output {
+      grid-column: 2;
+      grid-row: 2;
+      min-height: 0;
+      border-right: 0;
+      border-left: 1px solid #1e1e2e;
+      padding-top: 12px;
     }
 
     .selected-chips {
@@ -1947,6 +2307,7 @@
         <button class="mode-toggle-btn active" id="mode-btn-prompt" type="button" onclick="setLeftPanelTab('prompt')">프롬프트 선택</button>
         <button class="mode-toggle-btn" id="mode-btn-combo" type="button" onclick="setLeftPanelTab('combo')">커스텀 조합</button>
       </div>
+      <div class="core-quick-access-row" id="core-quick-access-row" aria-label="핵심 분류 빠른 접근"></div>
 
       <div class="panel-mode-view active" id="panel-view-prompt">
         <div class="prompt-view-filter">
@@ -2050,6 +2411,10 @@
         </div>
         <div class="prompt-image-block">
           <label>설명 이미지</label>
+          <div class="image-orientation-tabs" role="tablist" aria-label="프롬프트 이미지 방향 선택">
+            <button id="input-image-tab-landscape" class="image-orientation-tab active" type="button" onclick="setPromptImageEditOrientation('landscape')">가로 이미지</button>
+            <button id="input-image-tab-portrait" class="image-orientation-tab" type="button" onclick="setPromptImageEditOrientation('portrait')">세로 이미지</button>
+          </div>
           <div class="prompt-image-row">
             <input id="input-image-file" type="file" accept="image/*" />
             <input id="input-image-name" type="text" placeholder="자동 생성된 이미지 이름" readonly />
@@ -2090,6 +2455,10 @@
         </div>
         <div class="prompt-image-block">
           <label>설명 이미지</label>
+          <div class="image-orientation-tabs" role="tablist" aria-label="커스텀 조합 이미지 방향 선택">
+            <button id="combo-image-tab-landscape" class="image-orientation-tab active" type="button" onclick="setComposedImageEditOrientation('landscape')">가로 이미지</button>
+            <button id="combo-image-tab-portrait" class="image-orientation-tab" type="button" onclick="setComposedImageEditOrientation('portrait')">세로 이미지</button>
+          </div>
           <div class="prompt-image-row">
             <input id="combo-image-file" type="file" accept="image/*" />
             <input id="combo-image-name" type="text" placeholder="자동 생성된 이미지 이름" readonly />
@@ -2149,6 +2518,14 @@
         </div>
       </div>
       <div class="settings-option-card">
+        <div class="settings-option-title">미리보기 렌더링 모드</div>
+        <div class="settings-option-description">앱은 가로 레이아웃을 유지합니다. 세로 렌더링을 켜면 설명 이미지 비율이 3:4로 바뀌고, 좌측 패널은 그대로 둔 채 중앙/우측 패널을 2열로 균등 분할합니다.</div>
+        <div class="settings-level-row" role="group" aria-label="미리보기 렌더링 모드 선택">
+          <button class="settings-level-btn" type="button" data-preview-render-mode="landscape" onclick="setPreviewRenderMode('landscape', { notify: true })">기본(가로)</button>
+          <button class="settings-level-btn" type="button" data-preview-render-mode="portrait" onclick="setPreviewRenderMode('portrait', { notify: true })">세로 렌더링</button>
+        </div>
+      </div>
+      <div class="settings-option-card">
         <div class="settings-option-title">미리보기 애니메이션</div>
         <div class="settings-option-description">1은 더 약하게, 2는 기본, 3은 더 강하게 숨 쉬듯 움직입니다. 원하는 강도에 맞춰 선택해 주세요.</div>
         <div class="settings-level-row" role="group" aria-label="미리보기 애니메이션 강도 선택">
@@ -2203,6 +2580,8 @@
   const TAP_COMPOSE_MODE_KEY = 'prompt_repo_tap_compose_mode_v1';
   const PREVIEW_ANIMATION_KEY = 'prompt_repo_preview_animation_v1';
   const PREVIEW_TRANSITION_MODE_KEY = 'prompt_repo_preview_transition_mode_v1';
+  const PREVIEW_RENDER_MODE_KEY = 'prompt_repo_preview_render_mode_v1';
+  const LEGACY_VIEW_ORIENTATION_KEY = 'prompt_repo_view_orientation_v1';
   const PROMPT_ADD_MODE = {
     SWIPE: 'swipe',
     TAP: 'tap',
@@ -2213,7 +2592,7 @@
   const IMAGE_STORE_NAME = 'images';
 
   // ── State ──
-  let prompts = [];          // [{id, mainCategory, subCategory, content, imageId, imageName}] 개별 프롬프트
+  let prompts = [];          // [{id, mainCategory, subCategory, content, imageId, imageName, portraitImageId, portraitImageName}] 개별 프롬프트
   let composedPrompts = [];  // [{id, mainCategory, subCategory, items, content}] 조합 저장 프롬프트
   let selected = [];         // [{id, mainCategory, subCategory, content, source}]
   let activeCategoryPrompt = null;
@@ -2228,15 +2607,19 @@
   let isOutputEditing = false;
   let customOutputText = null;
   let tapComposeMode = PROMPT_ADD_MODE.SWIPE;
-  let pendingPromptImage = null;
-  let pendingComposedImage = null;
+  let pendingPromptImages = { landscape: null, portrait: null };
+  let pendingComposedImages = { landscape: null, portrait: null };
   let promptFormMode = 'add';
   let editingPromptId = null;
   let editingPromptImageId = '';
   let editingPromptImageData = '';
+  let editingPromptPortraitImageId = '';
+  let editingPromptPortraitImageData = '';
   let editingComposedPromptId = null;
   let editingComposedImageId = '';
   let editingComposedImageData = '';
+  let editingComposedPortraitImageId = '';
+  let editingComposedPortraitImageData = '';
   let activePromptPreviewId = null;
   let activeComposedPreviewId = null;
   let armedCoreRandomComposedId = null;
@@ -2253,6 +2636,9 @@
   let promptPreviewSizeLevel = 2;
   let previewAnimationLevel = 2;
   let previewTransitionMode = 'scale';
+  let previewRenderMode = 'landscape';
+  let promptImageEditOrientation = 'landscape';
+  let composedImageEditOrientation = 'landscape';
   let activeImageViewer = null;
   let imageViewerScale = 1;
   let imageViewerTranslateX = 0;
@@ -2467,12 +2853,15 @@
     const ids = new Set();
     prompts.forEach((item) => {
       if (item?.imageId) ids.add(item.imageId);
+      if (item?.portraitImageId) ids.add(item.portraitImageId);
     });
     composedPrompts.forEach((composed) => {
       if (composed?.imageId) ids.add(composed.imageId);
+      if (composed?.portraitImageId) ids.add(composed.portraitImageId);
       if (!Array.isArray(composed?.items)) return;
       composed.items.forEach((item) => {
         if (item?.imageId) ids.add(item.imageId);
+        if (item?.portraitImageId) ids.add(item.portraitImageId);
       });
     });
     return ids;
@@ -2750,6 +3139,13 @@
       previewAnimationLevel = 2;
     }
 
+    try {
+      const storedPreviewRenderMode = localStorage.getItem(PREVIEW_RENDER_MODE_KEY) ?? localStorage.getItem(LEGACY_VIEW_ORIENTATION_KEY);
+      previewRenderMode = normalizePreviewRenderMode(storedPreviewRenderMode);
+    } catch {
+      previewRenderMode = 'landscape';
+    }
+
     ensureCategoryConfigConsistency();
     ensureComposedCategoryConfigConsistency();
 
@@ -2767,6 +3163,9 @@
       imageId: item.imageId || '',
       imageData: !item.imageId && item.imageData ? item.imageData : '',
       imageName: item.imageName || '',
+      portraitImageId: item.portraitImageId || '',
+      portraitImageData: !item.portraitImageId && item.portraitImageData ? item.portraitImageData : '',
+      portraitImageName: item.portraitImageName || '',
     }));
 
     localStorage.setItem(STORAGE_KEY, JSON.stringify(promptPayload));
@@ -2782,6 +3181,7 @@
       promptPreviewSizeLevel,
       previewAnimationLevel,
       previewTransitionMode,
+      previewRenderMode,
     };
   }
 
@@ -2792,6 +3192,7 @@
     localStorage.setItem(PROMPT_PREVIEW_SIZE_LEVEL_KEY, String(payload.promptPreviewSizeLevel));
     localStorage.setItem(PREVIEW_ANIMATION_KEY, String(payload.previewAnimationLevel));
     localStorage.setItem(PREVIEW_TRANSITION_MODE_KEY, payload.previewTransitionMode);
+    localStorage.setItem(PREVIEW_RENDER_MODE_KEY, payload.previewRenderMode);
   }
 
   function loadSettings() {
@@ -2807,6 +3208,7 @@
     setPromptPreviewSizeLevel(storedSettings?.promptPreviewSizeLevel ?? localStorage.getItem(PROMPT_PREVIEW_SIZE_LEVEL_KEY) ?? 2);
     setPreviewAnimationLevel(storedSettings?.previewAnimationLevel ?? localStorage.getItem(PREVIEW_ANIMATION_KEY));
     setPreviewTransitionMode(storedSettings?.previewTransitionMode ?? localStorage.getItem(PREVIEW_TRANSITION_MODE_KEY) ?? 'scale');
+    setPreviewRenderMode(storedSettings?.previewRenderMode ?? localStorage.getItem(PREVIEW_RENDER_MODE_KEY) ?? localStorage.getItem(LEGACY_VIEW_ORIENTATION_KEY) ?? 'landscape');
     saveSettings();
   }
 
@@ -2825,10 +3227,15 @@
       mainCategory: mainCategory || '기타',
       subCategory: subCategory || '기타',
       content,
+      // 기존 image* 필드는 가로 이미지(기본)로 간주한다.
       imageId: (prompt.imageId ?? '').trim(),
       // 레거시 데이터 호환용. 새 저장에서는 사용하지 않는다.
       imageData: (prompt.imageData ?? '').trim(),
       imageName: (prompt.imageName ?? '').trim(),
+      portraitImageId: (prompt.portraitImageId ?? '').trim(),
+      // 레거시 데이터 호환용. 새 저장에서는 사용하지 않는다.
+      portraitImageData: (prompt.portraitImageData ?? '').trim(),
+      portraitImageName: (prompt.portraitImageName ?? '').trim(),
     };
   }
 
@@ -2841,6 +3248,9 @@
       imageId: prompt.imageId || '',
       imageData: !prompt.imageId && prompt.imageData ? prompt.imageData : '',
       imageName: prompt.imageName,
+      portraitImageId: prompt.portraitImageId || '',
+      portraitImageData: !prompt.portraitImageId && prompt.portraitImageData ? prompt.portraitImageData : '',
+      portraitImageName: prompt.portraitImageName,
     };
   }
 
@@ -2875,6 +3285,70 @@
     return fileName.length > 120 ? fileName.slice(0, 120).trim() : fileName;
   }
 
+  function normalizeImageOrientation(value) {
+    return value === 'portrait' ? 'portrait' : 'landscape';
+  }
+
+  function getImageOrientationLabel(orientation) {
+    return orientation === 'portrait' ? '세로' : '가로';
+  }
+
+  function getOtherImageOrientation(orientation) {
+    return orientation === 'portrait' ? 'landscape' : 'portrait';
+  }
+
+  function getPendingPromptImage(orientation = promptImageEditOrientation) {
+    return pendingPromptImages?.[normalizeImageOrientation(orientation)] || null;
+  }
+
+  function getPendingComposedImage(orientation = composedImageEditOrientation) {
+    return pendingComposedImages?.[normalizeImageOrientation(orientation)] || null;
+  }
+
+  function renderPromptImageOrientationTabs() {
+    const current = normalizeImageOrientation(promptImageEditOrientation);
+    const landscapeBtn = document.getElementById('input-image-tab-landscape');
+    const portraitBtn = document.getElementById('input-image-tab-portrait');
+    if (landscapeBtn) {
+      const isActive = current === 'landscape';
+      landscapeBtn.classList.toggle('active', isActive);
+      landscapeBtn.setAttribute('aria-pressed', isActive ? 'true' : 'false');
+    }
+    if (portraitBtn) {
+      const isActive = current === 'portrait';
+      portraitBtn.classList.toggle('active', isActive);
+      portraitBtn.setAttribute('aria-pressed', isActive ? 'true' : 'false');
+    }
+  }
+
+  function renderComposedImageOrientationTabs() {
+    const current = normalizeImageOrientation(composedImageEditOrientation);
+    const landscapeBtn = document.getElementById('combo-image-tab-landscape');
+    const portraitBtn = document.getElementById('combo-image-tab-portrait');
+    if (landscapeBtn) {
+      const isActive = current === 'landscape';
+      landscapeBtn.classList.toggle('active', isActive);
+      landscapeBtn.setAttribute('aria-pressed', isActive ? 'true' : 'false');
+    }
+    if (portraitBtn) {
+      const isActive = current === 'portrait';
+      portraitBtn.classList.toggle('active', isActive);
+      portraitBtn.setAttribute('aria-pressed', isActive ? 'true' : 'false');
+    }
+  }
+
+  function setPromptImageEditOrientation(orientation) {
+    promptImageEditOrientation = normalizeImageOrientation(orientation);
+    renderPromptImageOrientationTabs();
+    renderPendingPromptImagePreview();
+  }
+
+  function setComposedImageEditOrientation(orientation) {
+    composedImageEditOrientation = normalizeImageOrientation(orientation);
+    renderComposedImageOrientationTabs();
+    renderPendingComposedImagePreview();
+  }
+
   function readFileAsDataUrl(file) {
     return new Promise((resolve, reject) => {
       const reader = new FileReader();
@@ -2896,26 +3370,36 @@
     const imageName = buildPromptImageName(mainCategory, subCategory, content);
     nameInput.value = imageName;
 
+    const orientation = normalizeImageOrientation(promptImageEditOrientation);
+    const orientationLabel = getImageOrientationLabel(orientation);
+    const otherImage = getPendingPromptImage(getOtherImageOrientation(orientation));
+    const pendingPromptImage = getPendingPromptImage(orientation);
+    preview.classList.toggle('orientation-portrait', orientation === 'portrait');
+    preview.style.setProperty('--preview-aspect-ratio', orientation === 'portrait' ? '3 / 4' : '4 / 3');
+    renderPromptImageOrientationTabs();
+
     if (pendingPromptImage?.dataUrl) {
       preview.innerHTML = `<img src="${pendingPromptImage.dataUrl}" alt="${esc(imageName)}" />`;
-      meta.textContent = pendingPromptImage.fileName
+      const fileText = pendingPromptImage.fileName
         ? `${imageName} · ${pendingPromptImage.fileName}`
         : imageName;
+      meta.textContent = `${orientationLabel} 이미지 편집 중 · ${fileText}`;
       return;
     }
 
     preview.innerHTML = '<span class="empty-state" style="padding:0">선택한 설명 이미지가 여기에 표시됩니다.</span>';
-    meta.textContent = `${imageName} 이름으로 저장됩니다.`;
+    meta.textContent = `${orientationLabel} 이미지가 비어 있습니다. ${otherImage?.dataUrl ? '다른 방향 이미지는 유지됩니다. ' : ''}${imageName} 이름으로 저장됩니다.`;
   }
 
   function setPendingPromptImage(file, dataUrl) {
+    const orientation = normalizeImageOrientation(promptImageEditOrientation);
     if (!file || !dataUrl) {
-      pendingPromptImage = null;
+      pendingPromptImages[orientation] = null;
       renderPendingPromptImagePreview();
       return;
     }
 
-    pendingPromptImage = {
+    pendingPromptImages[orientation] = {
       dataUrl,
       fileName: file.name || '',
       mimeType: file.type || '',
@@ -2941,26 +3425,36 @@
     const imageName = buildComposedImageName(mainCategory, subCategory, content);
     nameInput.value = imageName;
 
+    const orientation = normalizeImageOrientation(composedImageEditOrientation);
+    const orientationLabel = getImageOrientationLabel(orientation);
+    const otherImage = getPendingComposedImage(getOtherImageOrientation(orientation));
+    const pendingComposedImage = getPendingComposedImage(orientation);
+    preview.classList.toggle('orientation-portrait', orientation === 'portrait');
+    preview.style.setProperty('--preview-aspect-ratio', orientation === 'portrait' ? '3 / 4' : '4 / 3');
+    renderComposedImageOrientationTabs();
+
     if (pendingComposedImage?.dataUrl) {
       preview.innerHTML = `<img src="${pendingComposedImage.dataUrl}" alt="${esc(imageName)}" />`;
-      meta.textContent = pendingComposedImage.fileName
+      const fileText = pendingComposedImage.fileName
         ? `${imageName} · ${pendingComposedImage.fileName}`
         : imageName;
+      meta.textContent = `${orientationLabel} 이미지 편집 중 · ${fileText}`;
       return;
     }
 
     preview.innerHTML = '<span class="empty-state" style="padding:0">선택한 설명 이미지가 여기에 표시됩니다.</span>';
-    meta.textContent = `${imageName} 이름으로 저장됩니다.`;
+    meta.textContent = `${orientationLabel} 이미지가 비어 있습니다. ${otherImage?.dataUrl ? '다른 방향 이미지는 유지됩니다. ' : ''}${imageName} 이름으로 저장됩니다.`;
   }
 
   function setPendingComposedImage(file, dataUrl) {
+    const orientation = normalizeImageOrientation(composedImageEditOrientation);
     if (!file || !dataUrl) {
-      pendingComposedImage = null;
+      pendingComposedImages[orientation] = null;
       renderPendingComposedImagePreview();
       return;
     }
 
-    pendingComposedImage = {
+    pendingComposedImages[orientation] = {
       dataUrl,
       fileName: file.name || '',
       mimeType: file.type || '',
@@ -2974,15 +3468,23 @@
     renderPendingComposedImagePreview();
   }
 
-  function clearPendingPromptImage() {
-    pendingPromptImage = null;
+  function clearPendingPromptImage(options = {}) {
+    if (options.all) {
+      pendingPromptImages = { landscape: null, portrait: null };
+    } else {
+      pendingPromptImages[normalizeImageOrientation(promptImageEditOrientation)] = null;
+    }
     const fileInput = document.getElementById('input-image-file');
     if (fileInput) fileInput.value = '';
     renderPendingPromptImagePreview();
   }
 
-  function clearPendingComposedImage() {
-    pendingComposedImage = null;
+  function clearPendingComposedImage(options = {}) {
+    if (options.all) {
+      pendingComposedImages = { landscape: null, portrait: null };
+    } else {
+      pendingComposedImages[normalizeImageOrientation(composedImageEditOrientation)] = null;
+    }
     const fileInput = document.getElementById('combo-image-file');
     if (fileInput) fileInput.value = '';
     renderPendingComposedImagePreview();
@@ -2993,6 +3495,8 @@
     editingPromptId = null;
     editingPromptImageId = '';
     editingPromptImageData = '';
+    editingPromptPortraitImageId = '';
+    editingPromptPortraitImageData = '';
     const modalTitle = document.getElementById('add-prompt-title');
     const saveButton = document.querySelector('#add-prompt-modal .modal-actions .btn-primary');
     if (modalTitle) modalTitle.textContent = '새 프롬프트 추가';
@@ -3004,6 +3508,8 @@
     editingPromptId = prompt.id;
     editingPromptImageId = prompt.imageId || '';
     editingPromptImageData = '';
+    editingPromptPortraitImageId = prompt.portraitImageId || '';
+    editingPromptPortraitImageData = '';
     const modalTitle = document.getElementById('add-prompt-title');
     const saveButton = document.querySelector('#add-prompt-modal .modal-actions .btn-primary');
     if (modalTitle) modalTitle.textContent = '프롬프트 편집';
@@ -3012,19 +3518,57 @@
 
   function getPromptImageSource(prompt) {
     if (!prompt) return '';
-    if (prompt.imageData) return prompt.imageData;
-    if (prompt.imageId) return promptImageUrlCache.get(prompt.imageId) || '';
+    const preferPortrait = previewRenderMode === 'portrait';
+    const imageDataCandidates = preferPortrait
+      ? [prompt.portraitImageData, prompt.imageData]
+      : [prompt.imageData, prompt.portraitImageData];
+    for (const imageData of imageDataCandidates) {
+      if (imageData) return imageData;
+    }
+
+    const imageIdCandidates = preferPortrait
+      ? [prompt.portraitImageId, prompt.imageId]
+      : [prompt.imageId, prompt.portraitImageId];
+    for (const imageId of imageIdCandidates) {
+      if (!imageId) continue;
+      const cached = promptImageUrlCache.get(imageId);
+      if (cached) return cached;
+    }
     return '';
   }
 
+  function getPromptActiveImageMeta(prompt) {
+    if (!prompt) return { imageId: '', alt: '' };
+    const preferPortrait = previewRenderMode === 'portrait';
+    const imageId = preferPortrait
+      ? (prompt.portraitImageId || prompt.imageId || '')
+      : (prompt.imageId || prompt.portraitImageId || '');
+    const imageName = preferPortrait
+      ? (prompt.portraitImageName || prompt.imageName || '')
+      : (prompt.imageName || prompt.portraitImageName || '');
+    return {
+      imageId,
+      alt: imageName || getPromptDisplayName(prompt.mainCategory, prompt.subCategory),
+    };
+  }
+
   function queuePromptImageLoad(prompt) {
-    if (!prompt?.imageId || prompt.imageData) return;
-    getPromptImageObjectUrl(prompt.imageId)
+    if (!prompt) return;
+    const preferPortrait = previewRenderMode === 'portrait';
+    const preferredImageId = preferPortrait
+      ? (prompt.portraitImageId || prompt.imageId || '')
+      : (prompt.imageId || prompt.portraitImageId || '');
+    const preferredImageData = preferPortrait
+      ? (prompt.portraitImageData || prompt.imageData || '')
+      : (prompt.imageData || prompt.portraitImageData || '');
+    if (!preferredImageId || preferredImageData) return;
+
+    getPromptImageObjectUrl(preferredImageId)
       .then((url) => {
         if (!url) return;
         renderPromptDescriptionPreview();
         renderComposedDescriptionPreview();
-        if (activeImageViewer?.imageId === prompt.imageId && activeImageViewer.src !== url) {
+        if (activeImageViewer?.imageId === preferredImageId && activeImageViewer.src !== url) {
           activeImageViewer = { ...activeImageViewer, src: url };
           renderImageViewer();
         }
@@ -3060,18 +3604,35 @@
     setPromptFormToEdit(prompt);
     renderCategorySelectors();
     syncPromptFormFields(prompt);
-    let editImageDataUrl = prompt.imageData || '';
-    if (!editImageDataUrl && prompt.imageId) {
-      const imageUrl = await getPromptImageObjectUrl(prompt.imageId);
-      editImageDataUrl = imageUrl || '';
-    }
-    pendingPromptImage = editImageDataUrl ? {
-      dataUrl: editImageDataUrl,
-      fileName: prompt.imageName || '',
-      mimeType: '',
-      file: null,
-      imageName: prompt.imageName || buildPromptImageName(prompt.mainCategory, prompt.subCategory, prompt.content),
-    } : null;
+    const [landscapeUrl, portraitUrl] = await Promise.all([
+      (!prompt.imageData && prompt.imageId)
+        ? getPromptImageObjectUrl(prompt.imageId)
+        : Promise.resolve(''),
+      (!prompt.portraitImageData && prompt.portraitImageId)
+        ? getPromptImageObjectUrl(prompt.portraitImageId)
+        : Promise.resolve(''),
+    ]);
+
+    const landscapeDataUrl = prompt.imageData || landscapeUrl || '';
+    const portraitDataUrl = prompt.portraitImageData || portraitUrl || '';
+
+    pendingPromptImages = {
+      landscape: landscapeDataUrl ? {
+        dataUrl: landscapeDataUrl,
+        fileName: prompt.imageName || '',
+        mimeType: '',
+        file: null,
+        imageName: prompt.imageName || buildPromptImageName(prompt.mainCategory, prompt.subCategory, prompt.content),
+      } : null,
+      portrait: portraitDataUrl ? {
+        dataUrl: portraitDataUrl,
+        fileName: prompt.portraitImageName || '',
+        mimeType: '',
+        file: null,
+        imageName: prompt.portraitImageName || buildPromptImageName(prompt.mainCategory, prompt.subCategory, prompt.content),
+      } : null,
+    };
+    setPromptImageEditOrientation('landscape');
     renderPendingPromptImagePreview();
     document.getElementById('input-content').focus();
   }
@@ -3187,8 +3748,7 @@
     }
     return {
       src: imageSrc,
-      imageId: prompt.imageId || '',
-      alt: prompt.imageName || getPromptDisplayName(prompt.mainCategory, prompt.subCategory),
+      ...getPromptActiveImageMeta(prompt),
     };
   }
 
@@ -3201,14 +3761,22 @@
     }
     return {
       src: imageSrc,
-      imageId: composed.imageId || '',
-      alt: composed.imageName || getPromptDisplayName(composed.mainCategory, composed.subCategory),
+      ...getPromptActiveImageMeta(composed),
     };
   }
 
   function normalizePromptPreviewSizeLevel(level) {
     const value = Number(level);
     return value === 1 || value === 2 || value === 3 ? value : 2;
+  }
+
+  function normalizePreviewRenderMode(value) {
+    if (value === 'portrait' || value === 'vertical') return 'portrait';
+    return 'landscape';
+  }
+
+  function getPreviewRenderModeLabel(mode) {
+    return mode === 'portrait' ? '세로 렌더링' : '기본(가로)';
   }
 
   function getPromptPreviewSizeLabel(level) {
@@ -3219,9 +3787,14 @@
 
   function renderPromptPreviewSizeLevel() {
     const panel = document.querySelector('.panel-library');
+    const main = document.querySelector('.main');
     document.querySelectorAll('.prompt-description-preview').forEach((preview) => {
       preview.style.setProperty('--prompt-preview-max-width', PROMPT_PREVIEW_MAX_WIDTH_BY_LEVEL[promptPreviewSizeLevel]);
     });
+    if (main) {
+      const portraitInset = promptPreviewSizeLevel === 1 ? '12px' : promptPreviewSizeLevel === 3 ? '2px' : '6px';
+      main.style.setProperty('--portrait-preview-inner-padding', portraitInset);
+    }
     if (panel) {
       panel.classList.toggle('preview-level-3-full', promptPreviewSizeLevel === 3);
     }
@@ -3232,6 +3805,29 @@
       button.classList.toggle('active', isActive);
       button.setAttribute('aria-pressed', isActive ? 'true' : 'false');
       button.title = isActive ? `현재 이미지 영역 크기 ${getPromptPreviewSizeLabel(level)}` : `이미지 영역 크기를 ${getPromptPreviewSizeLabel(level)}로 변경`;
+    });
+  }
+
+  function renderPreviewRenderMode() {
+    const nextMode = normalizePreviewRenderMode(previewRenderMode);
+    const aspectRatio = nextMode === 'portrait' ? '3 / 4' : '4 / 3';
+    const main = document.querySelector('.main');
+    if (main) {
+      main.classList.toggle('preview-render-portrait', nextMode === 'portrait');
+    }
+    document.body.classList.toggle('preview-render-portrait-mode', nextMode === 'portrait');
+
+    document.querySelectorAll('.prompt-description-preview, .prompt-image-preview').forEach((element) => {
+      element.style.setProperty('--preview-aspect-ratio', aspectRatio);
+    });
+
+    document.querySelectorAll('[data-preview-render-mode]').forEach(button => {
+      const mode = button.getAttribute('data-preview-render-mode');
+      const normalizedMode = normalizePreviewRenderMode(mode);
+      const isActive = normalizedMode === nextMode;
+      button.classList.toggle('active', isActive);
+      button.setAttribute('aria-pressed', isActive ? 'true' : 'false');
+      button.title = isActive ? `현재 모드: ${getPreviewRenderModeLabel(nextMode)}` : `모드를 ${getPreviewRenderModeLabel(normalizedMode)}로 변경`;
     });
   }
 
@@ -3409,6 +4005,10 @@
       // 레거시 데이터 호환용. 새 저장에서는 사용하지 않는다.
       imageData: (item.imageData ?? '').trim(),
       imageName: (item.imageName ?? '').trim(),
+      portraitImageId: (item.portraitImageId ?? '').trim(),
+      // 레거시 데이터 호환용. 새 저장에서는 사용하지 않는다.
+      portraitImageData: (item.portraitImageData ?? '').trim(),
+      portraitImageName: (item.portraitImageName ?? '').trim(),
     };
   }
 
@@ -3781,7 +4381,7 @@
 
     const removedImageIds = composedPrompts
       .filter(item => item.mainCategory === mainCategory)
-      .map(item => item.imageId)
+      .flatMap(item => [item.imageId, item.portraitImageId])
       .filter(Boolean);
 
     composedPrompts = composedPrompts.filter(item => item.mainCategory !== mainCategory);
@@ -3841,7 +4441,7 @@
 
     const removedImageIds = composedPrompts
       .filter(item => item.mainCategory === mainCategory && item.subCategory === subCategory)
-      .map(item => item.imageId)
+      .flatMap(item => [item.imageId, item.portraitImageId])
       .filter(Boolean);
 
     composedPrompts = composedPrompts.filter(item => !(item.mainCategory === mainCategory && item.subCategory === subCategory));
@@ -4219,11 +4819,61 @@
     return uniqueInOrder(filtered.map(p => p.subCategory).filter(Boolean));
   }
 
+  function getCoreSubCategorySelections() {
+    const cores = [];
+    getMainCategories().forEach((mainCategory) => {
+      getSubCategories(mainCategory).forEach((subCategory) => {
+        if (!isSubCategoryCoreEnabled(mainCategory, subCategory)) return;
+        cores.push({ mainCategory, subCategory });
+      });
+    });
+    return cores;
+  }
+
+  function openCoreSubCategory(mainCategory, subCategory) {
+    if (!mainCategory || !subCategory) return;
+    activeCategoryPrompt = mainCategory;
+    activeSubCategoryPrompt = subCategory;
+    if (getMainCategoryConfig(mainCategory).hiddenByDefault) {
+      openedHiddenMainCategories.add(mainCategory);
+    }
+    if (leftPanelTab !== 'prompt') {
+      setLeftPanelTab('prompt');
+      return;
+    }
+    render();
+  }
+
+  function renderCoreQuickAccessRow() {
+    const row = document.getElementById('core-quick-access-row');
+    if (!row) return;
+    const isPromptTab = leftPanelTab === 'prompt';
+    const coreSelections = getCoreSubCategorySelections();
+    row.innerHTML = '';
+    row.classList.toggle('visible', isPromptTab && coreSelections.length > 0);
+    if (!isPromptTab || !coreSelections.length) return;
+
+    coreSelections.forEach(({ mainCategory, subCategory }) => {
+      const button = document.createElement('button');
+      button.type = 'button';
+      button.className = 'core-quick-access-btn';
+      const isActive = leftPanelTab === 'prompt' && activeCategoryPrompt === mainCategory && activeSubCategoryPrompt === subCategory;
+      if (isActive) button.classList.add('active');
+      button.textContent = `핵심 : ${mainCategory}/${subCategory}`;
+      button.title = `${mainCategory} > ${subCategory} 핵심 분류 바로 열기`;
+      button.onclick = () => openCoreSubCategory(mainCategory, subCategory);
+      row.appendChild(button);
+    });
+  }
+
   // ── Render ──
   function render() {
     renderTapComposeToggle();
+    renderCoreQuickAccessRow();
     renderPreviewAnimationLevel();
+    renderPreviewTransitionMode();
     renderPromptPreviewSizeLevel();
+    renderPreviewRenderMode();
     ensureActiveCategoryState();
     renderMainCategoryFilter();
     renderAddFilterTabs();
@@ -4416,6 +5066,9 @@
     promptPreviewSizeLevel = normalizePromptPreviewSizeLevel(level);
     saveSettings();
     renderPromptPreviewSizeLevel();
+    renderPreviewRenderMode();
+    renderPromptDescriptionPreview();
+    renderComposedDescriptionPreview();
     if (options.notify) {
       showToast(`이미지 영역 크기를 ${getPromptPreviewSizeLabel(promptPreviewSizeLevel)}로 변경했습니다`);
     }
@@ -4436,10 +5089,26 @@
     previewTransitionMode = normalizePreviewTransitionMode(mode);
     saveSettings();
     renderPreviewTransitionMode();
+    // 같은 이미지를 보고 있는 상태에서도 전환 효과 변경이 체감되도록 다음 렌더에서 재진입 애니메이션을 강제한다.
+    lastRenderedPromptPreviewImageKey = '';
+    lastRenderedComposedPreviewImageKey = '';
     renderPromptDescriptionPreview();
     renderComposedDescriptionPreview();
     if (options.notify) {
       showToast(`이미지 전환 효과를 ${getPreviewTransitionModeText(previewTransitionMode)}로 변경했습니다`);
+    }
+  }
+
+  function setPreviewRenderMode(mode, options = {}) {
+    previewRenderMode = normalizePreviewRenderMode(mode);
+    saveSettings();
+    renderPreviewRenderMode();
+    renderPromptDescriptionPreview();
+    renderComposedDescriptionPreview();
+    renderPendingPromptImagePreview();
+    renderPendingComposedImagePreview();
+    if (options.notify) {
+      showToast(`미리보기 렌더링 모드를 ${getPreviewRenderModeLabel(previewRenderMode)}로 변경했습니다`);
     }
   }
 
@@ -5604,16 +6273,18 @@
     resetPromptFormToAdd();
     renderCategorySelectors();
     syncAddFormSelection();
-    clearPendingPromptImage();
+    setPromptImageEditOrientation('landscape');
+    clearPendingPromptImage({ all: true });
     document.getElementById('input-content').focus();
   }
 
   function closeAddPromptModal() {
     const modal = document.getElementById('add-prompt-modal');
     modal.classList.remove('open');
-    clearPendingPromptImage();
+    clearPendingPromptImage({ all: true });
     resetPromptFormToAdd();
     editingPromptImageData = '';
+    editingPromptPortraitImageData = '';
   }
 
   function handleAddPromptModalBackdrop(e) {
@@ -5626,9 +6297,12 @@
     editingComposedPromptId = null;
     editingComposedImageId = '';
     editingComposedImageData = '';
+    editingComposedPortraitImageId = '';
+    editingComposedPortraitImageData = '';
     renderSaveComposedModalMode();
     renderComposedCategorySelectors();
-    clearPendingComposedImage();
+    setComposedImageEditOrientation('landscape');
+    clearPendingComposedImage({ all: true });
     const modal = document.getElementById('save-composed-modal');
     modal.classList.add('open');
     document.getElementById('combo-main-category').focus();
@@ -5640,7 +6314,9 @@
     editingComposedPromptId = null;
     editingComposedImageId = '';
     editingComposedImageData = '';
-    clearPendingComposedImage();
+    editingComposedPortraitImageId = '';
+    editingComposedPortraitImageData = '';
+    clearPendingComposedImage({ all: true });
     renderSaveComposedModalMode();
   }
 
@@ -5694,18 +6370,38 @@
 
     editingComposedImageId = target.imageId || '';
     editingComposedImageData = target.imageData || '';
-    let editImageDataUrl = editingComposedImageData;
-    if (!editImageDataUrl && target.imageId) {
-      const imageUrl = await getPromptImageObjectUrl(target.imageId);
-      editImageDataUrl = imageUrl || '';
-    }
-    pendingComposedImage = editImageDataUrl ? {
-      dataUrl: editImageDataUrl,
-      fileName: target.imageName || '',
-      mimeType: '',
-      file: null,
-      imageName: target.imageName || buildComposedImageName(target.mainCategory, target.subCategory, getComposedItemText(target)),
-    } : null;
+    editingComposedPortraitImageId = target.portraitImageId || '';
+    editingComposedPortraitImageData = target.portraitImageData || '';
+
+    const [landscapeUrl, portraitUrl] = await Promise.all([
+      (!editingComposedImageData && target.imageId)
+        ? getPromptImageObjectUrl(target.imageId)
+        : Promise.resolve(''),
+      (!editingComposedPortraitImageData && target.portraitImageId)
+        ? getPromptImageObjectUrl(target.portraitImageId)
+        : Promise.resolve(''),
+    ]);
+
+    const landscapeDataUrl = editingComposedImageData || landscapeUrl || '';
+    const portraitDataUrl = editingComposedPortraitImageData || portraitUrl || '';
+
+    pendingComposedImages = {
+      landscape: landscapeDataUrl ? {
+        dataUrl: landscapeDataUrl,
+        fileName: target.imageName || '',
+        mimeType: '',
+        file: null,
+        imageName: target.imageName || buildComposedImageName(target.mainCategory, target.subCategory, getComposedItemText(target)),
+      } : null,
+      portrait: portraitDataUrl ? {
+        dataUrl: portraitDataUrl,
+        fileName: target.portraitImageName || '',
+        mimeType: '',
+        file: null,
+        imageName: target.portraitImageName || buildComposedImageName(target.mainCategory, target.subCategory, getComposedItemText(target)),
+      } : null,
+    };
+    setComposedImageEditOrientation('landscape');
     renderPendingComposedImagePreview();
 
     const modal = document.getElementById('save-composed-modal');
@@ -5750,21 +6446,41 @@
 
     const previousPrompt = isEditMode ? prompts.find(prompt => prompt.id === editingPromptId) : null;
     const previousImageId = previousPrompt?.imageId || editingPromptImageId || '';
+    const previousPortraitImageId = previousPrompt?.portraitImageId || editingPromptPortraitImageId || '';
     let nextImageId = previousImageId;
+    let nextPortraitImageId = previousPortraitImageId;
+
+    const pendingLandscapeImage = getPendingPromptImage('landscape');
+    const pendingPortraitImage = getPendingPromptImage('portrait');
 
     try {
-      if (pendingPromptImage?.file instanceof File) {
+      if (pendingLandscapeImage?.file instanceof File) {
         nextImageId = await saveImageBlobRecord({
-          blob: pendingPromptImage.file,
-          mimeType: pendingPromptImage.mimeType || pendingPromptImage.file.type || '',
-          fileName: pendingPromptImage.fileName || pendingPromptImage.file.name || '',
+          blob: pendingLandscapeImage.file,
+          mimeType: pendingLandscapeImage.mimeType || pendingLandscapeImage.file.type || '',
+          fileName: pendingLandscapeImage.fileName || pendingLandscapeImage.file.name || '',
         });
-      } else if (!previousImageId && pendingPromptImage?.dataUrl?.startsWith('data:')) {
-        const blob = dataUrlToBlob(pendingPromptImage.dataUrl);
+      } else if (!previousImageId && pendingLandscapeImage?.dataUrl?.startsWith('data:')) {
+        const blob = dataUrlToBlob(pendingLandscapeImage.dataUrl);
         nextImageId = await saveImageBlobRecord({
           blob,
-          mimeType: pendingPromptImage.mimeType || blob.type || '',
-          fileName: pendingPromptImage.fileName || '',
+          mimeType: pendingLandscapeImage.mimeType || blob.type || '',
+          fileName: pendingLandscapeImage.fileName || '',
+        });
+      }
+
+      if (pendingPortraitImage?.file instanceof File) {
+        nextPortraitImageId = await saveImageBlobRecord({
+          blob: pendingPortraitImage.file,
+          mimeType: pendingPortraitImage.mimeType || pendingPortraitImage.file.type || '',
+          fileName: pendingPortraitImage.fileName || pendingPortraitImage.file.name || '',
+        });
+      } else if (!previousPortraitImageId && pendingPortraitImage?.dataUrl?.startsWith('data:')) {
+        const blob = dataUrlToBlob(pendingPortraitImage.dataUrl);
+        nextPortraitImageId = await saveImageBlobRecord({
+          blob,
+          mimeType: pendingPortraitImage.mimeType || blob.type || '',
+          fileName: pendingPortraitImage.fileName || '',
         });
       }
     } catch {
@@ -5780,6 +6496,9 @@
       imageId: nextImageId,
       imageData: '',
       imageName: buildPromptImageName(mainCategory, subCategory, content),
+      portraitImageId: nextPortraitImageId,
+      portraitImageData: '',
+      portraitImageName: buildPromptImageName(mainCategory, subCategory, content),
     };
 
     if (promptFormMode === 'edit' && editingPromptId) {
@@ -5792,14 +6511,19 @@
       prompts.push(nextPrompt);
     }
 
-    if (isEditMode && previousImageId && previousImageId !== nextImageId) {
-      await deleteImageIfOrphaned(previousImageId);
+    if (isEditMode) {
+      const removedImageIds = [];
+      if (previousImageId && previousImageId !== nextImageId) removedImageIds.push(previousImageId);
+      if (previousPortraitImageId && previousPortraitImageId !== nextPortraitImageId) removedImageIds.push(previousPortraitImageId);
+      for (const imageId of uniqueInOrder(removedImageIds)) {
+        await deleteImageIfOrphaned(imageId);
+      }
     }
 
     ensureCategoryConfigConsistency();
     save();
     document.getElementById('input-content').value = '';
-    clearPendingPromptImage();
+    clearPendingPromptImage({ all: true });
     resetPromptFormToAdd();
     renderCategorySelectors();
     render();
@@ -5811,19 +6535,19 @@
     e.stopPropagation();
     if (source === 'prompt' && !confirm('정말 삭제하시겠습니까?')) return;
     clearOutputOverride();
-    let removedImageId = '';
+    let removedImageIds = [];
     if (source === 'composed') {
       composedPrompts = composedPrompts.filter(p => p.id !== id);
     } else {
       const removedPrompt = prompts.find(p => p.id === id);
-      removedImageId = removedPrompt?.imageId || '';
+      removedImageIds = [removedPrompt?.imageId || '', removedPrompt?.portraitImageId || ''].filter(Boolean);
       prompts = prompts.filter(p => p.id !== id);
       ensureCategoryConfigConsistency();
     }
     selected = selected.filter(s => !(s.id === id && s.source === source));
     save();
-    if (removedImageId) {
-      await deleteImageIfOrphaned(removedImageId);
+    for (const imageId of removedImageIds) {
+      await deleteImageIfOrphaned(imageId);
     }
     render();
   }
@@ -5944,7 +6668,12 @@
     const items = selected.map(normalizeSelected).filter(item => item && item.content).map(cleanPrompt);
     const previousComposed = isEditMode ? composedPrompts.find(item => item.id === editingComposedPromptId) : null;
     const previousImageId = previousComposed?.imageId || editingComposedImageId || '';
+    const previousPortraitImageId = previousComposed?.portraitImageId || editingComposedPortraitImageId || '';
     let nextImageId = previousImageId;
+    let nextPortraitImageId = previousPortraitImageId;
+
+    const pendingLandscapeImage = getPendingComposedImage('landscape');
+    const pendingPortraitImage = getPendingComposedImage('portrait');
 
     if (!mainCategory) {
       showToast('커스텀 조합 대분류를 입력하세요');
@@ -5960,18 +6689,33 @@
     }
 
     try {
-      if (pendingComposedImage?.file instanceof File) {
+      if (pendingLandscapeImage?.file instanceof File) {
         nextImageId = await saveImageBlobRecord({
-          blob: pendingComposedImage.file,
-          mimeType: pendingComposedImage.mimeType || pendingComposedImage.file.type || '',
-          fileName: pendingComposedImage.fileName || pendingComposedImage.file.name || '',
+          blob: pendingLandscapeImage.file,
+          mimeType: pendingLandscapeImage.mimeType || pendingLandscapeImage.file.type || '',
+          fileName: pendingLandscapeImage.fileName || pendingLandscapeImage.file.name || '',
         });
-      } else if (!previousImageId && pendingComposedImage?.dataUrl?.startsWith('data:')) {
-        const blob = dataUrlToBlob(pendingComposedImage.dataUrl);
+      } else if (!previousImageId && pendingLandscapeImage?.dataUrl?.startsWith('data:')) {
+        const blob = dataUrlToBlob(pendingLandscapeImage.dataUrl);
         nextImageId = await saveImageBlobRecord({
           blob,
-          mimeType: pendingComposedImage.mimeType || blob.type || '',
-          fileName: pendingComposedImage.fileName || '',
+          mimeType: pendingLandscapeImage.mimeType || blob.type || '',
+          fileName: pendingLandscapeImage.fileName || '',
+        });
+      }
+
+      if (pendingPortraitImage?.file instanceof File) {
+        nextPortraitImageId = await saveImageBlobRecord({
+          blob: pendingPortraitImage.file,
+          mimeType: pendingPortraitImage.mimeType || pendingPortraitImage.file.type || '',
+          fileName: pendingPortraitImage.fileName || pendingPortraitImage.file.name || '',
+        });
+      } else if (!previousPortraitImageId && pendingPortraitImage?.dataUrl?.startsWith('data:')) {
+        const blob = dataUrlToBlob(pendingPortraitImage.dataUrl);
+        nextPortraitImageId = await saveImageBlobRecord({
+          blob,
+          mimeType: pendingPortraitImage.mimeType || blob.type || '',
+          fileName: pendingPortraitImage.fileName || '',
         });
       }
     } catch {
@@ -5979,7 +6723,9 @@
       return;
     }
 
-    const imageName = pendingComposedImage?.imageName
+    const imageName = pendingLandscapeImage?.imageName
+      || buildComposedImageName(mainCategory, subCategory, items.map(p => p.content).join(', '));
+    const portraitImageName = pendingPortraitImage?.imageName
       || buildComposedImageName(mainCategory, subCategory, items.map(p => p.content).join(', '));
 
     const nextComposed = {
@@ -5990,8 +6736,11 @@
       items,
       content: items.map(p => p.content).join(', '),
       imageId: nextImageId,
-      imageData: nextImageId ? '' : (pendingComposedImage?.dataUrl || editingComposedImageData || ''),
+      imageData: nextImageId ? '' : (pendingLandscapeImage?.dataUrl || editingComposedImageData || ''),
       imageName,
+      portraitImageId: nextPortraitImageId,
+      portraitImageData: nextPortraitImageId ? '' : (pendingPortraitImage?.dataUrl || editingComposedPortraitImageData || ''),
+      portraitImageName,
     };
 
     if (isEditMode) {
@@ -6004,8 +6753,13 @@
       composedPrompts.push(nextComposed);
     }
 
-    if (isEditMode && previousImageId && previousImageId !== nextImageId) {
-      await deleteImageIfOrphaned(previousImageId);
+    if (isEditMode) {
+      const removedImageIds = [];
+      if (previousImageId && previousImageId !== nextImageId) removedImageIds.push(previousImageId);
+      if (previousPortraitImageId && previousPortraitImageId !== nextPortraitImageId) removedImageIds.push(previousPortraitImageId);
+      for (const imageId of uniqueInOrder(removedImageIds)) {
+        await deleteImageIfOrphaned(imageId);
+      }
     }
 
     save();
@@ -6017,7 +6771,7 @@
   // ── ZIP Backup (metadata + images) ──
   function buildBackupPayload() {
     return {
-      version: 3,
+      version: 4,
       exportedAt: new Date().toISOString(),
       prompts: prompts.map(cleanPrompt),
       composedPrompts: composedPrompts.map(item => ({
@@ -6030,6 +6784,9 @@
         imageId: item.imageId || '',
         imageData: !item.imageId && item.imageData ? item.imageData : '',
         imageName: item.imageName || '',
+        portraitImageId: item.portraitImageId || '',
+        portraitImageData: !item.portraitImageId && item.portraitImageData ? item.portraitImageData : '',
+        portraitImageName: item.portraitImageName || '',
       })),
       categoryConfig,
       composedCategoryConfig,
@@ -6312,7 +7069,7 @@
       const dataUrl = await readFileAsDataUrl(file);
       setPendingPromptImage(file, dataUrl);
     } catch {
-      pendingPromptImage = null;
+      pendingPromptImages[normalizeImageOrientation(promptImageEditOrientation)] = null;
       renderPendingPromptImagePreview();
       showToast('이미지를 읽지 못했습니다');
     }
@@ -6329,7 +7086,7 @@
       const dataUrl = await readFileAsDataUrl(file);
       setPendingComposedImage(file, dataUrl);
     } catch {
-      pendingComposedImage = null;
+      pendingComposedImages[normalizeImageOrientation(composedImageEditOrientation)] = null;
       renderPendingComposedImagePreview();
       showToast('이미지를 읽지 못했습니다');
     }
@@ -6371,10 +7128,17 @@
   comboMainCategoryInput.addEventListener('change', handleComposedMainCategoryChange);
   comboSubCategoryInput.addEventListener('change', handleComposedSubCategoryChange);
 
+  window.addEventListener('resize', () => {
+    if (normalizePreviewRenderMode(previewRenderMode) === 'portrait') {
+      renderPreviewRenderMode();
+    }
+  });
+
   // ── Init ──
   preventSafariDoubleTapZoom();
   loadSettings();
   renderSettingsDrawer();
+  renderPreviewRenderMode();
   renderImageViewer();
   setLeftPanelTab(localStorage.getItem(LEFT_PANEL_TAB_KEY) || 'prompt');
   load();
