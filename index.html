@@ -1353,6 +1353,7 @@
       gap: 8px;
       flex: 0 0 calc(50% - 5px);
       min-height: 0;
+      overflow: hidden;
     }
 
     .combo-edit-load-list {
@@ -1394,6 +1395,12 @@
 
     .combo-filter-wrap {
       margin-top: 2px;
+      flex: 1;
+      min-height: 0;
+      overflow-y: auto;
+      overscroll-behavior: contain;
+      -webkit-overflow-scrolling: touch;
+      padding-right: 2px;
     }
 
     /* ── Right Panel: Composer ── */
@@ -2624,6 +2631,7 @@
   let activeComposedPreviewId = null;
   let armedCoreRandomComposedId = null;
   let morphingCoreRandomComposedId = null;
+  let armedComposedCopyId = null;
   let coreRandomMorphTimer = null;
   let isCoreRandomFadeOutRunning = false;
   let shouldAutoSelectCoreSubCategoryOnPromptTab = false;
@@ -5020,6 +5028,7 @@
     tapComposeMode = normalizeTapComposeMode(mode);
     saveSettings();
     renderTapComposeToggle();
+    render();
     if (options.notify) {
       if (tapComposeMode === PROMPT_ADD_MODE.TAP) {
         showToast('터치로 추가 모드가 켜졌습니다');
@@ -5432,12 +5441,6 @@
     clearOutputOverride();
     selected = item.items.map(entry => ({ ...normalizeSelected(entry), source: 'prompt' })).filter(entry => entry && entry.content);
     render();
-    const text = getComposedOutputText();
-    copyPromptSilently(text)
-      .then(() => {
-        showToast('커스텀 조합을 불러오고 클립보드에 복사했습니다');
-      })
-      .catch(() => showToast('커스텀 조합은 불러왔지만 복사에 실패했습니다'));
   }
 
   async function deleteComposedPrompt(id, e) {
@@ -5529,6 +5532,7 @@
   function clearCoreRandomVisualState() {
     armedCoreRandomComposedId = null;
     morphingCoreRandomComposedId = null;
+    armedComposedCopyId = null;
     if (coreRandomMorphTimer) {
       window.clearTimeout(coreRandomMorphTimer);
       coreRandomMorphTimer = null;
@@ -5590,6 +5594,7 @@
     activeComposedPreviewId = composedPromptId;
     armedCoreRandomComposedId = composedPromptId;
     morphingCoreRandomComposedId = composedPromptId;
+    armedComposedCopyId = null;
     if (coreRandomMorphTimer) {
       window.clearTimeout(coreRandomMorphTimer);
     }
@@ -5602,6 +5607,49 @@
     }, 190);
     render();
     showToast('핵심 분류 무작위 선택 카드로 전환되었습니다');
+  }
+
+  function armComposedCardCopyShortcut(composedPromptId) {
+    const item = composedPrompts.find(p => p.id === composedPromptId);
+    if (!item) {
+      showToast('선택한 커스텀 카드를 찾지 못했습니다');
+      return;
+    }
+
+    const isEditOnly = !!getComposedMainCategoryConfig(item.mainCategory).editOnly;
+    if (!isEditOnly) {
+      armComposedCardCoreRandomShortcut(composedPromptId);
+      return;
+    }
+
+    activeCategoryComposed = item.mainCategory;
+    activeComposedPreviewId = composedPromptId;
+    armedCoreRandomComposedId = null;
+    morphingCoreRandomComposedId = null;
+    armedComposedCopyId = composedPromptId;
+    render();
+    showToast('클립보드 복사 버튼으로 전환되었습니다');
+  }
+
+  function runComposedCopyShortcut(composedPromptId) {
+    const item = composedPrompts.find(p => p.id === composedPromptId);
+    if (!item) {
+      showToast('선택한 커스텀 카드를 찾지 못했습니다');
+      return;
+    }
+
+    armedComposedCopyId = null;
+    loadComposedPrompt(composedPromptId);
+    const text = getComposedOutputText();
+    copyPromptSilently(text)
+      .then((copied) => {
+        if (copied) {
+          showToast('클립보드에 복사되었습니다');
+        } else {
+          showToast('복사할 내용이 없습니다');
+        }
+      })
+      .catch(() => showToast('클립보드 복사에 실패했습니다'));
   }
 
   function runComposedSwipeShortcut(composedPromptId) {
@@ -5821,16 +5869,21 @@
         const composedText = getComposedItemText(item);
         const isPreview = activeComposedPreviewId === item.id;
         const isArmedRandomCard = armedCoreRandomComposedId === item.id;
+        const isArmedCopyCard = armedComposedCopyId === item.id;
         const isMorphingRandomCard = morphingCoreRandomComposedId === item.id;
+        const isEditOnlyCategory = !!getComposedMainCategoryConfig(item.mainCategory).editOnly;
         const card = document.createElement('div');
         card.dataset.promptId = item.id;
         card.className = 'prompt-item combo-card-item'
           + (isPreview ? ' preview' : '')
           + (isArmedRandomCard ? ' core-random-armed' : '')
+          + (isArmedCopyCard ? ' core-random-armed' : '')
           + (isMorphingRandomCard ? ' core-random-morph' : '');
         card.title = isArmedRandomCard
           ? '탭하면 핵심 분류 무작위 선택을 실행합니다'
-          : '클릭하면 현재 조합으로 불러옵니다';
+          : isArmedCopyCard
+            ? '탭하면 클립보드에 복사합니다'
+            : '클릭하면 현재 조합으로 불러옵니다';
         card.innerHTML = isArmedRandomCard
           ? `
           <div class="prompt-item-swipe-content">
@@ -5842,7 +5895,18 @@
             </div>
           </div>
           `
-          : `
+          : isArmedCopyCard
+            ? `
+          <div class="prompt-item-swipe-content">
+            <div class="prompt-item-body">
+              <div class="combo-card-text">
+                <span class="combo-card-name combo-card-random-name"><span class="combo-card-random-icon">📋</span><span>클립보드 복사</span></span>
+                <span class="combo-card-preview" title="${esc(composedText)}">${esc(composedText)}</span>
+              </div>
+            </div>
+          </div>
+          `
+            : `
           <div class="prompt-item-swipe-content">
             <div class="prompt-item-body">
               <div class="combo-card-text">
@@ -5861,8 +5925,15 @@
           bindPromptItemSwipe(card, item, {
             allowRightSwipeCommit: false,
             allowLeftSwipeActions: false,
-            requireSwipeComposeMode: false,
+            requireSwipeComposeMode: true,
             onTap: () => runComposedSwipeShortcut(item.id),
+          });
+        } else if (isArmedCopyCard) {
+          bindPromptItemSwipe(card, item, {
+            allowRightSwipeCommit: false,
+            allowLeftSwipeActions: false,
+            requireSwipeComposeMode: true,
+            onTap: () => runComposedCopyShortcut(item.id),
           });
         } else {
           const editBtn = card.querySelector('.edit-btn');
@@ -5876,11 +5947,63 @@
 
           bindPromptItemSwipe(card, item, {
             allowRightSwipeCommit: true,
-            requireSwipeComposeMode: false,
-            onSwipeCommit: () => armComposedCardCoreRandomShortcut(item.id),
+            requireSwipeComposeMode: true,
+            onSwipeCommit: () => {
+              if (isEditOnlyCategory) {
+                armComposedCardCopyShortcut(item.id);
+              } else {
+                armComposedCardCoreRandomShortcut(item.id);
+              }
+            },
             onTap: () => {
+              if (isArmedRandomCard) {
+                runComposedSwipeShortcut(item.id);
+                return;
+              }
+              if (isArmedCopyCard) {
+                runComposedCopyShortcut(item.id);
+                return;
+              }
               if (armedCoreRandomComposedId && armedCoreRandomComposedId !== item.id) {
-                fadeOutArmedCoreRandomCard(() => loadComposedPrompt(item.id));
+                fadeOutArmedCoreRandomCard(() => {
+                  if (tapComposeMode === PROMPT_ADD_MODE.TAP) {
+                    if (isEditOnlyCategory) {
+                      armComposedCardCopyShortcut(item.id);
+                    } else {
+                      armComposedCardCoreRandomShortcut(item.id);
+                    }
+                  } else if (tapComposeMode === PROMPT_ADD_MODE.DOUBLE_TAP_PREVIEW) {
+                    activeComposedPreviewId = item.id;
+                    render();
+                  } else {
+                    loadComposedPrompt(item.id);
+                  }
+                });
+                return;
+              }
+              if (armedComposedCopyId && armedComposedCopyId !== item.id) {
+                armedComposedCopyId = null;
+              }
+              if (tapComposeMode === PROMPT_ADD_MODE.DOUBLE_TAP_PREVIEW) {
+                if (activeComposedPreviewId === item.id) {
+                  activateDoubleTapTouchCooldown();
+                  if (isEditOnlyCategory) {
+                    armComposedCardCopyShortcut(item.id);
+                  } else {
+                    armComposedCardCoreRandomShortcut(item.id);
+                  }
+                } else {
+                  activeComposedPreviewId = item.id;
+                  render();
+                }
+                return;
+              }
+              if (tapComposeMode === PROMPT_ADD_MODE.TAP) {
+                if (isEditOnlyCategory) {
+                  armComposedCardCopyShortcut(item.id);
+                } else {
+                  armComposedCardCoreRandomShortcut(item.id);
+                }
                 return;
               }
               loadComposedPrompt(item.id);
