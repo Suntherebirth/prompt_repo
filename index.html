@@ -1633,7 +1633,17 @@
       padding: 4px 8px;
       font-size: 0.82rem;
       color: #e0d0ff;
-      cursor: default;
+      cursor: grab;
+      -webkit-user-drag: none;
+      user-select: none;
+      touch-action: pan-y;
+    }
+    .selected-chip.dragging {
+      opacity: 0.48;
+    }
+    .selected-chip.drag-over {
+      border-color: #8ab4ff;
+      box-shadow: 0 0 0 1px rgba(138, 180, 255, 0.35);
     }
     .selected-chip .chip-cat { font-size: 0.7rem; color: #c084fc; font-weight: 600; }
     .selected-chip .chip-remove {
@@ -2067,6 +2077,77 @@
       padding: 0 14px 14px;
     }
 
+    .composed-modal-editor {
+      margin-top: 12px;
+      border: 1px solid #2a2a3a;
+      border-radius: 10px;
+      background: #13131c;
+      padding: 10px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .composed-modal-editor-title {
+      font-size: 0.78rem;
+      font-weight: 700;
+      color: #c9d7ff;
+      letter-spacing: 0.02em;
+    }
+
+    .composed-modal-add-row {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr)) auto;
+      gap: 8px;
+      align-items: center;
+    }
+
+    @media (max-width: 760px) {
+      .composed-modal-add-row {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .composed-modal-items {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      max-height: 240px;
+      overflow-y: auto;
+      padding-right: 2px;
+    }
+
+    .composed-modal-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      border: 1px solid #2a2a3a;
+      border-radius: 8px;
+      background: #171724;
+      padding: 8px;
+    }
+
+    .composed-modal-item-text {
+      flex: 1;
+      min-width: 0;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      align-items: center;
+      font-size: 0.76rem;
+      color: #e4ddf7;
+      line-height: 1.45;
+      word-break: break-word;
+    }
+
+    .composed-modal-item-actions {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      flex-shrink: 0;
+    }
+
     .settings-drawer {
       position: fixed;
       inset: 0;
@@ -2400,13 +2481,13 @@
         </div>
         <div class="prompt-category-grid">
           <div>
-            <label>대분류</label>
+            <label>1단계: 대분류</label>
             <div class="category-input-wrap">
               <select id="input-main-category"></select>
             </div>
           </div>
           <div>
-            <label class="sub-field-label">중분류</label>
+            <label class="sub-field-label">2단계: 중분류 이름</label>
             <div class="category-input-wrap">
               <select id="input-sub-category" class="sub-field-select" disabled></select>
             </div>
@@ -2459,6 +2540,16 @@
           <div class="category-input-wrap">
             <select id="combo-sub-category" class="sub-field-select" disabled></select>
           </div>
+        </div>
+        <div class="composed-modal-editor">
+          <div class="composed-modal-editor-title">조합 프롬프트 편집</div>
+          <div class="composed-modal-add-row">
+            <select id="composed-item-add-main" onchange="handleComposedEditorAddMainChange()"></select>
+            <select id="composed-item-add-sub" onchange="handleComposedEditorAddSubChange()"></select>
+            <select id="composed-item-add-select"></select>
+            <button class="btn btn-primary btn-sm" id="composed-item-add-btn" type="button" onclick="addPromptToComposedEditor()">+ 추가</button>
+          </div>
+          <div class="composed-modal-items" id="composed-items-edit-list"></div>
         </div>
         <div class="prompt-image-block">
           <label>설명 이미지</label>
@@ -4894,6 +4985,7 @@
     syncAddFormSelection();
     renderPromptList();
     renderSelected();
+    renderComposedModalItemEditor();
     renderPromptDescriptionPreview();
     renderComposedDescriptionPreview();
     if (document.getElementById('category-manage-modal')?.classList.contains('open')) {
@@ -6124,7 +6216,11 @@
 
   function renderSelected() {
     const container = document.getElementById('selected-chips');
-    const empty = document.getElementById('chips-empty');
+    if (!container) return;
+
+    container.ondragover = dragOverSelectedContainer;
+    container.ondrop = dropOnSelectedContainer;
+
     container.innerHTML = '';
 
     if (selected.length === 0) {
@@ -6146,13 +6242,203 @@
           <button class="chip-remove" title="제거" onclick="removeSelected(${i})">×</button>
         `;
         chip.addEventListener('dragstart', dragStart);
+        chip.addEventListener('dragend', dragEnd);
         chip.addEventListener('dragover', dragOver);
         chip.addEventListener('drop', drop);
+        chip.addEventListener('dragleave', dragLeave);
+        chip.addEventListener('pointerdown', chipPointerDown);
+        chip.addEventListener('pointermove', chipPointerMove);
+        chip.addEventListener('pointerup', chipPointerEnd);
+        chip.addEventListener('pointercancel', chipPointerEnd);
         container.appendChild(chip);
       });
     }
 
     updateOutput();
+  }
+
+  function getComposedPromptOptionLabel(prompt) {
+    const content = prompt?.content || '';
+    return content;
+  }
+
+  function getComposedEditorPromptMainCategories() {
+    return uniqueInOrder(prompts.map(prompt => prompt.mainCategory).filter(Boolean));
+  }
+
+  function getComposedEditorPromptSubCategories(mainCategory) {
+    if (!mainCategory) return [];
+    return uniqueInOrder(
+      prompts
+        .filter(prompt => prompt.mainCategory === mainCategory)
+        .map(prompt => prompt.subCategory)
+        .filter(Boolean)
+    );
+  }
+
+  function handleComposedEditorAddMainChange() {
+    const subSelect = document.getElementById('composed-item-add-sub');
+    const promptSelect = document.getElementById('composed-item-add-select');
+    if (subSelect) subSelect.value = '';
+    if (promptSelect) promptSelect.value = '';
+    renderComposedModalItemEditor();
+  }
+
+  function handleComposedEditorAddSubChange() {
+    const promptSelect = document.getElementById('composed-item-add-select');
+    if (promptSelect) promptSelect.value = '';
+    renderComposedModalItemEditor();
+  }
+
+  function renderComposedModalItemEditor() {
+    const list = document.getElementById('composed-items-edit-list');
+    const addMainSelect = document.getElementById('composed-item-add-main');
+    const addSubSelect = document.getElementById('composed-item-add-sub');
+    const addSelect = document.getElementById('composed-item-add-select');
+    const addBtn = document.getElementById('composed-item-add-btn');
+    if (!list || !addMainSelect || !addSubSelect || !addSelect || !addBtn) return;
+
+    const previousMainValue = addMainSelect.value;
+    const previousSubValue = addSubSelect.value;
+    const previousValue = addSelect.value;
+
+    const mainCategories = getComposedEditorPromptMainCategories();
+    addMainSelect.innerHTML = '';
+    appendSelectOption(addMainSelect, '', '1단계: 대분류 선택');
+    mainCategories.forEach(mainCategory => appendSelectOption(addMainSelect, mainCategory, mainCategory));
+    if (previousMainValue && mainCategories.includes(previousMainValue)) {
+      addMainSelect.value = previousMainValue;
+    }
+
+    const currentMainCategory = addMainSelect.value;
+    const subCategories = getComposedEditorPromptSubCategories(currentMainCategory);
+    addSubSelect.innerHTML = '';
+    appendSelectOption(addSubSelect, '', currentMainCategory ? '2단계: 중분류 선택' : '1단계에서 대분류를 선택');
+    subCategories.forEach(subCategory => appendSelectOption(addSubSelect, subCategory, subCategory));
+    addSubSelect.disabled = !currentMainCategory;
+    if (previousSubValue && subCategories.includes(previousSubValue)) {
+      addSubSelect.value = previousSubValue;
+    }
+
+    const currentSubCategory = addSubSelect.value;
+    const filteredPrompts = prompts
+      .filter(prompt => {
+        if (!currentMainCategory || prompt.mainCategory !== currentMainCategory) return false;
+        if (!currentSubCategory || prompt.subCategory !== currentSubCategory) return false;
+        return true;
+      })
+      .sort((a, b) => {
+        const byContent = String(a.content || '').localeCompare(String(b.content || ''), 'ko');
+        if (byContent !== 0) return byContent;
+        return String(a.id || '').localeCompare(String(b.id || ''), 'ko');
+      });
+
+    addSelect.innerHTML = '';
+    appendSelectOption(addSelect, '', currentSubCategory ? '3단계: 프롬프트 선택' : '2단계에서 중분류를 선택');
+    filteredPrompts.forEach(prompt => {
+      appendSelectOption(addSelect, prompt.id, getComposedPromptOptionLabel(prompt));
+    });
+    addSelect.disabled = !currentSubCategory;
+    if (previousValue && filteredPrompts.some(prompt => prompt.id === previousValue)) {
+      addSelect.value = previousValue;
+    }
+    addBtn.disabled = filteredPrompts.length === 0 || !addSelect.value;
+
+    list.innerHTML = '';
+    addSelect.onchange = () => {
+      addBtn.disabled = !addSelect.value;
+    };
+
+    if (selected.length === 0) {
+      const empty = document.createElement('div');
+      empty.className = 'empty-state';
+      empty.style.padding = '14px 8px';
+      empty.textContent = '조합에 프롬프트가 없습니다. 위에서 추가해 주세요.';
+      list.appendChild(empty);
+      return;
+    }
+
+    selected.forEach((item, index) => {
+      const row = document.createElement('div');
+      row.className = 'composed-modal-item';
+
+      const text = document.createElement('div');
+      text.className = 'composed-modal-item-text';
+      text.innerHTML = `<span class="chip-cat">${index + 1}</span><span class="chip-cat">${esc(item.mainCategory || item.category || '')}</span><span class="chip-cat" style="color:#8ab4ff">${esc(item.subCategory || '')}</span><span>${esc(item.content || '')}</span>`;
+
+      const actions = document.createElement('div');
+      actions.className = 'composed-modal-item-actions';
+
+      const upBtn = document.createElement('button');
+      upBtn.type = 'button';
+      upBtn.className = 'btn btn-secondary btn-sm';
+      upBtn.textContent = '↑';
+      upBtn.disabled = index === 0;
+      upBtn.addEventListener('click', () => moveSelectedItemInComposedEditor(index, -1));
+
+      const downBtn = document.createElement('button');
+      downBtn.type = 'button';
+      downBtn.className = 'btn btn-secondary btn-sm';
+      downBtn.textContent = '↓';
+      downBtn.disabled = index === selected.length - 1;
+      downBtn.addEventListener('click', () => moveSelectedItemInComposedEditor(index, 1));
+
+      const removeBtn = document.createElement('button');
+      removeBtn.type = 'button';
+      removeBtn.className = 'btn btn-danger btn-sm';
+      removeBtn.textContent = '삭제';
+      removeBtn.addEventListener('click', () => removeSelectedItemInComposedEditor(index));
+
+      actions.appendChild(upBtn);
+      actions.appendChild(downBtn);
+      actions.appendChild(removeBtn);
+
+      row.appendChild(text);
+      row.appendChild(actions);
+      list.appendChild(row);
+    });
+  }
+
+  function addPromptToComposedEditor() {
+    const addSelect = document.getElementById('composed-item-add-select');
+    if (!addSelect) return;
+
+    const promptId = addSelect.value;
+    if (!promptId) {
+      showToast('추가할 프롬프트를 선택해 주세요');
+      return;
+    }
+
+    const prompt = prompts.find(item => item.id === promptId);
+    if (!prompt) {
+      showToast('선택한 프롬프트를 찾지 못했습니다');
+      return;
+    }
+
+    const added = addPromptToComposition(prompt, { suppressToast: true });
+    if (!added) {
+      showToast('이미 조합에 추가된 프롬프트입니다');
+      return;
+    }
+
+    addSelect.value = '';
+    showToast('조합에 프롬프트가 추가되었습니다');
+  }
+
+  function moveSelectedItemInComposedEditor(index, delta) {
+    const toIndex = index + delta;
+    if (index < 0 || toIndex < 0 || index >= selected.length || toIndex >= selected.length) return;
+    clearOutputOverride();
+    const item = selected.splice(index, 1)[0];
+    selected.splice(toIndex, 0, item);
+    render();
+  }
+
+  function removeSelectedItemInComposedEditor(index) {
+    if (index < 0 || index >= selected.length) return;
+    clearOutputOverride();
+    selected.splice(index, 1);
+    render();
   }
 
   function getComposedOutputText() {
@@ -6231,11 +6517,10 @@
     const current = select.value;
 
     select.innerHTML = '';
-    appendSelectOption(select, '', '대분류 선택');
-    appendSelectOption(select, '__new__', '＋ 새 대분류 추가');
+    appendSelectOption(select, '', '1단계: 대분류 선택');
     categories.forEach(category => appendSelectOption(select, category, category));
 
-    if (current && [...categories, '__new__'].includes(current)) {
+    if (current && categories.includes(current)) {
       select.value = current;
     }
   }
@@ -6243,16 +6528,15 @@
   function renderSubCategorySelect() {
     const mainSelect = document.getElementById('input-main-category');
     const select = document.getElementById('input-sub-category');
-    const mainCategory = mainSelect.value && mainSelect.value !== '__new__' ? mainSelect.value : '';
+    const mainCategory = mainSelect.value ? mainSelect.value : '';
     const categories = mainCategory ? getSubCategories(mainCategory) : [];
     const current = select.value;
 
     select.innerHTML = '';
-    appendSelectOption(select, '', mainCategory ? '중분류 선택' : '대분류를 먼저 선택');
+    appendSelectOption(select, '', mainCategory ? '2단계: 중분류 이름 선택' : '1단계에서 대분류를 먼저 선택');
 
     if (mainCategory) {
       categories.forEach(category => appendSelectOption(select, category, category));
-      appendSelectOption(select, '__new__', '＋ 새 중분류 추가');
       if (categories.length === 0) {
         appendSelectOption(select, '기타', '기타');
       }
@@ -6303,40 +6587,11 @@
   }
 
   function handleMainCategoryChange() {
-    const select = document.getElementById('input-main-category');
-    if (select.value === '__new__') {
-      const nextValue = prompt('새 대분류 이름을 입력하세요');
-      if (nextValue && nextValue.trim()) {
-        const value = nextValue.trim();
-        ensureMainCategoryConfig(value);
-        categoryConfig.mainOrder = uniqueInOrder([...(categoryConfig.mainOrder || []), value]);
-        appendSelectOption(select, value, value);
-        select.value = value;
-      } else {
-        select.value = '';
-      }
-    }
     renderSubCategorySelect();
     renderPendingPromptImagePreview();
   }
 
   function handleSubCategoryChange() {
-    const select = document.getElementById('input-sub-category');
-    const mainCategory = document.getElementById('input-main-category').value.trim();
-    if (select.value === '__new__') {
-      const nextValue = prompt('새 중분류 이름을 입력하세요');
-      if (nextValue && nextValue.trim()) {
-        const value = nextValue.trim();
-        if (mainCategory) {
-          const mainConfig = ensureMainCategoryConfig(mainCategory);
-          mainConfig.subOrder = uniqueInOrder([...(mainConfig.subOrder || []), value]);
-        }
-        appendSelectOption(select, value, value);
-        select.value = value;
-      } else {
-        select.value = '';
-      }
-    }
     renderPendingPromptImagePreview();
   }
 
@@ -6428,6 +6683,7 @@
     clearPendingComposedImage({ all: true });
     const modal = document.getElementById('save-composed-modal');
     modal.classList.add('open');
+    renderComposedModalItemEditor();
     document.getElementById('combo-main-category').focus();
   }
 
@@ -6529,6 +6785,7 @@
 
     const modal = document.getElementById('save-composed-modal');
     modal.classList.add('open');
+    renderComposedModalItemEditor();
     if (subSelect) subSelect.focus();
   }
 
@@ -7098,25 +7355,146 @@
 
   // ── Drag to reorder ──
   let dragIdx = null;
+  let touchDragIdx = null;
+  let touchDropIdx = null;
+  let touchPointerId = null;
+
+  function clearSelectedChipDragState() {
+    const chips = document.querySelectorAll('.selected-chip');
+    chips.forEach(chip => chip.classList.remove('dragging', 'drag-over'));
+  }
 
   function dragStart(e) {
     dragIdx = +e.currentTarget.dataset.idx;
+    e.currentTarget.classList.add('dragging');
     e.dataTransfer.effectAllowed = 'move';
+    e.dataTransfer.setData('text/plain', String(dragIdx));
+  }
+
+  function dragEnd() {
+    dragIdx = null;
+    clearSelectedChipDragState();
+  }
+
+  function chipPointerDown(e) {
+    if (e.pointerType !== 'touch') return;
+    if (e.target.closest('.chip-remove')) return;
+
+    touchDragIdx = +e.currentTarget.dataset.idx;
+    touchDropIdx = touchDragIdx;
+    touchPointerId = e.pointerId;
+    e.currentTarget.classList.add('dragging');
+    if (typeof e.currentTarget.setPointerCapture === 'function') {
+      e.currentTarget.setPointerCapture(e.pointerId);
+    }
+  }
+
+  function chipPointerMove(e) {
+    if (e.pointerType !== 'touch') return;
+    if (touchDragIdx === null || touchPointerId !== e.pointerId) return;
+
+    e.preventDefault();
+    clearSelectedChipDragState();
+
+    const draggingChip = document.querySelector(`.selected-chip[data-idx="${touchDragIdx}"]`);
+    if (draggingChip) {
+      draggingChip.classList.add('dragging');
+    }
+
+    const pointed = document.elementFromPoint(e.clientX, e.clientY);
+    const targetChip = pointed ? pointed.closest('.selected-chip') : null;
+    if (targetChip) {
+      const targetIdx = +targetChip.dataset.idx;
+      touchDropIdx = targetIdx;
+      if (targetIdx !== touchDragIdx) {
+        targetChip.classList.add('drag-over');
+      }
+      return;
+    }
+
+    const container = pointed ? pointed.closest('#selected-chips') : null;
+    if (container && selected.length > 0) {
+      touchDropIdx = selected.length - 1;
+    }
+  }
+
+  function chipPointerEnd(e) {
+    if (e.pointerType !== 'touch') return;
+    if (touchDragIdx === null || touchPointerId !== e.pointerId) return;
+
+    const fromIdx = touchDragIdx;
+    const toIdx = touchDropIdx;
+
+    touchDragIdx = null;
+    touchDropIdx = null;
+    touchPointerId = null;
+
+    if (typeof e.currentTarget.releasePointerCapture === 'function') {
+      try {
+        e.currentTarget.releasePointerCapture(e.pointerId);
+      } catch {
+        // Browsers may auto-release capture on pointerup.
+      }
+    }
+
+    if (fromIdx === null || toIdx === null || fromIdx === toIdx) {
+      clearSelectedChipDragState();
+      return;
+    }
+
+    clearOutputOverride();
+    const item = selected.splice(fromIdx, 1)[0];
+    selected.splice(toIdx, 0, item);
+    clearSelectedChipDragState();
+    render();
   }
 
   function dragOver(e) {
     e.preventDefault();
     e.dataTransfer.dropEffect = 'move';
+    clearSelectedChipDragState();
+    const targetChip = e.currentTarget;
+    if (targetChip && +targetChip.dataset.idx !== dragIdx) {
+      targetChip.classList.add('drag-over');
+    }
+  }
+
+  function dragLeave(e) {
+    e.currentTarget.classList.remove('drag-over');
   }
 
   function drop(e) {
     e.preventDefault();
+    e.stopPropagation();
     const toIdx = +e.currentTarget.dataset.idx;
     if (dragIdx === null || dragIdx === toIdx) return;
     clearOutputOverride();
     const item = selected.splice(dragIdx, 1)[0];
     selected.splice(toIdx, 0, item);
     dragIdx = null;
+    clearSelectedChipDragState();
+    render();
+  }
+
+  function dragOverSelectedContainer(e) {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
+  }
+
+  function dropOnSelectedContainer(e) {
+    e.preventDefault();
+    if (dragIdx === null) return;
+
+    const targetChip = e.target.closest('.selected-chip');
+    if (targetChip) {
+      return;
+    }
+
+    clearOutputOverride();
+    const item = selected.splice(dragIdx, 1)[0];
+    selected.push(item);
+    dragIdx = null;
+    clearSelectedChipDragState();
     render();
   }
 
