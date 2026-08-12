@@ -2780,6 +2780,8 @@
   let activeComposedPreviewId = null;
   let armedCoreRandomComposedId = null;
   let morphingCoreRandomComposedId = null;
+  let frozenComboCardId = null;
+  let frozenComboCardHeight = 0;
   let armedComposedCopyId = null;
   let coreRandomMorphTimer = null;
   let isCoreRandomFadeOutRunning = false;
@@ -5680,10 +5682,26 @@
     return true;
   }
 
+  function setFrozenComboCardHeight(composedPromptId, height) {
+    if (!composedPromptId || !height) return;
+    frozenComboCardId = composedPromptId;
+    frozenComboCardHeight = height;
+  }
+
+  function getFrozenComboCardHeight(composedPromptId) {
+    return frozenComboCardId === composedPromptId ? frozenComboCardHeight : 0;
+  }
+
+  function clearFrozenComboCardHeight() {
+    frozenComboCardId = null;
+    frozenComboCardHeight = 0;
+  }
+
   function clearCoreRandomVisualState() {
     armedCoreRandomComposedId = null;
     morphingCoreRandomComposedId = null;
     armedComposedCopyId = null;
+    clearFrozenComboCardHeight();
     if (coreRandomMorphTimer) {
       window.clearTimeout(coreRandomMorphTimer);
       coreRandomMorphTimer = null;
@@ -5731,7 +5749,7 @@
 
     if (!skipFadeOut && armedCoreRandomComposedId && armedCoreRandomComposedId !== composedPromptId) {
       fadeOutArmedCoreRandomCard(() => {
-        armComposedCardCoreRandomShortcut(composedPromptId, { skipFadeOut: true });
+        armComposedCardCoreRandomShortcut(composedPromptId, { skipFadeOut: true, frozenHeight: options.frozenHeight });
       });
       return;
     }
@@ -5746,6 +5764,9 @@
     armedCoreRandomComposedId = composedPromptId;
     morphingCoreRandomComposedId = composedPromptId;
     armedComposedCopyId = null;
+    if (options.frozenHeight) {
+      setFrozenComboCardHeight(composedPromptId, options.frozenHeight);
+    }
     if (coreRandomMorphTimer) {
       window.clearTimeout(coreRandomMorphTimer);
     }
@@ -5760,7 +5781,7 @@
     showToast('핵심 분류 무작위 선택 카드로 전환되었습니다');
   }
 
-  function armComposedCardCopyShortcut(composedPromptId) {
+  function armComposedCardCopyShortcut(composedPromptId, options = {}) {
     const item = composedPrompts.find(p => p.id === composedPromptId);
     if (!item) {
       showToast('선택한 커스텀 카드를 찾지 못했습니다');
@@ -5769,7 +5790,7 @@
 
     const isEditOnly = !!getComposedMainCategoryConfig(item.mainCategory).editOnly;
     if (!isEditOnly) {
-      armComposedCardCoreRandomShortcut(composedPromptId);
+      armComposedCardCoreRandomShortcut(composedPromptId, options);
       return;
     }
 
@@ -5778,6 +5799,9 @@
     armedCoreRandomComposedId = null;
     morphingCoreRandomComposedId = null;
     armedComposedCopyId = composedPromptId;
+    if (options.frozenHeight) {
+      setFrozenComboCardHeight(composedPromptId, options.frozenHeight);
+    }
     render();
     showToast('클립보드 복사 버튼으로 전환되었습니다');
   }
@@ -6067,6 +6091,11 @@
           : isArmedCopyCard
             ? '탭하면 클립보드에 복사합니다'
             : '클릭하면 현재 조합으로 불러옵니다';
+        if (isArmedRandomCard || isArmedCopyCard) {
+          // 스와이프 직전 카드 높이를 유지해 전환 시 크기가 줄어들며 출렁이지 않게 한다.
+          const frozenHeight = getFrozenComboCardHeight(item.id);
+          if (frozenHeight) card.style.minHeight = `${frozenHeight}px`;
+        }
         card.innerHTML = isArmedRandomCard
           ? `
           <div class="prompt-item-swipe-content">
@@ -6148,10 +6177,11 @@
             allowRightSwipeCommit: true,
             requireSwipeComposeMode: true,
             onSwipeCommit: () => {
+              const frozenHeight = card.getBoundingClientRect().height;
               if (isEditOnlyCategory) {
-                armComposedCardCopyShortcut(item.id);
+                armComposedCardCopyShortcut(item.id, { frozenHeight });
               } else {
-                armComposedCardCoreRandomShortcut(item.id);
+                armComposedCardCoreRandomShortcut(item.id, { frozenHeight });
               }
             },
             onTap: () => {
