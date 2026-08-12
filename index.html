@@ -6530,6 +6530,7 @@
     select.innerHTML = '';
     appendSelectOption(select, '', '1단계: 대분류 선택');
     categories.forEach(category => appendSelectOption(select, category, category));
+    appendSelectOption(select, '__new__', '＋ 새 대분류 추가');
 
     if (current && categories.includes(current)) {
       select.value = current;
@@ -6551,6 +6552,7 @@
       if (categories.length === 0) {
         appendSelectOption(select, '기타', '기타');
       }
+      appendSelectOption(select, '__new__', '＋ 새 중분류 추가');
       select.disabled = false;
       if (current && [...categories, '기타'].includes(current)) {
         select.value = current;
@@ -6598,11 +6600,33 @@
   }
 
   function handleMainCategoryChange() {
+    const select = document.getElementById('input-main-category');
+    if (select.value === '__new__') {
+      const nextValue = prompt('새 대분류 이름을 입력하세요');
+      if (nextValue && nextValue.trim()) {
+        const value = nextValue.trim();
+        appendSelectOption(select, value, value);
+        select.value = value;
+      } else {
+        select.value = '';
+      }
+    }
     renderSubCategorySelect();
     renderPendingPromptImagePreview();
   }
 
   function handleSubCategoryChange() {
+    const select = document.getElementById('input-sub-category');
+    if (select.value === '__new__') {
+      const nextValue = prompt('새 중분류 이름을 입력하세요');
+      if (nextValue && nextValue.trim()) {
+        const value = nextValue.trim();
+        appendSelectOption(select, value, value);
+        select.value = value;
+      } else {
+        select.value = '';
+      }
+    }
     renderPendingPromptImagePreview();
   }
 
