@@ -6235,12 +6235,23 @@
         chip.className = 'selected-chip';
         chip.draggable = true;
         chip.dataset.idx = i;
+        chip.title = '탭하면 중앙 목록의 해당 프롬프트 카드로 이동합니다';
         chip.innerHTML = `
           <span class="chip-cat">${esc(p.mainCategory || p.category)}</span>
           <span class="chip-cat" style="color:#8ab4ff">${esc(p.subCategory || '')}</span>
           <span>${esc(p.content)}</span>
           <button class="chip-remove" title="제거" onclick="removeSelected(${i})">×</button>
         `;
+        const removeBtn = chip.querySelector('.chip-remove');
+        if (removeBtn) {
+          removeBtn.addEventListener('click', (event) => {
+            event.stopPropagation();
+          });
+        }
+        chip.addEventListener('click', (event) => {
+          if (event.target.closest('.chip-remove')) return;
+          jumpToPromptCardFromSelected(i);
+        });
         chip.addEventListener('dragstart', dragStart);
         chip.addEventListener('dragend', dragEnd);
         chip.addEventListener('dragover', dragOver);
@@ -6996,6 +7007,54 @@
     clearOutputOverride();
     selected.splice(i, 1);
     render();
+  }
+
+  function jumpToPromptCardFromSelected(index) {
+    const item = selected[index];
+    if (!item || !item.id) {
+      showToast('선택한 프롬프트를 찾지 못했습니다');
+      return;
+    }
+    if (item.source && item.source !== 'prompt') {
+      showToast('개별 프롬프트 카드에서만 편집으로 이동할 수 있습니다');
+      return;
+    }
+
+    const prompt = prompts.find(entry => entry.id === item.id);
+    if (!prompt) {
+      showToast('원본 프롬프트를 찾지 못했습니다');
+      return;
+    }
+
+    isPromptPreviewSuppressed = false;
+    activePromptPreviewId = prompt.id;
+    activeCategoryPrompt = prompt.mainCategory || activeCategoryPrompt;
+    activeSubCategoryPrompt = prompt.subCategory || activeSubCategoryPrompt;
+
+    if (prompt.mainCategory && getMainCategoryConfig(prompt.mainCategory).hiddenByDefault) {
+      openedHiddenMainCategories.add(prompt.mainCategory);
+    }
+
+    if (leftPanelTab !== 'prompt') {
+      setLeftPanelTab('prompt');
+    } else {
+      render();
+    }
+
+    requestAnimationFrame(() => {
+      const target = document.querySelector(`.prompt-item[data-prompt-id="${prompt.id}"]`);
+      if (!target) return;
+
+      closeAllPromptSwipeActions(prompt.id);
+      target.classList.add('actions-open');
+      const swipeContent = target.querySelector('.prompt-item-swipe-content');
+      if (swipeContent) {
+        swipeContent.style.transition = '';
+        swipeContent.style.transform = `translateX(-${PROMPT_SWIPE_ACTION_WIDTH}px)`;
+      }
+
+      target.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'nearest' });
+    });
   }
 
   function clearSelected() {
