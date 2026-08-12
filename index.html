@@ -1907,6 +1907,64 @@
       color: #f4d8a5;
     }
 
+    .combo-card-choice-row {
+      display: flex;
+      width: 100%;
+      align-items: stretch;
+    }
+
+    .combo-card-choice-btn {
+      flex: 1;
+      min-width: 0;
+      border: 0;
+      border-right: 1px solid rgba(254, 243, 199, 0.24);
+      border-radius: 0;
+      background: rgba(15, 15, 19, 0.2);
+      color: #fef3c7;
+      font: inherit;
+      font-size: 0.78rem;
+      font-weight: 700;
+      line-height: 1.35;
+      cursor: pointer;
+      padding: 12px 8px;
+    }
+
+    .combo-card-choice-btn:hover,
+    .combo-card-choice-btn:active {
+      background: rgba(254, 243, 199, 0.14);
+    }
+
+    .combo-card-choice-btn:last-child {
+      border-right: 0;
+    }
+
+    .prompt-item.combo-card-item.core-random-armed .prompt-item-swipe-content {
+      padding: 0;
+      min-height: 58px;
+    }
+
+    .prompt-item.combo-card-item.core-random-armed .prompt-item-body,
+    .prompt-item.combo-card-item.core-random-armed .combo-card-text,
+    .prompt-item.combo-card-item.core-random-armed .combo-card-choice-row {
+      height: 100%;
+    }
+
+    .prompt-item.combo-card-item.core-random-armed .combo-card-choice-btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .combo-card-choice-btn.copy {
+      color: #dbeafe;
+      border-color: rgba(219, 234, 254, 0.24);
+    }
+
+    .combo-card-choice-btn.copy:hover,
+    .combo-card-choice-btn.copy:active {
+      background: rgba(219, 234, 254, 0.14);
+    }
+
     .prompt-item.combo-card-item.core-random-morph .prompt-item-swipe-content {
       animation: coreRandomFadeIn .18s cubic-bezier(0.16, 1, 0.3, 1);
     }
@@ -5204,6 +5262,7 @@
     previewRenderMode = normalizePreviewRenderMode(mode);
     saveSettings();
     renderPreviewRenderMode();
+    renderPromptList();
     renderPromptDescriptionPreview();
     renderComposedDescriptionPreview();
     renderPendingPromptImagePreview();
@@ -5723,6 +5782,38 @@
     showToast('클립보드 복사 버튼으로 전환되었습니다');
   }
 
+  function runComposedCopyAndOpenCoreShortcut(composedPromptId) {
+    const item = composedPrompts.find(p => p.id === composedPromptId);
+    if (!item) {
+      showToast('선택한 커스텀 카드를 찾지 못했습니다');
+      return;
+    }
+
+    loadComposedPrompt(composedPromptId);
+    const coreSelection = findCoreSubCategorySelection();
+    if (!coreSelection) {
+      showToast('핵심 분류가 설정되지 않았습니다');
+      return;
+    }
+
+    copyPromptSilently(getComposedOutputText())
+      .then((copied) => {
+        showToast(copied ? '클립보드에 복사되었습니다' : '복사할 내용이 없습니다');
+      })
+      .catch(() => showToast('클립보드 복사에 실패했습니다'));
+
+    activeCategoryPrompt = coreSelection.mainCategory;
+    activeSubCategoryPrompt = coreSelection.subCategory;
+    if (getMainCategoryConfig(coreSelection.mainCategory).hiddenByDefault) {
+      openedHiddenMainCategories.add(coreSelection.mainCategory);
+    }
+    if (leftPanelTab !== 'prompt') {
+      setLeftPanelTab('prompt');
+    } else {
+      render();
+    }
+  }
+
   function runComposedCopyShortcut(composedPromptId) {
     const item = composedPrompts.find(p => p.id === composedPromptId);
     if (!item) {
@@ -5920,7 +6011,7 @@
       }
 
       closeAllPromptSwipeActions();
-      onTap();
+      onTap(e);
     };
 
     item.addEventListener('pointerup', onPointerEnd);
@@ -5972,7 +6063,7 @@
           + (isArmedCopyCard ? ' core-random-armed' : '')
           + (isMorphingRandomCard ? ' core-random-morph' : '');
         card.title = isArmedRandomCard
-          ? '탭하면 핵심 분류 무작위 선택을 실행합니다'
+          ? '왼쪽은 클립보드 복사, 오른쪽은 핵심 분류 무작위 선택'
           : isArmedCopyCard
             ? '탭하면 클립보드에 복사합니다'
             : '클릭하면 현재 조합으로 불러옵니다';
@@ -5981,8 +6072,14 @@
           <div class="prompt-item-swipe-content">
             <div class="prompt-item-body">
               <div class="combo-card-text">
-                <span class="combo-card-name combo-card-random-name"><span class="combo-card-random-icon">🎲</span><span>핵심 분류 무작위 선택</span></span>
-                <span class="combo-card-preview" title="${esc(composedText)}">${esc(composedText)}</span>
+                <div class="combo-card-choice-row">
+                  <button class="combo-card-choice-btn copy" type="button" data-combo-choice="copy">
+                    📋 클립보드 복사
+                  </button>
+                  <button class="combo-card-choice-btn" type="button" data-combo-choice="random">
+                    🎲 핵심 분류 무작위 선택
+                  </button>
+                </div>
               </div>
             </div>
           </div>
@@ -6018,7 +6115,17 @@
             allowRightSwipeCommit: false,
             allowLeftSwipeActions: false,
             requireSwipeComposeMode: true,
-            onTap: () => runComposedSwipeShortcut(item.id),
+            onTap: (event) => {
+              const tappedChoice = event
+                ? (document.elementFromPoint(event.clientX, event.clientY)?.closest('[data-combo-choice]')
+                  || event.target?.closest?.('[data-combo-choice]'))
+                : null;
+              if (tappedChoice?.dataset.comboChoice === 'copy') {
+                runComposedCopyAndOpenCoreShortcut(item.id);
+                return;
+              }
+              runComposedSwipeShortcut(item.id);
+            },
           });
         } else if (isArmedCopyCard) {
           bindPromptItemSwipe(card, item, {
