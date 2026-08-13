@@ -2635,6 +2635,10 @@
           <label>내용</label>
           <textarea id="input-content" placeholder="내용을 입력"></textarea>
         </div>
+        <div>
+          <label>태그</label>
+          <textarea id="input-tags" placeholder="쉼표 또는 줄바꿈으로 여러 태그 입력"></textarea>
+        </div>
         <div id="prompt-description-field" style="display:none">
           <label>이미지 설명</label>
           <textarea id="input-description" placeholder="핵심 분류 항목에만 설명을 입력할 수 있습니다."></textarea>
@@ -3478,6 +3482,11 @@
     return Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
   }
 
+  function normalizePromptTags(tags) {
+    const values = Array.isArray(tags) ? tags : String(tags ?? '').split(/[\n,]/);
+    return uniqueInOrder(values.map(tag => String(tag).trim()).filter(Boolean));
+  }
+
   function normalizePrompt(prompt) {
     if (!prompt) return null;
     const mainCategory = (prompt.mainCategory ?? '').trim();
@@ -3489,6 +3498,7 @@
       mainCategory: mainCategory || '기타',
       subCategory: subCategory || '기타',
       content,
+      tags: normalizePromptTags(prompt.tags),
       description: String(prompt.description ?? '').trim(),
       // 기존 image* 필드는 가로 이미지(기본)로 간주한다.
       imageId: (prompt.imageId ?? '').trim(),
@@ -3509,6 +3519,7 @@
       mainCategory: prompt.mainCategory,
       subCategory: prompt.subCategory,
       content: prompt.content,
+      tags: normalizePromptTags(prompt.tags),
       description: isCore ? (prompt.description || '').trim() : '',
       imageId: prompt.imageId || '',
       imageData: !prompt.imageId && prompt.imageData ? prompt.imageData : '',
@@ -3785,8 +3796,10 @@
     editingPromptPortraitImageData = '';
     const modalTitle = document.getElementById('add-prompt-title');
     const saveButton = document.querySelector('#add-prompt-modal .modal-actions .btn-primary');
+    const tagsInput = document.getElementById('input-tags');
     if (modalTitle) modalTitle.textContent = '새 프롬프트 추가';
     if (saveButton) saveButton.textContent = '+ 저장';
+    if (tagsInput) tagsInput.value = '';
   }
 
   function setPromptFormToEdit(prompt) {
@@ -3847,7 +3860,7 @@
     const preferredImageData = preferPortrait
       ? (prompt.portraitImageData || prompt.imageData || '')
       : (prompt.imageData || prompt.portraitImageData || '');
-    if (!preferredImageId || preferredImageData) return;
+    if (!preferredImageId || preferredImageData || promptImageUrlCache.has(preferredImageId)) return;
 
     getPromptImageObjectUrl(preferredImageId)
       .then((url) => {
@@ -3884,6 +3897,7 @@
     const mainSelect = document.getElementById('input-main-category');
     const subSelect = document.getElementById('input-sub-category');
     const contentInput = document.getElementById('input-content');
+    const tagsInput = document.getElementById('input-tags');
     const descriptionInput = document.getElementById('input-description');
     if (!mainSelect || !subSelect || !contentInput || !prompt) return;
 
@@ -3894,6 +3908,7 @@
     }
     subSelect.value = prompt.subCategory || '';
     contentInput.value = prompt.content || '';
+    if (tagsInput) tagsInput.value = normalizePromptTags(prompt.tags).join(', ');
     if (descriptionInput) {
       descriptionInput.value = prompt.description || '';
     }
@@ -3996,8 +4011,6 @@
       return;
     }
 
-    queuePromptImageLoad(prompt);
-
     preview.classList.remove('has-image');
     preview.classList.remove('image-switch-feedback');
     preview.classList.remove('image-clear-feedback');
@@ -4042,8 +4055,6 @@
       lastRenderedComposedPreviewImageKey = nextImageKey;
       return;
     }
-
-    queuePromptImageLoad(composed);
 
     preview.classList.remove('has-image');
     preview.classList.remove('image-switch-feedback');
@@ -7164,6 +7175,7 @@
     const mainCategory = document.getElementById('input-main-category').value.trim();
     const subCategory = document.getElementById('input-sub-category').value.trim();
     const content = document.getElementById('input-content').value.trim();
+    const tags = normalizePromptTags(document.getElementById('input-tags').value);
     const isCore = !!mainCategory && !!subCategory && isSubCategoryCoreEnabled(mainCategory, subCategory);
     const description = isCore ? document.getElementById('input-description').value.trim() : '';
     if (!mainCategory) { showToast('대분류를 입력하세요'); return; }
@@ -7224,6 +7236,7 @@
       mainCategory,
       subCategory,
       content,
+      tags,
       description: isCore ? description : '',
       imageId: nextImageId,
       imageData: '',
@@ -7256,6 +7269,7 @@
     ensureCategoryConfigConsistency();
     save();
     document.getElementById('input-content').value = '';
+    document.getElementById('input-tags').value = '';
     document.getElementById('input-description').value = '';
     clearPendingPromptImage({ all: true });
     resetPromptFormToAdd();
