@@ -263,11 +263,9 @@
       height: 100%;
       display: flex;
       flex-direction: column;
-      gap: 8px;
-      padding: 0;
       background: #101018;
-      border-radius: 8px;
       overflow: hidden;
+      border-radius: 8px;
     }
 
     .prompt-description-preview .preview-portrait-stack .preview-image-shell {
@@ -278,19 +276,22 @@
 
     .prompt-description-preview .preview-description-text {
       flex-shrink: 0;
-      padding: 10px 12px 12px;
-      font-size: 0.78rem;
+      padding: 12px 14px 13px;
+      font-size: 0.79rem;
       line-height: 1.6;
-      color: rgba(228, 234, 244, 0.82);
-      background: linear-gradient(180deg, rgba(17, 17, 23, 0.9), rgba(12, 12, 17, 0.96));
+      color: rgba(219, 227, 240, 0.8);
+      background: linear-gradient(180deg, rgba(17, 17, 23, 0.9), rgba(10, 10, 14, 0.94));
       border-top: 1px solid rgba(255, 255, 255, 0.04);
+      white-space: pre-wrap;
+      word-break: break-word;
       text-align: center;
       font-family: 'Avenir Next', 'Segoe UI', 'Helvetica Neue', 'Apple SD Gothic Neo', 'Noto Sans KR', 'Malgun Gothic', sans-serif;
       letter-spacing: 0.02em;
       font-weight: 400;
-      white-space: pre-wrap;
-      word-break: break-word;
       text-shadow: 0 1px 0 rgba(0, 0, 0, 0.12);
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+      opacity: 0.88;
     }
 
     .preview-render-portrait-mode .prompt-description-preview .preview-image-shell img {
@@ -313,6 +314,11 @@
     }
 
     .preview-render-portrait-mode .prompt-description-preview .preview-image-shell img {
+      border-radius: 0;
+    }
+
+    .preview-render-portrait-mode .prompt-description-preview .preview-portrait-stack,
+    .preview-render-portrait-mode .prompt-description-preview .preview-portrait-stack .preview-image-shell {
       border-radius: 0;
     }
 
@@ -1669,6 +1675,25 @@
       user-select: none;
       touch-action: pan-y;
     }
+    .selected-chip.core {
+      background: #183f35;
+      border-color: #34d399aa;
+      box-shadow: inset 0 0 0 1px rgba(52, 211, 153, 0.14), 0 2px 8px rgba(52, 211, 153, 0.1);
+      color: #d1fae5;
+      font-weight: 600;
+    }
+    .selected-chip .chip-core-mark {
+      display: inline-flex;
+      align-items: center;
+      height: 18px;
+      padding: 0 5px;
+      border-radius: 4px;
+      background: #34d399;
+      color: #10251f;
+      font-size: 0.65rem;
+      font-weight: 800;
+      line-height: 1;
+    }
     .selected-chip.dragging {
       opacity: 0.48;
     }
@@ -2592,6 +2617,10 @@
           <label>내용</label>
           <textarea id="input-content" placeholder="내용을 입력"></textarea>
         </div>
+        <div id="prompt-description-field" style="display:none">
+          <label>이미지 설명</label>
+          <textarea id="input-description" placeholder="핵심 분류 항목에만 설명을 입력할 수 있습니다."></textarea>
+        </div>
         <div class="prompt-image-block">
           <label>설명 이미지</label>
           <div class="image-orientation-tabs" role="tablist" aria-label="프롬프트 이미지 방향 선택">
@@ -2785,9 +2814,9 @@
   const IMAGE_STORE_NAME = 'images';
 
   // ── State ──
-  let prompts = [];          // [{id, mainCategory, subCategory, content, imageId, imageName, portraitImageId, portraitImageName}] 개별 프롬프트
+  let prompts = [];          // [{id, mainCategory, subCategory, content, description, imageId, imageName, portraitImageId, portraitImageName}] 개별 프롬프트
   let composedPrompts = [];  // [{id, mainCategory, subCategory, items, content}] 조합 저장 프롬프트
-  let selected = [];         // [{id, mainCategory, subCategory, content, source}]
+  let selected = [];         // [{id, mainCategory, subCategory, content, description, source}]
   let activeCategoryPrompt = null;
   let activeSubCategoryPrompt = null;
   let activeCategoryComposed = null;
@@ -3233,6 +3262,24 @@
     );
   }
 
+  function applyPromptDescriptionRules() {
+    const normalizeDescription = (prompt) => {
+      if (!prompt) return prompt;
+      return {
+        ...prompt,
+        description: isSubCategoryCoreEnabled(prompt.mainCategory, prompt.subCategory)
+          ? String(prompt.description ?? '').trim()
+          : '',
+      };
+    };
+
+    prompts = prompts.map(normalizeDescription);
+    composedPrompts = composedPrompts.map((composed) => ({
+      ...composed,
+      items: Array.isArray(composed.items) ? composed.items.map(normalizeDescription) : [],
+    }));
+  }
+
   function ensureComposedMainCategoryConfig(mainCategory) {
     if (!mainCategory) return null;
     if (!composedCategoryConfig.mains[mainCategory]) {
@@ -3342,6 +3389,7 @@
       previewRenderMode = 'landscape';
     }
 
+    applyPromptDescriptionRules();
     ensureCategoryConfigConsistency();
     ensureComposedCategoryConfigConsistency();
 
@@ -3423,6 +3471,7 @@
       mainCategory: mainCategory || '기타',
       subCategory: subCategory || '기타',
       content,
+      description: String(prompt.description ?? '').trim(),
       // 기존 image* 필드는 가로 이미지(기본)로 간주한다.
       imageId: (prompt.imageId ?? '').trim(),
       // 레거시 데이터 호환용. 새 저장에서는 사용하지 않는다.
@@ -3436,11 +3485,13 @@
   }
 
   function cleanPrompt(prompt) {
+    const isCore = !!prompt && isSubCategoryCoreEnabled(prompt.mainCategory, prompt.subCategory);
     return {
       id: prompt.id,
       mainCategory: prompt.mainCategory,
       subCategory: prompt.subCategory,
       content: prompt.content,
+      description: isCore ? (prompt.description || '').trim() : '',
       imageId: prompt.imageId || '',
       imageData: !prompt.imageId && prompt.imageData ? prompt.imageData : '',
       imageName: prompt.imageName,
@@ -3793,10 +3844,29 @@
       .catch(() => {});
   }
 
+  function renderPromptDescriptionField() {
+    const fieldWrap = document.getElementById('prompt-description-field');
+    const descriptionInput = document.getElementById('input-description');
+    if (!fieldWrap || !descriptionInput) return;
+
+    const mainCategory = document.getElementById('input-main-category')?.value?.trim() || '';
+    const subCategory = document.getElementById('input-sub-category')?.value?.trim() || '';
+    const isCore = !!mainCategory && !!subCategory && isSubCategoryCoreEnabled(mainCategory, subCategory);
+    fieldWrap.style.display = isCore ? 'block' : 'none';
+    descriptionInput.disabled = !isCore;
+    if (!isCore) {
+      descriptionInput.value = '';
+      descriptionInput.placeholder = '핵심 분류 항목만 설명을 입력할 수 있습니다.';
+      return;
+    }
+    descriptionInput.placeholder = '이미지 아래에 표시될 설명을 입력하세요.';
+  }
+
   function syncPromptFormFields(prompt) {
     const mainSelect = document.getElementById('input-main-category');
     const subSelect = document.getElementById('input-sub-category');
     const contentInput = document.getElementById('input-content');
+    const descriptionInput = document.getElementById('input-description');
     if (!mainSelect || !subSelect || !contentInput || !prompt) return;
 
     mainSelect.value = prompt.mainCategory || '';
@@ -3806,6 +3876,10 @@
     }
     subSelect.value = prompt.subCategory || '';
     contentInput.value = prompt.content || '';
+    if (descriptionInput) {
+      descriptionInput.value = prompt.description || '';
+    }
+    renderPromptDescriptionField();
   }
 
   async function openEditPromptModal(id, e) {
@@ -3883,14 +3957,16 @@
       const altText = prompt.imageName || getPromptDisplayName(prompt.mainCategory, prompt.subCategory);
       const nextImageKey = `${prompt.id || ''}:${imageSrc}`;
       const shouldAnimateTransition = nextImageKey !== lastRenderedPromptPreviewImageKey;
-      const hasPortraitCaption = previewRenderMode === 'portrait' && !!prompt?.description && isSubCategoryCoreEnabled(prompt.mainCategory, prompt.subCategory);
+      const portraitDescription = previewRenderMode === 'portrait' && !!prompt?.description && isSubCategoryCoreEnabled(prompt.mainCategory, prompt.subCategory)
+        ? `<div class="preview-description-text">${esc(prompt.description)}</div>`
+        : '';
       shouldAnimatePromptPreviewClear = false;
       preview.classList.add('has-image');
       preview.classList.remove('image-clear-feedback');
       preview.classList.remove('image-switch-feedback');
       preview.title = '터치하면 이미지를 크게 봅니다';
-      preview.innerHTML = hasPortraitCaption
-        ? `<div class="preview-portrait-stack"><div class="preview-image-shell"><img class="${shouldAnimateTransition ? 'preview-image-enter' : ''}" src="${imageSrc}" alt="${esc(altText)}" /></div><div class="preview-description-text">${esc(prompt.description)}</div></div>`
+      preview.innerHTML = portraitDescription
+        ? `<div class="preview-portrait-stack"><div class="preview-image-shell"><img class="${shouldAnimateTransition ? 'preview-image-enter' : ''}" src="${imageSrc}" alt="${esc(altText)}" /></div>${portraitDescription}</div>`
         : `<div class="preview-image-shell"><img class="${shouldAnimateTransition ? 'preview-image-enter' : ''}" src="${imageSrc}" alt="${esc(altText)}" /></div>`;
       if (shouldAnimateTransition) {
         // 클래스를 다시 붙여 연속 전환에서도 피드백 애니메이션이 반복 실행되도록 한다.
@@ -6428,13 +6504,23 @@
       e.textContent = '선택된 프롬프트가 없습니다';
       container.appendChild(e);
     } else {
-      selected.forEach((p, i) => {
+      const selectedForRender = selected
+        .map((prompt, index) => ({ prompt, index }))
+        .sort((a, b) => {
+          const aIsCore = isSubCategoryCoreEnabled(a.prompt.mainCategory, a.prompt.subCategory);
+          const bIsCore = isSubCategoryCoreEnabled(b.prompt.mainCategory, b.prompt.subCategory);
+          return Number(bIsCore) - Number(aIsCore);
+        });
+
+      selectedForRender.forEach(({ prompt: p, index: i }) => {
+        const isCore = isSubCategoryCoreEnabled(p.mainCategory, p.subCategory);
         const chip = document.createElement('div');
-        chip.className = 'selected-chip';
+        chip.className = `selected-chip${isCore ? ' core' : ''}`;
         chip.draggable = true;
         chip.dataset.idx = i;
         chip.title = '탭하면 중앙 목록의 해당 프롬프트 카드로 이동합니다';
         chip.innerHTML = `
+          ${isCore ? '<span class="chip-core-mark">핵심</span>' : ''}
           <span class="chip-cat">${esc(p.mainCategory || p.category)}</span>
           <span class="chip-cat" style="color:#8ab4ff">${esc(p.subCategory || '')}</span>
           <span>${esc(p.content)}</span>
@@ -6810,6 +6896,7 @@
       }
     }
     renderSubCategorySelect();
+    renderPromptDescriptionField();
     renderPendingPromptImagePreview();
   }
 
@@ -6825,6 +6912,7 @@
         select.value = '';
       }
     }
+    renderPromptDescriptionField();
     renderPendingPromptImagePreview();
   }
 
@@ -7048,6 +7136,8 @@
     const mainCategory = document.getElementById('input-main-category').value.trim();
     const subCategory = document.getElementById('input-sub-category').value.trim();
     const content = document.getElementById('input-content').value.trim();
+    const isCore = !!mainCategory && !!subCategory && isSubCategoryCoreEnabled(mainCategory, subCategory);
+    const description = isCore ? document.getElementById('input-description').value.trim() : '';
     if (!mainCategory) { showToast('대분류를 입력하세요'); return; }
     if (!subCategory) { showToast('중분류를 입력하세요'); return; }
     if (!content) { showToast('프롬프트 내용을 입력하세요'); return; }
@@ -7106,6 +7196,7 @@
       mainCategory,
       subCategory,
       content,
+      description: isCore ? description : '',
       imageId: nextImageId,
       imageData: '',
       imageName: buildPromptImageName(mainCategory, subCategory, content),
@@ -7137,6 +7228,7 @@
     ensureCategoryConfigConsistency();
     save();
     document.getElementById('input-content').value = '';
+    document.getElementById('input-description').value = '';
     clearPendingPromptImage({ all: true });
     resetPromptFormToAdd();
     renderCategorySelectors();
@@ -7511,6 +7603,7 @@
       composedCategoryConfig = createDefaultComposedCategoryConfig();
     }
 
+    applyPromptDescriptionRules();
     ensureCategoryConfigConsistency();
     ensureComposedCategoryConfigConsistency();
     activePromptPreviewId = prompts[0]?.id || null;
