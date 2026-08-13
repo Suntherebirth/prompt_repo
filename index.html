@@ -3971,6 +3971,7 @@
     preview.classList.toggle('preview-animation-enabled', previewAnimationLevel > 0);
 
     const imageSrc = getPromptImageSource(prompt);
+    queuePromptImageLoad(prompt);
     if (imageSrc) {
       const altText = prompt.imageName || getPromptDisplayName(prompt.mainCategory, prompt.subCategory);
       const nextImageKey = `${prompt.id || ''}:${imageSrc}`;
@@ -4025,6 +4026,7 @@
 
     const composed = getActiveComposedPreviewItem();
     const imageSrc = getPromptImageSource(composed);
+    queuePromptImageLoad(composed);
     if (imageSrc) {
       const altText = composed.imageName || getPromptDisplayName(composed.mainCategory, composed.subCategory);
       const nextImageKey = `${composed.id || ''}:${imageSrc}`;
@@ -4055,6 +4057,7 @@
       || selected.find(item => item.source === 'prompt' && item.imageData)
       || selected.find(item => item.source === 'prompt');
 
+    queuePromptImageLoad(prompt);
     const imageSrc = getPromptImageSource(prompt);
     if (!imageSrc) {
       queuePromptImageLoad(prompt);
@@ -4068,6 +4071,7 @@
 
   function getActiveComposedPreviewImage() {
     const composed = getActiveComposedPreviewItem();
+    queuePromptImageLoad(composed);
     const imageSrc = getPromptImageSource(composed);
     if (!imageSrc) {
       queuePromptImageLoad(composed);
@@ -5416,10 +5420,16 @@
   }
 
   function setPreviewRenderMode(mode, options = {}) {
-    previewRenderMode = normalizePreviewRenderMode(mode);
+    const nextMode = normalizePreviewRenderMode(mode);
+    const didModeChange = previewRenderMode !== nextMode;
+    previewRenderMode = nextMode;
     saveSettings();
     renderPreviewRenderMode();
     renderPromptList();
+    if (didModeChange) {
+      lastRenderedPromptPreviewImageKey = '';
+      lastRenderedComposedPreviewImageKey = '';
+    }
     renderPromptDescriptionPreview();
     renderComposedDescriptionPreview();
     renderPendingPromptImagePreview();
