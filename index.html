@@ -32,7 +32,7 @@
 
     header {
       background: #1a1a24;
-      padding: 8px 24px;
+      padding: 12px 24px;
       border-bottom: 1px solid #2a2a3a;
       display: flex;
       align-items: center;
@@ -263,8 +263,8 @@
       height: 100%;
       display: flex;
       flex-direction: column;
-      gap: 2px;
-      padding-bottom: 3px;
+      gap: 5px;
+      padding-bottom: 0;
       background: #101018;
       overflow: hidden;
       border-radius: 8px;
@@ -278,7 +278,7 @@
 
     .prompt-description-preview .preview-description-text {
       flex-shrink: 0;
-      padding: 5px 12px 6px;
+      padding: 4px 12px 5px;
       font-size: 0.79rem;
       line-height: 1.5;
       color: rgba(219, 227, 240, 0.8);
@@ -294,6 +294,16 @@
       -webkit-font-smoothing: antialiased;
       -moz-osx-font-smoothing: grayscale;
       opacity: 0.88;
+    }
+
+    .prompt-description-preview .preview-portrait-stack.has-caption {
+      justify-content: flex-start;
+    }
+
+    .prompt-description-preview .preview-portrait-stack.has-caption .preview-image-shell {
+      flex: 0 0 auto;
+      height: auto;
+      aspect-ratio: 3 / 4;
     }
 
     .preview-render-portrait-mode .prompt-description-preview .preview-image-shell img {
@@ -3970,7 +3980,7 @@
       preview.classList.remove('image-switch-feedback');
       preview.title = '터치하면 이미지를 크게 봅니다';
       preview.innerHTML = portraitDescription
-        ? `<div class="preview-portrait-stack"><div class="preview-image-shell"><img class="${shouldAnimateTransition ? 'preview-image-enter' : ''}" src="${imageSrc}" alt="${esc(altText)}" /></div>${portraitDescription}</div>`
+        ? `<div class="preview-portrait-stack has-caption"><div class="preview-image-shell"><img class="${shouldAnimateTransition ? 'preview-image-enter' : ''}" src="${imageSrc}" alt="${esc(altText)}" /></div>${portraitDescription}</div>`
         : `<div class="preview-image-shell"><img class="${shouldAnimateTransition ? 'preview-image-enter' : ''}" src="${imageSrc}" alt="${esc(altText)}" /></div>`;
       if (shouldAnimateTransition) {
         // 클래스를 다시 붙여 연속 전환에서도 피드백 애니메이션이 반복 실행되도록 한다.
