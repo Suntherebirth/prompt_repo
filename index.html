@@ -296,6 +296,31 @@
       opacity: 0.88;
     }
 
+    .prompt-description-preview .preview-tag-list {
+      flex-shrink: 0;
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 4px;
+      padding: 5px 10px 7px;
+      background: #0a0a0e;
+      border-top: 1px solid rgba(255, 255, 255, 0.04);
+    }
+
+    .prompt-description-preview .preview-tag-chip {
+      display: inline-flex;
+      align-items: center;
+      min-height: 20px;
+      padding: 2px 8px;
+      border: 1px solid rgba(45, 212, 191, 0.42);
+      border-radius: 999px;
+      color: #99f6e4;
+      background: rgba(13, 74, 74, 0.48);
+      font-size: 0.68rem;
+      line-height: 1.2;
+      white-space: nowrap;
+    }
+
     .prompt-description-preview .preview-portrait-stack.has-caption {
       height: auto;
       flex: 0 0 auto;
@@ -3994,13 +4019,19 @@
       const portraitDescription = previewRenderMode === 'portrait' && !!prompt?.description && isSubCategoryCoreEnabled(prompt.mainCategory, prompt.subCategory)
         ? `<div class="preview-description-text">${esc(prompt.description)}</div>`
         : '';
+      const portraitTags = previewRenderMode === 'portrait'
+        ? normalizePromptTags(prompt?.tags).map(tag => `<span class="preview-tag-chip">${esc(tag)}</span>`).join('')
+        : '';
+      const portraitCaption = portraitDescription || portraitTags
+        ? `${portraitDescription}${portraitTags ? `<div class="preview-tag-list">${portraitTags}</div>` : ''}`
+        : '';
       shouldAnimatePromptPreviewClear = false;
       preview.classList.add('has-image');
       preview.classList.remove('image-clear-feedback');
       preview.classList.remove('image-switch-feedback');
       preview.title = '터치하면 이미지를 크게 봅니다';
-      preview.innerHTML = portraitDescription
-        ? `<div class="preview-portrait-stack has-caption"><div class="preview-image-shell"><img class="${shouldAnimateTransition ? 'preview-image-enter' : ''}" src="${imageSrc}" alt="${esc(altText)}" /></div>${portraitDescription}</div>`
+      preview.innerHTML = portraitCaption
+        ? `<div class="preview-portrait-stack has-caption"><div class="preview-image-shell"><img class="${shouldAnimateTransition ? 'preview-image-enter' : ''}" src="${imageSrc}" alt="${esc(altText)}" /></div>${portraitCaption}</div>`
         : `<div class="preview-image-shell"><img class="${shouldAnimateTransition ? 'preview-image-enter' : ''}" src="${imageSrc}" alt="${esc(altText)}" /></div>`;
       if (shouldAnimateTransition) {
         // 클래스를 다시 붙여 연속 전환에서도 피드백 애니메이션이 반복 실행되도록 한다.
