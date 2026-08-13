@@ -270,14 +270,30 @@
       border-radius: 8px;
     }
 
+    .preview-render-portrait-mode .prompt-description-preview .preview-portrait-stack {
+      height: 100%;
+      gap: 0;
+      border-radius: 0;
+    }
+
     .prompt-description-preview .preview-portrait-stack .preview-image-shell {
       flex: 1 1 auto;
       min-height: 0;
       border-radius: 8px 8px 0 0;
     }
 
+    .preview-render-portrait-mode .prompt-description-preview .preview-portrait-stack .preview-image-shell {
+      flex: 1 1 auto;
+      height: auto;
+      min-height: 0;
+      aspect-ratio: auto;
+      border-radius: 0;
+    }
+
     .prompt-description-preview .preview-description-text {
       flex-shrink: 0;
+      height: 44px;
+      overflow: hidden;
       padding: 4px 12px 5px;
       font-size: 0.79rem;
       line-height: 1.5;
@@ -296,8 +312,16 @@
       opacity: 0.88;
     }
 
+    .preview-render-portrait-mode .prompt-description-preview .preview-description-text {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
     .prompt-description-preview .preview-tag-list {
       flex-shrink: 0;
+      height: 56px;
+      overflow: hidden;
       display: flex;
       flex-wrap: wrap;
       justify-content: center;
@@ -307,18 +331,46 @@
       border-top: 1px solid rgba(255, 255, 255, 0.04);
     }
 
+    .preview-render-portrait-mode .prompt-description-preview .preview-tag-list {
+      align-content: center;
+      gap: 7px;
+      padding: 6px 14px 8px;
+    }
+
     .prompt-description-preview .preview-tag-chip {
+      position: relative;
       display: inline-flex;
       align-items: center;
-      min-height: 20px;
-      padding: 2px 8px;
-      border: 1px solid rgba(45, 212, 191, 0.42);
-      border-radius: 999px;
-      color: #99f6e4;
-      background: rgba(13, 74, 74, 0.48);
-      font-size: 0.68rem;
-      line-height: 1.2;
+      min-height: 36px;
+      padding: 6px 12px 6px 26px;
+      border: 1px solid rgba(45, 212, 191, 0.56);
+      border-radius: 8px 18px 18px 8px;
+      color: #ccfbf1;
+      background: rgba(13, 74, 74, 0.72);
+      box-shadow: inset 3px 0 0 rgba(45, 212, 191, 0.7);
+      font-size: 0.76rem;
+      font-weight: 700;
+      line-height: 1.25;
       white-space: nowrap;
+      user-select: none;
+      touch-action: manipulation;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    .prompt-description-preview .preview-tag-chip::before {
+      content: '';
+      position: absolute;
+      left: 10px;
+      width: 6px;
+      height: 6px;
+      border: 2px solid #5eead4;
+      border-radius: 2px;
+      transform: rotate(45deg);
+    }
+
+    .prompt-description-preview .preview-tag-chip:active {
+      background: rgba(20, 110, 102, 0.86);
+      transform: translateY(1px);
     }
 
     .prompt-description-preview .preview-portrait-stack.has-caption {
@@ -329,10 +381,23 @@
       max-height: 100%;
     }
 
+    .preview-render-portrait-mode .prompt-description-preview .preview-portrait-stack.has-caption {
+      height: 100%;
+      flex: 1 1 auto;
+      align-self: stretch;
+      max-height: none;
+    }
+
     .prompt-description-preview .preview-portrait-stack.has-caption .preview-image-shell {
       flex: 0 0 auto;
       height: auto;
       aspect-ratio: 3 / 4;
+    }
+
+    .preview-render-portrait-mode .prompt-description-preview .preview-portrait-stack.has-caption .preview-image-shell {
+      flex: 1 1 auto;
+      height: auto;
+      aspect-ratio: auto;
     }
 
     .preview-render-portrait-mode .prompt-description-preview .preview-image-shell img {
@@ -4016,14 +4081,14 @@
       const altText = prompt.imageName || getPromptDisplayName(prompt.mainCategory, prompt.subCategory);
       const nextImageKey = `${prompt.id || ''}:${imageSrc}`;
       const shouldAnimateTransition = nextImageKey !== lastRenderedPromptPreviewImageKey;
-      const portraitDescription = previewRenderMode === 'portrait' && !!prompt?.description && isSubCategoryCoreEnabled(prompt.mainCategory, prompt.subCategory)
-        ? `<div class="preview-description-text">${esc(prompt.description)}</div>`
+      const portraitDescription = previewRenderMode === 'portrait'
+        ? `<div class="preview-description-text">${prompt?.description && isSubCategoryCoreEnabled(prompt.mainCategory, prompt.subCategory) ? esc(prompt.description) : ''}</div>`
         : '';
       const portraitTags = previewRenderMode === 'portrait'
         ? normalizePromptTags(prompt?.tags).map(tag => `<span class="preview-tag-chip">${esc(tag)}</span>`).join('')
         : '';
-      const portraitCaption = portraitDescription || portraitTags
-        ? `${portraitDescription}${portraitTags ? `<div class="preview-tag-list">${portraitTags}</div>` : ''}`
+      const portraitCaption = previewRenderMode === 'portrait'
+        ? `${portraitDescription}<div class="preview-tag-list">${portraitTags}</div>`
         : '';
       shouldAnimatePromptPreviewClear = false;
       preview.classList.add('has-image');
