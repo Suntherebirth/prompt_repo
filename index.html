@@ -3860,7 +3860,7 @@
     const preferredImageData = preferPortrait
       ? (prompt.portraitImageData || prompt.imageData || '')
       : (prompt.imageData || prompt.portraitImageData || '');
-    if (!preferredImageId || preferredImageData) return;
+    if (!preferredImageId || preferredImageData || promptImageUrlCache.has(preferredImageId)) return;
 
     getPromptImageObjectUrl(preferredImageId)
       .then((url) => {
@@ -4011,8 +4011,6 @@
       return;
     }
 
-    queuePromptImageLoad(prompt);
-
     preview.classList.remove('has-image');
     preview.classList.remove('image-switch-feedback');
     preview.classList.remove('image-clear-feedback');
@@ -4057,8 +4055,6 @@
       lastRenderedComposedPreviewImageKey = nextImageKey;
       return;
     }
-
-    queuePromptImageLoad(composed);
 
     preview.classList.remove('has-image');
     preview.classList.remove('image-switch-feedback');
