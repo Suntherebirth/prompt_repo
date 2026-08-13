@@ -32,7 +32,7 @@
 
     header {
       background: #1a1a24;
-      padding: 16px 24px;
+      padding: 8px 24px;
       border-bottom: 1px solid #2a2a3a;
       display: flex;
       align-items: center;
@@ -263,8 +263,8 @@
       height: 100%;
       display: flex;
       flex-direction: column;
-      gap: 6px;
-      padding-bottom: 10px;
+      gap: 2px;
+      padding-bottom: 3px;
       background: #101018;
       overflow: hidden;
       border-radius: 8px;
@@ -278,9 +278,9 @@
 
     .prompt-description-preview .preview-description-text {
       flex-shrink: 0;
-      padding: 12px 14px 13px;
+      padding: 5px 12px 6px;
       font-size: 0.79rem;
-      line-height: 1.6;
+      line-height: 1.5;
       color: rgba(219, 227, 240, 0.8);
       background: linear-gradient(180deg, rgba(17, 17, 23, 0.9), rgba(10, 10, 14, 0.94));
       border-top: 1px solid rgba(255, 255, 255, 0.04);
@@ -1455,7 +1455,7 @@
     .main.preview-render-portrait {
       --portrait-left-width: 300px;
       --portrait-center-width: 420px;
-      --portrait-preview-inner-padding: 6px;
+      --portrait-preview-inner-padding: 3px;
       display: grid;
       grid-template-columns: var(--portrait-left-width) var(--portrait-center-width) minmax(0, 1fr);
       grid-template-rows: minmax(220px, 1fr) minmax(260px, 1fr);
@@ -1511,12 +1511,14 @@
       grid-row: 2;
       border-bottom: 0;
       border-right: 0;
+      padding: 4px 8px;
     }
 
     .main.preview-render-portrait .panel-library > .prompt-list {
       grid-column: 1;
       grid-row: 3;
       border-right: 0;
+      padding-top: 4px;
     }
 
     .main.preview-render-portrait .panel-library > .library-footer {
