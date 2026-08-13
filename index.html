@@ -943,7 +943,7 @@
       bottom: 0;
       width: 124px;
       display: flex;
-      align-items: center;
+      align-items: stretch;
       justify-content: stretch;
       flex-shrink: 0;
       z-index: 1;
@@ -955,42 +955,38 @@
       transform: translateX(0);
       pointer-events: auto;
     }
+    .prompt-item .edit-btn,
+    .prompt-item .del-btn {
+      width: 62px;
+      height: 100%;
+      border: none;
+      border-radius: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0;
+      text-align: center;
+      white-space: normal;
+      overflow-wrap: anywhere;
+      line-height: 1.2;
+      flex-shrink: 0;
+    }
     .prompt-item .edit-btn {
       background: #173044;
-      border: none;
       color: #bae6fd;
       cursor: pointer;
       font-size: 0.78rem;
       font-weight: 700;
       letter-spacing: 0.01em;
-      width: 62px;
-      height: 100%;
-      border-radius: 0;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      padding: 0;
-      line-height: 1;
-      flex-shrink: 0;
     }
     .prompt-item .edit-btn:hover { color: #bae6fd; background: #173044; }
     .prompt-item .del-btn {
       background: #2a1717;
-      border: none;
       color: #fda4af;
       cursor: pointer;
       font-size: 0.78rem;
       font-weight: 700;
       letter-spacing: 0.01em;
-      width: 62px;
-      height: 100%;
-      border-radius: 0;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      padding: 0;
-      line-height: 1;
-      flex-shrink: 0;
     }
     .prompt-item .del-btn:hover { color: #f87171; background: #2a1717; }
 
@@ -1905,6 +1901,12 @@
 
     .prompt-item.combo-card-item.core-random-armed .combo-card-preview {
       color: #f4d8a5;
+    }
+
+    .prompt-item.combo-card-item.core-random-armed .combo-card-text {
+      align-items: center;
+      justify-content: center;
+      text-align: center;
     }
 
     .combo-card-choice-row {
@@ -3411,6 +3413,27 @@
       portraitImageData: !prompt.portraitImageId && prompt.portraitImageData ? prompt.portraitImageData : '',
       portraitImageName: prompt.portraitImageName,
     };
+  }
+
+  function syncPromptUpdateToComposedPrompts(prompt) {
+    const updatedPrompt = cleanPrompt(prompt);
+    composedPrompts = composedPrompts.map(composed => {
+      if (!Array.isArray(composed.items)) return composed;
+
+      let wasUpdated = false;
+      const items = composed.items.map(item => {
+        if (item.id !== updatedPrompt.id) return item;
+        wasUpdated = true;
+        return updatedPrompt;
+      });
+
+      if (!wasUpdated) return composed;
+      return {
+        ...composed,
+        items,
+        content: items.map(item => item.content).join(', '),
+      };
+    });
   }
 
   function getPromptDisplayName(mainCategory, subCategory) {
@@ -5667,7 +5690,7 @@
       return false;
     }
 
-    const added = addPromptToComposition(targetPrompt, { suppressToast: true });
+    const added = addPromptToComposition(targetPrompt, { suppressToast: true, scrollToCard: true });
     if (!added) {
       return false;
     }
@@ -7055,6 +7078,7 @@
 
     if (promptFormMode === 'edit' && editingPromptId) {
       prompts = prompts.map(prompt => prompt.id === editingPromptId ? nextPrompt : prompt);
+      syncPromptUpdateToComposedPrompts(nextPrompt);
       selected = selected.map(item => {
         if (item.source !== 'prompt' || item.id !== editingPromptId) return item;
         return { ...item, ...nextPrompt };
@@ -7155,6 +7179,15 @@
     selectingFromPreviewId = p.id;
     selected.push({ ...p, source: 'prompt' });
     render();
+    if (options.scrollToCard) {
+      requestAnimationFrame(() => {
+        const list = document.getElementById('prompt-list');
+        const card = list
+          ? [...list.querySelectorAll('.prompt-item')].find(item => item.dataset.promptId === p.id)
+          : null;
+        if (card) card.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      });
+    }
     if (!suppressToast) showToast('조합에 추가되었습니다');
     setTimeout(() => {
       if (selectingFromPreviewId !== p.id) return;
