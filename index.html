@@ -3237,7 +3237,7 @@
   let editingComposedPortraitImageData = '';
   let activePromptPreviewId = null;
   let activePromptTagFilter = null;
-  let activePromptTagSort = 'name';
+  let activePromptTagSort = 'birth';
   let shouldAnimatePromptTagSort = false;
   let shouldAnimatePromptTagGridEntry = false;
   let activeComposedPreviewId = null;
@@ -4354,9 +4354,48 @@
     return characters.join(' ');
   }
 
+  function parseBirthDatePart(text) {
+    const match = String(text || '').match(/^\s*(\d{4})\s*년\s*(\d{1,2})\s*월\s*(\d{1,2})\s*일(?:\s*\(\s*\d+\s*세\s*\))?\s*$/);
+    if (!match) return null;
+    const year = Number(match[1]);
+    const month = Number(match[2]);
+    const day = Number(match[3]);
+    if (!Number.isInteger(year) || !Number.isInteger(month) || !Number.isInteger(day)) return null;
+    if (month < 1 || month > 12 || day < 1 || day > 31) return null;
+    const birthDate = new Date(year, month - 1, day);
+    if (
+      birthDate.getFullYear() !== year
+      || birthDate.getMonth() !== month - 1
+      || birthDate.getDate() !== day
+    ) {
+      return null;
+    }
+    return { year, month, day, date: birthDate };
+  }
+
+  function calculateAgeFromBirthDate(birthDate) {
+    // 브라우저가 실행 중인 기기의 로컬 시스템 날짜/시간을 기준으로 만 나이를 계산한다.
+    const now = new Date();
+    let age = now.getFullYear() - birthDate.getFullYear();
+    const hasHadBirthdayThisYear = (
+      now.getMonth() > birthDate.getMonth()
+      || (now.getMonth() === birthDate.getMonth() && now.getDate() >= birthDate.getDate())
+    );
+    if (!hasHadBirthdayThisYear) age -= 1;
+    return Math.max(0, age);
+  }
+
+  function formatDescriptionBirthPart(part) {
+    const parsed = parseBirthDatePart(part);
+    if (!parsed) return String(part || '').trim();
+    const age = calculateAgeFromBirthDate(parsed.date);
+    return `${parsed.year}년 ${parsed.month}월 ${parsed.day}일 (${age}세)`;
+  }
+
   function formatPromptDescriptionForDisplay(description) {
     const parts = String(description || '').split('|').map(part => part.trim());
     if (parts[0]) parts[0] = formatDescriptionNamePart(parts[0]);
+    if (parts[1]) parts[1] = formatDescriptionBirthPart(parts[1]);
     return parts.join(' | ').trim();
   }
 
@@ -4385,9 +4424,9 @@
       .filter(Boolean);
     const getBirthDateValue = prompt => {
       const birthText = getDescriptionParts(prompt)[1] || '';
-      const match = birthText.match(/(\d{4})\s*년\s*(\d{1,2})\s*월\s*(\d{1,2})\s*일/);
-      if (!match) return null;
-      return Date.UTC(Number(match[1]), Number(match[2]) - 1, Number(match[3]));
+      const parsed = parseBirthDatePart(birthText);
+      if (!parsed) return null;
+      return Date.UTC(parsed.year, parsed.month - 1, parsed.day);
     };
     const getHeightValue = prompt => {
       const heightText = getDescriptionParts(prompt)[2] || '';
@@ -4426,6 +4465,7 @@
       const altText = prompt.imageName || getPromptDisplayName(prompt.mainCategory, prompt.subCategory);
       const descriptionParts = getDescriptionParts(prompt);
       if (descriptionParts[0]) descriptionParts[0] = formatDescriptionNamePart(descriptionParts[0]);
+      if (descriptionParts[1]) descriptionParts[1] = formatDescriptionBirthPart(descriptionParts[1]);
       const descriptionLines = [];
       let currentDescriptionLine = '';
       descriptionParts.forEach(part => {
@@ -4450,7 +4490,7 @@
     preview.classList.remove('image-clear-feedback', 'image-switch-feedback');
     preview.title = `태그 이미지: ${tag}`;
     const sortLabel = activePromptTagSort === 'birth' ? '출생순' : activePromptTagSort === 'height' ? '신장순' : '이름순';
-    const nextSortLabel = activePromptTagSort === 'name' ? '출생순' : activePromptTagSort === 'birth' ? '신장순' : '이름순';
+    const nextSortLabel = activePromptTagSort === 'birth' ? '이름순' : activePromptTagSort === 'name' ? '신장순' : '출생순';
     const randomToggleLabel = '무작위로 선택';
     const randomToggle = `<button class="preview-tag-grid-random-toggle" type="button" data-random-tag="${esc(tag)}" aria-label="${esc(tag)} 안에서 무작위로 선택">${randomToggleLabel}</button>`;
     if (cards) {
@@ -8642,11 +8682,11 @@
     const sortToggle = e.target.closest('.preview-tag-grid-sort-toggle');
     if (sortToggle) {
       e.stopPropagation();
-      activePromptTagSort = activePromptTagSort === 'name'
-        ? 'birth'
-        : activePromptTagSort === 'birth'
+      activePromptTagSort = activePromptTagSort === 'birth'
+        ? 'name'
+        : activePromptTagSort === 'name'
           ? 'height'
-          : 'name';
+          : 'birth';
       shouldAnimatePromptTagSort = true;
       if (activePromptTagFilter) renderPromptDescriptionPreview();
       return;
@@ -8666,7 +8706,7 @@
     if (tagChip) {
       e.stopPropagation();
       const tag = tagChip.dataset.tag || '';
-      activePromptTagSort = 'name';
+      activePromptTagSort = 'birth';
       shouldAnimatePromptTagGridEntry = true;
       activePromptTagFilter = activePromptTagFilter === tag ? null : tag;
       isPromptPreviewSuppressed = false;
