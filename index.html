@@ -6444,6 +6444,12 @@
     if (!added) {
       return false;
     }
+
+    copyPromptSilently(getComposedOutputText())
+      .then((copied) => {
+        showToast(copied ? '태그 무작위 선택이 조합에 추가되고 클립보드에 복사되었습니다' : '태그 무작위 선택은 추가되었지만 복사에 실패했습니다');
+      })
+      .catch(() => showToast('태그 무작위 선택은 추가되었지만 복사에 실패했습니다'));
     return true;
   }
 
