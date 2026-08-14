@@ -6419,16 +6419,15 @@
       return false;
     }
 
-    const previousSelections = selected.filter(item => {
-      if (item.source !== 'prompt') return false;
-      if (item.mainCategory !== activeCategoryPrompt || item.subCategory !== activeSubCategoryPrompt) return false;
-      return normalizePromptTags(item.tags).includes(tag);
-    });
+    const previousSelections = selected.filter(item => (
+      item.source === 'prompt'
+      && item.mainCategory === activeCategoryPrompt
+      && item.subCategory === activeSubCategoryPrompt
+    ));
     if (previousSelections.length > 0) {
       selected = selected.filter(item => !(item.source === 'prompt'
         && item.mainCategory === activeCategoryPrompt
-        && item.subCategory === activeSubCategoryPrompt
-        && normalizePromptTags(item.tags).includes(tag)));
+        && item.subCategory === activeSubCategoryPrompt));
     }
 
     const availablePrompts = filteredPrompts.filter(p => !selected.some(s => s.id === p.id && s.source === 'prompt'));
