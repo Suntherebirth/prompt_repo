@@ -592,10 +592,70 @@
       cursor: pointer;
     }
 
+    .prompt-description-preview .preview-tag-swipe-item {
+      display: inline-flex;
+      align-items: center;
+      gap: 0;
+      max-width: 100%;
+      transition: gap .18s ease;
+    }
+
+    .prompt-description-preview .preview-tag-swipe-item.is-swipe-action-visible .preview-tag-chip {
+      width: var(--preview-tag-swipe-width);
+      min-width: var(--preview-tag-swipe-width);
+      color: #eef5ff;
+      background: #202b45;
+      border-color: rgba(138, 180, 255, 0.65);
+      box-shadow: none;
+      transition: transform .32s cubic-bezier(0.16, 1, 0.3, 1), opacity .24s ease-out, filter .28s ease-out, color .18s ease, background .18s ease;
+    }
+
+    .prompt-description-preview .preview-tag-swipe-item.is-swipe-action-visible .preview-tag-chip {
+      animation: promptSelectFeedback .32s ease-out;
+    }
+
+    .prompt-description-preview .preview-tag-swipe-item.swipe-commit {
+      pointer-events: none;
+    }
+
+    .prompt-description-preview .preview-tag-swipe-item.swipe-commit .preview-tag-chip {
+      box-shadow: 0 10px 24px rgba(52, 211, 153, 0.14);
+    }
+
+    .prompt-description-preview .preview-tag-swipe-item.is-swipe-action-visible .preview-tag-chip::before {
+      display: none;
+    }
+
+    .prompt-description-preview .preview-tag-swipe-item.is-swipe-action-visible .preview-tag-chip:hover,
+    .prompt-description-preview .preview-tag-swipe-item.is-swipe-action-visible .preview-tag-chip:active {
+      border-color: #8ab4ff;
+      background: #2a3858;
+    }
+
     .prompt-description-preview .preview-tag-browser-actions {
       display: flex;
       align-items: center;
       gap: 6px;
+    }
+
+    .prompt-description-preview .preview-tag-mode-toggle {
+      padding: 5px 8px;
+      border: 1px solid rgba(138, 180, 255, 0.35);
+      border-radius: 5px;
+      background: #1a1f2f;
+      color: #a9bddf;
+      font: inherit;
+      font-size: 0.7rem;
+      font-weight: 700;
+      cursor: pointer;
+      touch-action: manipulation;
+    }
+
+    .prompt-description-preview .preview-tag-mode-toggle:hover,
+    .prompt-description-preview .preview-tag-browser.is-edit-mode .preview-tag-mode-toggle {
+      border-color: #8ab4ff;
+      color: #eef5ff;
+      background: #202b45;
     }
 
     .prompt-description-preview .preview-tag-browser-layout {
@@ -642,6 +702,10 @@
     }
 
     .prompt-description-preview .preview-tag-layout-item {
+      cursor: pointer;
+    }
+
+    .prompt-description-preview .preview-tag-browser.is-edit-mode .preview-tag-layout-item {
       cursor: grab;
     }
 
@@ -659,8 +723,12 @@
       display: flex;
       align-items: center;
       min-height: 24px;
-      cursor: grab;
+      cursor: pointer;
       touch-action: pan-y;
+    }
+
+    .prompt-description-preview .preview-tag-browser.is-edit-mode .preview-tag-divider {
+      cursor: grab;
     }
 
     .prompt-description-preview .preview-tag-divider.is-delete-visible {
@@ -3338,6 +3406,7 @@
   let activePromptTagFilter = null;
   let promptTagLayouts = {};
   let promptTagDragIndex = null;
+  let isPromptTagEditMode = false;
   let activePromptTagSort = 'birth';
   let shouldAnimatePromptTagSort = false;
   let shouldAnimatePromptTagGridEntry = false;
@@ -4549,9 +4618,9 @@
     preview.classList.remove('image-clear-feedback', 'image-switch-feedback');
     preview.title = '';
     preview.innerHTML = tags.length
-      ? `<div class="preview-tag-browser"><div class="preview-tag-browser-header"><div class="preview-tag-browser-title">[${esc(activeSubCategoryPrompt)}]의 태그</div><div class="preview-tag-browser-actions"><button class="preview-tag-divider-add" type="button">구분선 추가</button></div></div><div class="preview-tag-browser-layout">${layout.map((item, index) => item.type === 'divider'
-        ? `<div class="preview-tag-divider preview-tag-layout-item" draggable="true" data-layout-index="${index}"><button class="preview-tag-divider-remove" type="button" data-divider-id="${esc(item.id)}" aria-label="구분선 삭제">×</button></div>`
-        : `<span class="preview-tag-chip preview-tag-layout-item" draggable="true" data-layout-index="${index}" data-tag="${esc(item.tag)}" title="드래그하여 순서 변경">${esc(item.tag)}</span>`).join('')}</div></div>`
+      ? `<div class="preview-tag-browser ${isPromptTagEditMode ? 'is-edit-mode' : ''}"><div class="preview-tag-browser-header"><div class="preview-tag-browser-title">[${esc(activeSubCategoryPrompt)}]의 태그</div><div class="preview-tag-browser-actions"><button class="preview-tag-mode-toggle" type="button" aria-pressed="${isPromptTagEditMode ? 'true' : 'false'}">${isPromptTagEditMode ? '기본 모드로 전환' : '편집 모드로 전환'}</button>${isPromptTagEditMode ? '<button class="preview-tag-divider-add" type="button">구분선 추가</button>' : ''}</div></div><div class="preview-tag-browser-layout">${layout.map((item, index) => item.type === 'divider'
+        ? `<div class="preview-tag-divider preview-tag-layout-item" ${isPromptTagEditMode ? 'draggable="true"' : ''} data-layout-index="${index}"><button class="preview-tag-divider-remove" type="button" data-divider-id="${esc(item.id)}" aria-label="구분선 삭제">×</button></div>`
+        : `<span class="preview-tag-swipe-item preview-tag-layout-item" ${isPromptTagEditMode ? 'draggable="true"' : ''} data-layout-index="${index}"><button class="preview-tag-chip" type="button" data-tag="${esc(item.tag)}" title="${isPromptTagEditMode ? '드래그하여 순서 변경' : ''}">${esc(item.tag)}</button></span>`).join('')}</div></div>`
       : '<span class="empty-state">이 중분류에 등록된 태그가 없습니다.</span>';
     if (tags.length) bindPromptTagLayoutInteractions(preview, layout);
     lastRenderedPromptPreviewImageKey = '';
@@ -4559,8 +4628,22 @@
 
   function bindPromptTagLayoutInteractions(preview, layout) {
     const browser = preview.querySelector('.preview-tag-browser');
+    const modeToggle = preview.querySelector('.preview-tag-mode-toggle');
     const addButton = preview.querySelector('.preview-tag-divider-add');
-    if (!browser || !addButton) return;
+    if (!browser || !modeToggle) return;
+
+    modeToggle.addEventListener('click', event => {
+      event.stopPropagation();
+      isPromptTagEditMode = !isPromptTagEditMode;
+      promptTagDragIndex = null;
+      renderPromptDescriptionPreview();
+    });
+
+    if (!isPromptTagEditMode) {
+      bindPreviewTagSwipe(browser, '.preview-tag-swipe-item');
+      return;
+    }
+    if (!addButton) return;
 
     const moveLayoutItem = (fromIndex, toIndex) => {
       if (fromIndex === toIndex || fromIndex < 0 || toIndex < 0) return;
@@ -4635,8 +4718,9 @@
 
     browser.addEventListener('pointerdown', event => {
       if (event.pointerType !== 'touch') return;
-      const item = event.target.closest('.preview-tag-chip.preview-tag-layout-item');
+      const item = event.target.closest('.preview-tag-layout-item');
       if (!item) return;
+      if (event.target.closest('.preview-tag-chip')) return;
       touchDragIndex = Number(item.dataset.layoutIndex);
       touchDropIndex = touchDragIndex;
       touchPointerId = event.pointerId;
@@ -4647,6 +4731,9 @@
 
     browser.addEventListener('pointermove', event => {
       if (event.pointerType !== 'touch' || touchPointerId !== event.pointerId || touchDragIndex === null) return;
+      const swipeItem = event.target.closest('.preview-tag-swipe-item');
+      const swipeDx = event.clientX - (swipeItem ? swipeItem._swipeStartX || event.clientX : event.clientX);
+      if (swipeItem && swipeDx > 8) return;
       const pointed = document.elementFromPoint(event.clientX, event.clientY);
       const target = pointed?.closest('.preview-tag-layout-item');
       if (!target) return;
@@ -4701,6 +4788,112 @@
         element.classList.remove('is-dragging', 'is-drag-over');
       });
     });
+
+  }
+
+  function bindPreviewTagSwipe(container, selector) {
+    if (!container) return;
+    let pointerId = null;
+    let activeItem = null;
+    let startX = 0;
+    let startY = 0;
+    let swiping = false;
+
+    const clearSwipe = () => {
+      if (activeItem) activeItem._swipeStartX = 0;
+      pointerId = null;
+      activeItem = null;
+      swiping = false;
+    };
+
+    const hideSwipeAction = item => {
+      if (!item) return;
+      const chip = item.querySelector('.preview-tag-chip');
+      item.classList.remove('is-swipe-action-visible');
+      if (chip) {
+        chip.textContent = chip.dataset.tag || '';
+        chip.style.removeProperty('--preview-tag-swipe-width');
+        chip.removeAttribute('aria-label');
+      }
+    };
+
+    container.addEventListener('pointerdown', event => {
+      if (event.pointerType === 'mouse' && event.button !== 0) return;
+      const item = event.target.closest(selector);
+      if (!item || !event.target.closest('.preview-tag-chip')) return;
+      container.querySelectorAll(`${selector}.is-swipe-action-visible`).forEach(other => {
+        if (other !== item) hideSwipeAction(other);
+      });
+      pointerId = event.pointerId;
+      activeItem = item;
+      activeItem._swipeStartX = event.clientX;
+      startX = event.clientX;
+      startY = event.clientY;
+      swiping = false;
+      try { item.setPointerCapture(event.pointerId); } catch {}
+    });
+
+    container.addEventListener('pointermove', event => {
+      if (event.pointerId !== pointerId || !activeItem) return;
+      const dx = event.clientX - startX;
+      const dy = event.clientY - startY;
+      if (!swiping) {
+        if (Math.abs(dx) < 8) return;
+        if (Math.abs(dx) <= Math.abs(dy) || dx < 0) {
+          hideSwipeAction(activeItem);
+          clearSwipe();
+          return;
+        }
+        swiping = true;
+      }
+      event.preventDefault();
+      if (dx >= 36) {
+        const chip = activeItem.querySelector('.preview-tag-chip');
+        const wasActionVisible = activeItem.classList.contains('is-swipe-action-visible');
+        activeItem.classList.add('is-swipe-action-visible');
+        if (chip) {
+          if (!wasActionVisible) {
+            chip.style.setProperty('--preview-tag-swipe-width', `${chip.offsetWidth}px`);
+            chip.textContent = '🎲';
+          }
+          chip.setAttribute('aria-label', `${chip.dataset.tag} 안에서 무작위로 선택`);
+        }
+      }
+    });
+
+    const finishSwipe = event => {
+      if (event.pointerId !== pointerId) return;
+      if (swiping) event.preventDefault();
+      clearSwipe();
+    };
+
+    container.addEventListener('pointerup', finishSwipe);
+    container.addEventListener('pointercancel', finishSwipe);
+  }
+
+  function commitPreviewTagRandomSelection(item, chip) {
+    if (!item || !chip || item.classList.contains('swipe-commit')) return;
+    const tag = chip.dataset.tag || '';
+    if (!tag) return;
+    item.classList.add('swipe-commit');
+    chip.style.transition = 'none';
+    chip.style.transform = 'translateX(0) scale(1)';
+    chip.style.opacity = '1';
+    chip.style.filter = 'saturate(1)';
+
+    requestAnimationFrame(() => {
+      chip.style.transition = 'transform .32s cubic-bezier(0.16, 1, 0.3, 1), opacity .24s ease-out, filter .28s ease-out';
+      chip.style.transform = 'translateX(40px) scale(0.972)';
+      chip.style.opacity = '0';
+      chip.style.filter = 'saturate(1.05)';
+    });
+
+    window.setTimeout(() => {
+      activePromptTagSort = 'name';
+      activePromptTagFilter = tag;
+      isPromptPreviewSuppressed = false;
+      applyRandomSelectionForActiveTag();
+    }, 80);
   }
 
   function renderPromptTagImageGrid(preview, tag) {
@@ -4856,7 +5049,7 @@
         ? `<div class="preview-description-text">${prompt?.description && isSubCategoryCoreEnabled(prompt.mainCategory, prompt.subCategory) ? esc(formatPromptDescriptionForDisplay(prompt.description)) : ''}</div>`
         : '';
       const portraitTags = previewRenderMode === 'portrait'
-        ? normalizePromptTags(prompt?.tags).map(tag => `<span class="preview-tag-chip" data-tag="${esc(tag)}">${esc(tag)}</span>`).join('')
+        ? normalizePromptTags(prompt?.tags).map(tag => `<span class="preview-tag-swipe-item"><button class="preview-tag-chip" type="button" data-tag="${esc(tag)}">${esc(tag)}</button></span>`).join('')
         : '';
       const portraitCaption = previewRenderMode === 'portrait'
         ? `${portraitDescription}<div class="preview-tag-list">${portraitTags}</div>`
@@ -4869,6 +5062,7 @@
       preview.innerHTML = portraitCaption
         ? `<div class="preview-portrait-stack has-caption"><div class="preview-image-shell"><img class="${shouldAnimateTransition ? 'preview-image-enter' : ''}" src="${imageSrc}" alt="${esc(altText)}" /></div>${portraitCaption}</div>`
         : `<div class="preview-image-shell"><img class="${shouldAnimateTransition ? 'preview-image-enter' : ''}" src="${imageSrc}" alt="${esc(altText)}" /></div>`;
+      if (portraitTags) bindPreviewTagSwipe(preview.querySelector('.preview-tag-list'), '.preview-tag-swipe-item');
       if (shouldAnimateTransition) {
         // 클래스를 다시 붙여 연속 전환에서도 피드백 애니메이션이 반복 실행되도록 한다.
         void preview.offsetWidth;
@@ -8961,6 +9155,13 @@
   });
 
   document.getElementById('prompt-description-preview').addEventListener('click', e => {
+    const swipeActionChip = e.target.closest('.preview-tag-swipe-item.is-swipe-action-visible .preview-tag-chip');
+    if (swipeActionChip) {
+      e.stopPropagation();
+      commitPreviewTagRandomSelection(swipeActionChip.closest('.preview-tag-swipe-item'), swipeActionChip);
+      return;
+    }
+
     const tagRandomButton = e.target.closest('.preview-tag-grid-random-toggle');
     if (tagRandomButton) {
       e.stopPropagation();
