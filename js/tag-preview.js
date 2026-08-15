@@ -425,6 +425,11 @@
 
   function selectPromptFromTagImage(prompt) {
     if (!prompt) return;
+    if (isSubCategoryCoreEnabled(prompt.mainCategory, prompt.subCategory)) {
+      selected = selected.filter(item => !(item.source === 'prompt'
+        && item.mainCategory === prompt.mainCategory
+        && item.subCategory === prompt.subCategory));
+    }
     const added = addPromptToComposition(prompt, { suppressToast: true });
     if (!added) return;
     copyPromptSilently(getComposedOutputText())
