@@ -566,16 +566,23 @@
       width: 100%;
       height: 100%;
       display: flex;
-      flex-wrap: wrap;
-      align-content: flex-start;
-      gap: 8px;
-      overflow-y: auto;
-      padding: 14px;
+      flex-direction: column;
+      min-height: 0;
       background: #101018;
     }
 
+    .prompt-description-preview .preview-tag-browser-header {
+      flex: 0 0 auto;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      padding: 10px 14px;
+      border-bottom: 1px solid rgba(224, 173, 92, 0.2);
+      background: #15141a;
+    }
+
     .prompt-description-preview .preview-tag-browser-title {
-      flex: 0 0 100%;
       color: #8f8fa6;
       font-size: 0.72rem;
       letter-spacing: 0.04em;
@@ -583,6 +590,97 @@
 
     .prompt-description-preview .preview-tag-browser .preview-tag-chip {
       cursor: pointer;
+    }
+
+    .prompt-description-preview .preview-tag-browser-actions {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .prompt-description-preview .preview-tag-browser-layout {
+      flex: 1 1 auto;
+      min-height: 0;
+      display: flex;
+      flex-wrap: wrap;
+      align-content: flex-start;
+      gap: 8px;
+      overflow-y: auto;
+      padding: 14px;
+    }
+
+    .prompt-description-preview .preview-tag-divider-add,
+    .prompt-description-preview .preview-tag-divider-remove {
+      border: 1px solid rgba(224, 173, 92, 0.35);
+      background: #211f1c;
+      color: #d8c9aa;
+      font: inherit;
+      cursor: pointer;
+      touch-action: manipulation;
+    }
+
+    .prompt-description-preview .preview-tag-divider-add {
+      padding: 5px 8px;
+      border-radius: 5px;
+      font-size: 0.7rem;
+      font-weight: 700;
+    }
+
+    .prompt-description-preview .preview-tag-divider-remove {
+      display: none;
+      width: 22px;
+      height: 22px;
+      border-radius: 50%;
+      line-height: 1;
+      font-size: 0.9rem;
+    }
+
+    .prompt-description-preview .preview-tag-divider-add:hover,
+    .prompt-description-preview .preview-tag-divider-remove:hover {
+      border-color: rgba(224, 173, 92, 0.75);
+      color: #fff2cf;
+    }
+
+    .prompt-description-preview .preview-tag-layout-item {
+      cursor: grab;
+    }
+
+    .prompt-description-preview .preview-tag-layout-item.is-dragging {
+      opacity: 0.45;
+    }
+
+    .prompt-description-preview .preview-tag-layout-item.is-drag-over {
+      outline: 2px solid #8ab4ff;
+      outline-offset: 2px;
+    }
+
+    .prompt-description-preview .preview-tag-divider {
+      flex: 0 0 100%;
+      display: flex;
+      align-items: center;
+      min-height: 24px;
+      cursor: grab;
+      touch-action: pan-y;
+    }
+
+    .prompt-description-preview .preview-tag-divider.is-delete-visible {
+      gap: 8px;
+    }
+
+    .prompt-description-preview .preview-tag-divider.is-delete-visible .preview-tag-divider-remove {
+      display: block;
+    }
+
+    .prompt-description-preview .preview-tag-divider::before,
+    .prompt-description-preview .preview-tag-divider::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: rgba(224, 173, 92, 0.32);
+    }
+
+    .prompt-description-preview .preview-tag-divider:not(.is-delete-visible)::before {
+      display: none;
     }
 
     .prompt-description-preview .preview-tag-image-card {
@@ -3196,6 +3294,7 @@
   const PREVIEW_ANIMATION_KEY = 'prompt_repo_preview_animation_v1';
   const PREVIEW_TRANSITION_MODE_KEY = 'prompt_repo_preview_transition_mode_v1';
   const PREVIEW_RENDER_MODE_KEY = 'prompt_repo_preview_render_mode_v1';
+  const TAG_LAYOUT_STORAGE_KEY = 'prompt_repo_tag_layout_v1';
   const LEGACY_VIEW_ORIENTATION_KEY = 'prompt_repo_view_orientation_v1';
   const PROMPT_ADD_MODE = {
     SWIPE: 'swipe',
@@ -3237,6 +3336,8 @@
   let editingComposedPortraitImageData = '';
   let activePromptPreviewId = null;
   let activePromptTagFilter = null;
+  let promptTagLayouts = {};
+  let promptTagDragIndex = null;
   let activePromptTagSort = 'birth';
   let shouldAnimatePromptTagSort = false;
   let shouldAnimatePromptTagGridEntry = false;
@@ -3506,6 +3607,36 @@
     return result;
   }
 
+  function getPromptTagLayoutKey(mainCategory, subCategory) {
+    return JSON.stringify([mainCategory || '', subCategory || '']);
+  }
+
+  function getPromptTagLayout(tags) {
+    const key = getPromptTagLayoutKey(activeCategoryPrompt, activeSubCategoryPrompt);
+    const availableTags = uniqueInOrder(tags);
+    const availableSet = new Set(availableTags);
+    const stored = Array.isArray(promptTagLayouts[key]) ? promptTagLayouts[key] : [];
+    const usedTags = new Set();
+    const layout = stored.filter(item => {
+      if (!item || typeof item !== 'object') return false;
+      if (item.type === 'divider') return typeof item.id === 'string' && item.id;
+      if (item.type !== 'tag' || !availableSet.has(item.tag) || usedTags.has(item.tag)) return false;
+      usedTags.add(item.tag);
+      return true;
+    });
+    availableTags.forEach(tag => {
+      if (!usedTags.has(tag)) layout.push({ type: 'tag', tag });
+    });
+    promptTagLayouts[key] = layout;
+    return layout;
+  }
+
+  function savePromptTagLayout(layout) {
+    const key = getPromptTagLayoutKey(activeCategoryPrompt, activeSubCategoryPrompt);
+    promptTagLayouts[key] = layout;
+    save();
+  }
+
   function ensureMainCategoryConfig(mainCategory) {
     if (!mainCategory) return null;
     if (!categoryConfig.mains[mainCategory]) {
@@ -3773,6 +3904,14 @@
     }
 
     try {
+      const rawTagLayouts = localStorage.getItem(TAG_LAYOUT_STORAGE_KEY);
+      const parsed = rawTagLayouts ? JSON.parse(rawTagLayouts) : {};
+      promptTagLayouts = parsed && typeof parsed === 'object' && !Array.isArray(parsed) ? parsed : {};
+    } catch {
+      promptTagLayouts = {};
+    }
+
+    try {
       const storedPreviewAnimation = localStorage.getItem(PREVIEW_ANIMATION_KEY);
       previewAnimationLevel = normalizePreviewAnimationLevel(storedPreviewAnimation);
     } catch {
@@ -3814,6 +3953,7 @@
     localStorage.setItem(HIDDEN_MAIN_CATEGORIES_KEY, JSON.stringify([...hiddenMainCategories]));
     localStorage.setItem(CATEGORY_CONFIG_KEY, JSON.stringify(categoryConfig));
     localStorage.setItem(COMPOSED_CATEGORY_CONFIG_KEY, JSON.stringify(composedCategoryConfig));
+    localStorage.setItem(TAG_LAYOUT_STORAGE_KEY, JSON.stringify(promptTagLayouts));
   }
 
   function getSettingsPayload() {
@@ -4403,15 +4543,164 @@
     const categoryPrompts = prompts.filter(prompt => (
       prompt.mainCategory === activeCategoryPrompt && prompt.subCategory === activeSubCategoryPrompt
     ));
-    const tags = uniqueInOrder(categoryPrompts.flatMap(prompt => normalizePromptTags(prompt.tags)))
-      .sort((a, b) => a.localeCompare(b, 'ko'));
+    const tags = uniqueInOrder(categoryPrompts.flatMap(prompt => normalizePromptTags(prompt.tags)));
+    const layout = getPromptTagLayout(tags);
     preview.classList.add('has-image');
     preview.classList.remove('image-clear-feedback', 'image-switch-feedback');
     preview.title = '';
     preview.innerHTML = tags.length
-      ? `<div class="preview-tag-browser"><div class="preview-tag-browser-title">${esc(activeSubCategoryPrompt)}의 태그</div>${tags.map(tag => `<span class="preview-tag-chip" data-tag="${esc(tag)}">${esc(tag)}</span>`).join('')}</div>`
+      ? `<div class="preview-tag-browser"><div class="preview-tag-browser-header"><div class="preview-tag-browser-title">[${esc(activeSubCategoryPrompt)}]의 태그</div><div class="preview-tag-browser-actions"><button class="preview-tag-divider-add" type="button">구분선 추가</button></div></div><div class="preview-tag-browser-layout">${layout.map((item, index) => item.type === 'divider'
+        ? `<div class="preview-tag-divider preview-tag-layout-item" draggable="true" data-layout-index="${index}"><button class="preview-tag-divider-remove" type="button" data-divider-id="${esc(item.id)}" aria-label="구분선 삭제">×</button></div>`
+        : `<span class="preview-tag-chip preview-tag-layout-item" draggable="true" data-layout-index="${index}" data-tag="${esc(item.tag)}" title="드래그하여 순서 변경">${esc(item.tag)}</span>`).join('')}</div></div>`
       : '<span class="empty-state">이 중분류에 등록된 태그가 없습니다.</span>';
+    if (tags.length) bindPromptTagLayoutInteractions(preview, layout);
     lastRenderedPromptPreviewImageKey = '';
+  }
+
+  function bindPromptTagLayoutInteractions(preview, layout) {
+    const browser = preview.querySelector('.preview-tag-browser');
+    const addButton = preview.querySelector('.preview-tag-divider-add');
+    if (!browser || !addButton) return;
+
+    const moveLayoutItem = (fromIndex, toIndex) => {
+      if (fromIndex === toIndex || fromIndex < 0 || toIndex < 0) return;
+      const nextLayout = [...layout];
+      const [movedItem] = nextLayout.splice(fromIndex, 1);
+      if (!movedItem) return;
+      nextLayout.splice(toIndex, 0, movedItem);
+      savePromptTagLayout(nextLayout);
+      renderPromptDescriptionPreview();
+    };
+
+    addButton.addEventListener('click', event => {
+      event.stopPropagation();
+      savePromptTagLayout([...layout, { type: 'divider', id: uid() }]);
+      renderPromptDescriptionPreview();
+    });
+
+    browser.addEventListener('click', event => {
+      const removeButton = event.target.closest('.preview-tag-divider-remove');
+      if (!removeButton) return;
+      event.stopPropagation();
+      savePromptTagLayout(layout.filter(item => item.id !== removeButton.dataset.dividerId));
+      renderPromptDescriptionPreview();
+    });
+
+    let dividerPressTimer = null;
+    let pressedDivider = null;
+    const clearDividerPress = () => {
+      if (dividerPressTimer) window.clearTimeout(dividerPressTimer);
+      dividerPressTimer = null;
+      pressedDivider = null;
+    };
+
+    browser.addEventListener('pointerdown', event => {
+      const divider = event.target.closest('.preview-tag-divider');
+      if (!divider || event.target.closest('.preview-tag-divider-remove')) return;
+      clearDividerPress();
+      pressedDivider = divider;
+      dividerPressTimer = window.setTimeout(() => {
+        if (pressedDivider === divider) divider.classList.add('is-delete-visible');
+        clearDividerPress();
+      }, 600);
+    });
+
+    browser.addEventListener('pointermove', clearDividerPress);
+    browser.addEventListener('pointerup', clearDividerPress);
+    browser.addEventListener('pointercancel', clearDividerPress);
+
+    let touchDragIndex = null;
+    let touchDropIndex = null;
+    let touchPointerId = null;
+    let didTouchDrag = false;
+    let suppressTagClickUntil = 0;
+
+    browser.querySelectorAll('.preview-tag-layout-item').forEach(item => {
+      item.addEventListener('dragover', event => {
+        if (promptTagDragIndex === null) return;
+        event.preventDefault();
+        event.stopPropagation();
+        browser.querySelectorAll('.is-drag-over').forEach(element => element.classList.remove('is-drag-over'));
+        if (Number(item.dataset.layoutIndex) !== promptTagDragIndex) item.classList.add('is-drag-over');
+      });
+
+      item.addEventListener('drop', event => {
+        if (promptTagDragIndex === null) return;
+        event.preventDefault();
+        event.stopPropagation();
+        moveLayoutItem(promptTagDragIndex, Number(item.dataset.layoutIndex));
+        promptTagDragIndex = null;
+      });
+    });
+
+    browser.addEventListener('pointerdown', event => {
+      if (event.pointerType !== 'touch') return;
+      const item = event.target.closest('.preview-tag-chip.preview-tag-layout-item');
+      if (!item) return;
+      touchDragIndex = Number(item.dataset.layoutIndex);
+      touchDropIndex = touchDragIndex;
+      touchPointerId = event.pointerId;
+      didTouchDrag = false;
+      item.classList.add('is-dragging');
+      try { item.setPointerCapture(event.pointerId); } catch {}
+    });
+
+    browser.addEventListener('pointermove', event => {
+      if (event.pointerType !== 'touch' || touchPointerId !== event.pointerId || touchDragIndex === null) return;
+      const pointed = document.elementFromPoint(event.clientX, event.clientY);
+      const target = pointed?.closest('.preview-tag-layout-item');
+      if (!target) return;
+      const targetIndex = Number(target.dataset.layoutIndex);
+      if (targetIndex === touchDragIndex) return;
+      event.preventDefault();
+      didTouchDrag = true;
+      touchDropIndex = targetIndex;
+      browser.querySelectorAll('.is-drag-over').forEach(element => element.classList.remove('is-drag-over'));
+      target.classList.add('is-drag-over');
+    });
+
+    const finishTouchDrag = event => {
+      if (event.pointerType !== 'touch' || touchPointerId !== event.pointerId) return;
+      const fromIndex = touchDragIndex;
+      const toIndex = touchDropIndex;
+      const moved = didTouchDrag;
+      touchDragIndex = null;
+      touchDropIndex = null;
+      touchPointerId = null;
+      didTouchDrag = false;
+      browser.querySelectorAll('.is-dragging, .is-drag-over').forEach(element => {
+        element.classList.remove('is-dragging', 'is-drag-over');
+      });
+      if (!moved || fromIndex === null || toIndex === null) return;
+      suppressTagClickUntil = Date.now() + 350;
+      moveLayoutItem(fromIndex, toIndex);
+    };
+
+    browser.addEventListener('pointerup', finishTouchDrag);
+    browser.addEventListener('pointercancel', finishTouchDrag);
+    browser.addEventListener('click', event => {
+      if (Date.now() < suppressTagClickUntil && event.target.closest('.preview-tag-layout-item')) {
+        event.preventDefault();
+        event.stopPropagation();
+      }
+    }, true);
+
+    browser.addEventListener('dragstart', event => {
+      const item = event.target.closest('.preview-tag-layout-item');
+      if (!item) return;
+      clearDividerPress();
+      promptTagDragIndex = Number(item.dataset.layoutIndex);
+      item.classList.add('is-dragging');
+      event.dataTransfer.effectAllowed = 'move';
+      event.dataTransfer.setData('text/plain', String(promptTagDragIndex));
+    });
+
+    browser.addEventListener('dragend', () => {
+      promptTagDragIndex = null;
+      browser.querySelectorAll('.is-dragging, .is-drag-over').forEach(element => {
+        element.classList.remove('is-dragging', 'is-drag-over');
+      });
+    });
   }
 
   function renderPromptTagImageGrid(preview, tag) {
@@ -8213,7 +8502,7 @@
   // ── ZIP Backup (metadata + images) ──
   function buildBackupPayload() {
     return {
-      version: 4,
+      version: 5,
       exportedAt: new Date().toISOString(),
       prompts: prompts.map(cleanPrompt),
       composedPrompts: composedPrompts.map(item => ({
@@ -8232,6 +8521,7 @@
       })),
       categoryConfig,
       composedCategoryConfig,
+      promptTagLayouts,
       hiddenMainCategories: [...hiddenMainCategories],
       leftPanelTab,
     };
@@ -8243,6 +8533,9 @@
     const nextHidden = Array.isArray(parsed.hiddenMainCategories) ? parsed.hiddenMainCategories.filter(Boolean) : [];
     const nextCategoryConfig = parsed.categoryConfig && typeof parsed.categoryConfig === 'object' ? parsed.categoryConfig : null;
     const nextComposedCategoryConfig = parsed.composedCategoryConfig && typeof parsed.composedCategoryConfig === 'object' ? parsed.composedCategoryConfig : null;
+    const nextPromptTagLayouts = parsed.promptTagLayouts && typeof parsed.promptTagLayouts === 'object' && !Array.isArray(parsed.promptTagLayouts)
+      ? parsed.promptTagLayouts
+      : {};
 
     if (nextPrompts.length === 0 && nextComposed.length === 0) {
       throw new Error('EMPTY_DATA');
@@ -8251,6 +8544,7 @@
     prompts = nextPrompts;
     composedPrompts = nextComposed;
     hiddenMainCategories = new Set(nextHidden);
+    promptTagLayouts = nextPromptTagLayouts;
     if (nextCategoryConfig) {
       categoryConfig = createDefaultCategoryConfig();
       categoryConfig.mainOrder = uniqueInOrder(Array.isArray(nextCategoryConfig.mainOrder) ? nextCategoryConfig.mainOrder.filter(Boolean) : []);
@@ -8723,10 +9017,12 @@
       return;
     }
 
+    if (!e.target.closest('img')) return;
     openImageViewer();
   });
 
-  document.getElementById('composed-description-preview').addEventListener('click', () => {
+  document.getElementById('composed-description-preview').addEventListener('click', (e) => {
+    if (!e.target.closest('img')) return;
     openImageViewer();
   });
 
