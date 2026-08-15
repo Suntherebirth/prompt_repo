@@ -374,3 +374,121 @@
     if (typeof navigator.vibrate === 'function') navigator.vibrate(18);
   }
 
+  function renderPromptTagImageGrid(preview, tag) {
+    const taggedPrompts = prompts
+      .filter(prompt => normalizePromptTags(prompt.tags).includes(tag));
+
+    const getDescriptionParts = prompt => String(prompt.description || '')
+      .split('|')
+      .map(part => part.trim())
+      .filter(Boolean);
+    const getBirthDateValue = prompt => {
+      const birthText = getDescriptionParts(prompt)[1] || '';
+      const parsed = parseBirthDatePart(birthText);
+      if (!parsed) return null;
+      return Date.UTC(parsed.year, parsed.month - 1, parsed.day);
+    };
+    const getHeightValue = prompt => {
+      const heightText = getDescriptionParts(prompt)[2] || '';
+      const match = heightText.match(/(\d+(?:\.\d+)?)\s*cm/i);
+      return match ? Number(match[1]) : null;
+    };
+
+    taggedPrompts.sort((a, b) => {
+      if (activePromptTagSort === 'birth') {
+        const birthA = getBirthDateValue(a);
+        const birthB = getBirthDateValue(b);
+        if (birthA !== null && birthB !== null && birthA !== birthB) return birthB - birthA;
+        if (birthA !== null && birthB === null) return -1;
+        if (birthA === null && birthB !== null) return 1;
+      }
+      if (activePromptTagSort === 'height') {
+        const heightA = getHeightValue(a);
+        const heightB = getHeightValue(b);
+        if (heightA !== null && heightB !== null && heightA !== heightB) return heightB - heightA;
+        if (heightA !== null && heightB === null) return -1;
+        if (heightA === null && heightB !== null) return 1;
+      }
+
+      const descriptionA = getDescriptionParts(a)[0] || '';
+      const descriptionB = getDescriptionParts(b)[0] || '';
+      const firstCharacterOrder = (descriptionA[0] || '힣').localeCompare(descriptionB[0] || '힣', 'ko');
+      if (firstCharacterOrder !== 0) return firstCharacterOrder;
+      const descriptionOrder = descriptionA.localeCompare(descriptionB, 'ko');
+      if (descriptionOrder !== 0) return descriptionOrder;
+      return String(a.content || '').localeCompare(String(b.content || ''), 'ko');
+    });
+
+    const cards = taggedPrompts.map(prompt => {
+      const imageSrc = getPromptImageSource(prompt);
+      queuePromptImageLoad(prompt);
+      const altText = prompt.imageName || getPromptDisplayName(prompt.mainCategory, prompt.subCategory);
+      const descriptionParts = getDescriptionParts(prompt);
+      if (descriptionParts[0]) descriptionParts[0] = formatDescriptionNamePart(descriptionParts[0]);
+      if (descriptionParts[1]) descriptionParts[1] = formatDescriptionBirthPart(descriptionParts[1]);
+      const descriptionLines = [];
+      let currentDescriptionLine = '';
+      descriptionParts.forEach(part => {
+        const candidate = currentDescriptionLine ? `${currentDescriptionLine} | ${part}` : part;
+        if (currentDescriptionLine && candidate.length > 14) {
+          descriptionLines.push(currentDescriptionLine);
+          currentDescriptionLine = part;
+        } else {
+          currentDescriptionLine = candidate;
+        }
+      });
+      if (currentDescriptionLine) descriptionLines.push(currentDescriptionLine);
+      const description = descriptionLines
+        .map(line => `<span class="tag-image-description-part">${esc(line)}</span>`)
+        .join('');
+      return `<div class="preview-tag-image-card${shouldAnimatePromptTagGridEntry ? ' is-entering' : ''}" data-prompt-id="${esc(prompt.id)}" title="${esc(altText)}">${imageSrc
+        ? `<img src="${imageSrc}" alt="${esc(altText)}" />`
+        : '<span class="empty-state">이미지 로딩 중</span>'}<span class="tag-image-name">${esc(prompt.content)}</span>${description ? `<span class="tag-image-description">${description}</span>` : ''}</div>`;
+    }).join('');
+
+    preview.classList.add('has-image');
+    preview.classList.remove('image-clear-feedback', 'image-switch-feedback');
+    preview.title = `태그 이미지: ${tag}`;
+    const sortLabel = activePromptTagSort === 'birth' ? '출생순' : activePromptTagSort === 'height' ? '신장순' : '이름순';
+    const nextSortLabel = activePromptTagSort === 'birth' ? '이름순' : activePromptTagSort === 'name' ? '신장순' : '출생순';
+    const randomToggleLabel = '무작위로 선택';
+    const randomToggle = `<button class="preview-tag-grid-random-toggle" type="button" data-random-tag="${esc(tag)}" aria-label="${esc(tag)} 안에서 무작위로 선택">${randomToggleLabel}</button>`;
+    if (cards) {
+      preview.innerHTML = `<div class="preview-tag-image-grid${shouldAnimatePromptTagGridEntry ? ' is-entering' : ''}"><div class="preview-tag-grid-header${shouldAnimatePromptTagGridEntry ? ' is-entering' : ''}"><span class="preview-tag-chip">${esc(tag)}</span>${randomToggle}<button class="preview-tag-grid-sort-toggle" type="button" data-tag-sort="${activePromptTagSort}" aria-label="현재 ${sortLabel}. ${nextSortLabel}(으)로 정렬">${sortLabel}</button></div>${cards}</div>`;
+    } else {
+      preview.innerHTML = `<div class="preview-tag-image-grid${shouldAnimatePromptTagGridEntry ? ' is-entering' : ''}"><div class="preview-tag-grid-header${shouldAnimatePromptTagGridEntry ? ' is-entering' : ''}"><span class="preview-tag-chip">${esc(tag)}</span>${randomToggle}<button class="preview-tag-grid-sort-toggle" type="button" data-tag-sort="${activePromptTagSort}" aria-label="현재 ${sortLabel}. ${nextSortLabel}(으)로 정렬">${sortLabel}</button></div><span class="empty-state">이 태그가 연결된 이미지가 없습니다.</span></div>`;
+    }
+    shouldAnimatePromptTagGridEntry = false;
+    const sortToggleButton = preview.querySelector('.preview-tag-grid-sort-toggle');
+    if (sortToggleButton && shouldAnimatePromptTagSort) {
+      sortToggleButton.classList.add('is-changing');
+      shouldAnimatePromptTagSort = false;
+    }
+    lastRenderedPromptPreviewImageKey = `tag:${tag}`;
+  }
+
+  function jumpToPromptCardFromTagImage(prompt) {
+    if (!prompt) return;
+    activePromptTagFilter = null;
+    lastRenderedPromptPreviewImageKey = '';
+    activePromptPreviewId = prompt.id;
+    isPromptPreviewSuppressed = false;
+    activeCategoryPrompt = prompt.mainCategory || activeCategoryPrompt;
+    activeSubCategoryPrompt = prompt.subCategory || activeSubCategoryPrompt;
+
+    if (prompt.mainCategory && getMainCategoryConfig(prompt.mainCategory).hiddenByDefault) {
+      openedHiddenMainCategories.add(prompt.mainCategory);
+    }
+
+    if (leftPanelTab !== 'prompt') {
+      setLeftPanelTab('prompt');
+    } else {
+      render();
+    }
+
+    requestAnimationFrame(() => {
+      const target = document.querySelector(`.prompt-item[data-prompt-id="${prompt.id}"]`);
+      if (target) target.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'nearest' });
+    });
+  }
+

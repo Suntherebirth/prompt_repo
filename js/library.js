@@ -1144,3 +1144,113 @@
     });
   }
 
+  function render() {
+    renderTapComposeToggle();
+    renderCoreQuickAccessRow();
+    renderPreviewAnimationLevel();
+    renderPreviewTransitionMode();
+    renderPromptPreviewSizeLevel();
+    renderPreviewRenderMode();
+    ensureActiveCategoryState();
+    renderMainCategoryFilter();
+    renderAddFilterTabs();
+    renderComposedFilter();
+    renderComposedLoadList();
+    renderLibraryHeader();
+    renderLibraryLayout();
+    renderCategorySelectors();
+    renderComposedCategorySelectors();
+    syncAddFormSelection();
+    renderPromptList();
+    renderSelected();
+    renderComposedModalItemEditor();
+    renderPromptDescriptionPreview();
+    renderComposedDescriptionPreview();
+    if (document.getElementById('category-manage-modal')?.classList.contains('open')) {
+      renderCategoryManageTabs();
+      renderCategoryManageList();
+    }
+    const countBadge = document.getElementById('count-badge');
+    if (leftPanelTab === 'combo') {
+      const count = activeCategoryComposed
+        ? composedPrompts.filter(item => item.mainCategory === activeCategoryComposed).length
+        : 0;
+      countBadge.textContent = count ? `(${count})` : '';
+    } else {
+      countBadge.textContent = prompts.length ? `(${prompts.length})` : '';
+    }
+  }
+
+  function isSubCategoryUsed(mainCategory, subCategory) {
+    return selected.some(item => {
+      if (item.source === 'prompt') {
+        return item.mainCategory === mainCategory && item.subCategory === subCategory;
+      }
+      return false;
+    });
+  }
+
+  function renderSelected() {
+    const container = document.getElementById('selected-chips');
+    if (!container) return;
+
+    container.ondragover = dragOverSelectedContainer;
+    container.ondrop = dropOnSelectedContainer;
+
+    container.innerHTML = '';
+
+    if (selected.length === 0) {
+      const e = document.createElement('span');
+      e.id = 'chips-empty';
+      e.className = 'empty-state';
+      e.textContent = '선택된 프롬프트가 없습니다';
+      container.appendChild(e);
+    } else {
+      const selectedForRender = selected
+        .map((prompt, index) => ({ prompt, index }))
+        .sort((a, b) => {
+          const aIsCore = isSubCategoryCoreEnabled(a.prompt.mainCategory, a.prompt.subCategory);
+          const bIsCore = isSubCategoryCoreEnabled(b.prompt.mainCategory, b.prompt.subCategory);
+          return Number(bIsCore) - Number(aIsCore);
+        });
+
+      selectedForRender.forEach(({ prompt: p, index: i }) => {
+        const isCore = isSubCategoryCoreEnabled(p.mainCategory, p.subCategory);
+        const chip = document.createElement('div');
+        chip.className = `selected-chip${isCore ? ' core' : ''}`;
+        chip.draggable = true;
+        chip.dataset.idx = i;
+        chip.title = '탭하면 중앙 목록의 해당 프롬프트 카드로 이동합니다';
+        chip.innerHTML = `
+          ${isCore ? '<span class="chip-core-mark">핵심</span>' : ''}
+          <span class="chip-cat">${esc(p.mainCategory || p.category)}</span>
+          <span class="chip-cat" style="color:#8ab4ff">${esc(p.subCategory || '')}</span>
+          <span>${esc(p.content)}</span>
+          <button class="chip-remove" title="제거" onclick="removeSelected(${i})">×</button>
+        `;
+        const removeBtn = chip.querySelector('.chip-remove');
+        if (removeBtn) {
+          removeBtn.addEventListener('click', (event) => {
+            event.stopPropagation();
+          });
+        }
+        chip.addEventListener('click', (event) => {
+          if (event.target.closest('.chip-remove')) return;
+          jumpToPromptCardFromSelected(i);
+        });
+        chip.addEventListener('dragstart', dragStart);
+        chip.addEventListener('dragend', dragEnd);
+        chip.addEventListener('dragover', dragOver);
+        chip.addEventListener('drop', drop);
+        chip.addEventListener('dragleave', dragLeave);
+        chip.addEventListener('pointerdown', chipPointerDown);
+        chip.addEventListener('pointermove', chipPointerMove);
+        chip.addEventListener('pointerup', chipPointerEnd);
+        chip.addEventListener('pointercancel', chipPointerEnd);
+        container.appendChild(chip);
+      });
+    }
+
+    updateOutput();
+  }
+

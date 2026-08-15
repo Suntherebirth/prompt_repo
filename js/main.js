@@ -163,3 +163,15 @@
   setLeftPanelTab(localStorage.getItem(LEFT_PANEL_TAB_KEY) || 'prompt');
   load();
   render();
+  document.addEventListener('pointerdown', event => {
+    const tagChip = event.target.closest?.('.preview-tag-swipe-item.is-swipe-action-visible .preview-tag-chip');
+    const promptAction = event.target.closest?.('.prompt-item.actions-open .edit-btn, .prompt-item.actions-open .del-btn, .prompt-item .combo-card-choice-btn');
+    const actionElement = tagChip || promptAction;
+    const actionOwner = tagChip
+      ? tagChip.closest('.preview-tag-swipe-item')
+      : promptAction?.closest('.prompt-item');
+    if (!actionElement || !isSwipeActionTransitioning(actionOwner)) return;
+    event.preventDefault();
+    event.stopPropagation();
+    notifyInvalidSwipeTouch(actionOwner);
+  }, true);

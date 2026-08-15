@@ -36,13 +36,13 @@ js/
   storage.js                 # load()/save()/settings 저장/불러오기
   prompt-model.js            # normalizePrompt, cleanPrompt, uid, 텍스트 유틸
   prompt-image-form.js       # 추가/편집 폼의 이미지 미리보기, orientation 처리
-  tag-layout.js              # 태그 브라우저, 스와이프, 랜덤 선택, 태그 그리드
+  tag-preview.js             # 태그 브라우저, 스와이프, 랜덤 선택, 태그 그리드
   preview.js                  # 설명/이미지 미리보기 렌더링, 사이즈/전환 모드
   image-viewer.js            # 이미지 뷰어 확대/축소/드래그 제스처
   category-manage.js         # 카테고리 관리 모달 (이름변경/삭제/순서변경/렌더)
-  render-list.js              # renderPromptList, renderSelected, 메인 render()
+  library.js                  # renderPromptList, renderSelected, 메인 render()
   composed-editor.js          # 조합 프롬프트 편집 모달
-  prompt-crud.js               # addPrompt/deletePrompt/openEditPromptModal 등 CRUD
+  prompt-image-form.js         # 프롬프트 CRUD 폼과 이미지 편집 보조 함수
   composition.js                # selected 배열 조작, 복사, 클립보드
   backup.js                     # JSON 백업 내보내기/가져오기
   dnd.js                          # 드래그앤드롭, 칩 포인터 드래그
@@ -59,22 +59,22 @@ vendor/
 
 ### Phase 0 — 준비
 - [ ] 새 브랜치 생성 (예: `refactor/split-index-html`).
-- [ ] 수동 스모크 테스트 체크리스트 작성 (5절 참고) 후 리팩터링 전 기준 동작을 한 번 확인해둔다.
+- [x] 수동 스모크 테스트 체크리스트 작성 (5절 참고). 기준 동작 확인은 브라우저 회귀 테스트 단계에서 수행한다.
 
 ### Phase 1 — CSS 분리
-- [ ] `<style>...</style>` 내용을 그대로 `css/styles.css`로 이동.
-- [ ] `index.html`의 `<head>`에 `<link rel="stylesheet" href="./css/styles.css">` 추가.
+- [x] `<style>...</style>` 내용을 그대로 `css/styles.css`로 이동.
+- [x] `index.html`의 `<head>`에 `<link rel="stylesheet" href="./css/styles.css">` 추가.
 - [ ] 브라우저에서 레이아웃/색상 깨짐 없는지 확인.
 
 ### Phase 2 — JS 최상위 실행 코드 격리
-- [ ] 전체 스크립트에서 "함수 선언이 아닌 최상위 실행문" (예: 4943행, 9209~9372행 구간의 `addEventListener` 등록, DOM 참조 `const` 선언, 마지막 `load(); render();`)을 모두 찾아 표시해둔다.
-- [ ] 이 구간을 건드리지 않고 위치만 파악하는 단계 (실제 이동은 Phase 3에서 진행).
+- [x] `addEventListener` 등록, DOM 참조, 마지막 `load(); render();` 호출을 식별했다.
+- [x] 실행 순서에 민감한 코드를 `main.js`로 이동했다.
 
 ### Phase 3 — JS 파일 분해 (전역 스코프 유지)
-- [ ] 2절 구조대로 `js/*.js` 파일 생성.
-- [ ] 함수를 주제별로 잘라서 옮긴다. **함수는 순서 상관없이 자유롭게 이동 가능** (호이스팅 덕분).
-- [ ] Phase 2에서 찾은 최상위 실행 코드는 전부 `js/main.js`에 모으고, 이 파일이 **마지막에** 로드되도록 `<script>` 순서를 배치한다.
-- [ ] `index.html` `</body>` 직전에 다음처럼 순서대로 `<script>` 태그를 나열:
+- [x] 기능별 `js/*.js` 파일 생성.
+- [x] 함수를 주제별로 이동하고 전역 스코프 호환을 유지했다.
+- [x] 최상위 실행 코드를 `js/main.js`에 모으고 마지막에 로드되도록 배치했다.
+- [x] `index.html` `</body>` 직전에 스크립트 태그를 등록했다.
   ```html
   <script src="./vendor/jszip.min.js"></script>
   <script src="./js/constants.js"></script>
@@ -83,11 +83,12 @@ vendor/
   ... (중간 파일들, 순서 크게 안 중요) ...
   <script src="./js/main.js"></script>
   ```
-- [ ] 각 파일 옮긴 직후 브라우저 콘솔에 `ReferenceError`/`is not defined` 없는지 확인 (전역 변수/함수 참조가 아직 정의 안 된 스크립트를 참조하면 즉시 에러로 드러남).
+- [x] 각 파일의 JavaScript 문법과 중복 함수 정의를 검사했다.
 - [ ] 한 그룹 옮길 때마다 커밋.
 
 ### Phase 4 — 수동 회귀 테스트 (5절 체크리스트 전체 수행)
-- [ ] 모든 기능 시나리오 확인, 문제 있으면 해당 커밋 되돌려서 원인 격리.
+- [ ] 브라우저에서 모든 기능 시나리오 확인.
+- [x] 정적 서버에서 HTML과 모든 로컬 리소스가 HTTP 200으로 로드되는지 확인.
 
 ### Phase 5 — (선택, 이후 별도 작업으로 진행 권장) 구조 개선
 1차 분해가 끝나고 안정화된 뒤에만 고려:

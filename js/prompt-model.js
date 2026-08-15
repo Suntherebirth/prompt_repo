@@ -102,3 +102,60 @@
     return fileName.length > 120 ? fileName.slice(0, 120).trim() : fileName;
   }
 
+  function normalizeSelected(item) {
+    if (!item) return null;
+    return {
+      ...item,
+      mainCategory: (item.mainCategory ?? item.category ?? '기타').trim() || '기타',
+      subCategory: (item.subCategory ?? item.category ?? '기타').trim() || '기타',
+      content: (item.content ?? '').trim(),
+    };
+  }
+
+  function normalizeComposedPrompt(item) {
+    if (!item) return null;
+    const mainCategory = (item.mainCategory ?? item.category ?? '').trim() || '커스텀 조합';
+    const subCategory = (item.subCategory ?? item.name ?? '').trim() || '이름없음';
+    let items = Array.isArray(item.items)
+      ? item.items.map(normalizePrompt).filter(Boolean)
+      : [];
+
+    // 이전 포맷({category, content}) 호환: 단일 문자열을 1개 프롬프트 아이템으로 변환
+    if (items.length === 0 && typeof item.content === 'string' && item.content.trim()) {
+      items = [{
+        id: uid(),
+        mainCategory,
+        subCategory,
+        content: item.content.trim(),
+      }];
+    }
+
+    if (items.length === 0) return null;
+
+    return {
+      id: item.id || uid(),
+      mainCategory,
+      subCategory,
+      category: mainCategory,
+      items,
+      content: items.map(p => p.content).join(', '),
+      imageId: (item.imageId ?? '').trim(),
+      // 레거시 데이터 호환용. 새 저장에서는 사용하지 않는다.
+      imageData: (item.imageData ?? '').trim(),
+      imageName: (item.imageName ?? '').trim(),
+      portraitImageId: (item.portraitImageId ?? '').trim(),
+      // 레거시 데이터 호환용. 새 저장에서는 사용하지 않는다.
+      portraitImageData: (item.portraitImageData ?? '').trim(),
+      portraitImageName: (item.portraitImageName ?? '').trim(),
+    };
+  }
+
+  function getComposedItemText(item) {
+    if (!item) return '';
+    if (Array.isArray(item.items) && item.items.length > 0) {
+      return item.items.map(p => p.content).join(', ');
+    }
+    return (item.content ?? '').trim();
+  }
+
+  // ── Categories ──
