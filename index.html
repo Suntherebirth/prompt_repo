@@ -316,6 +316,7 @@
       display: flex;
       align-items: center;
       justify-content: center;
+      order: 2;
     }
 
     .prompt-description-preview .preview-tag-list {
@@ -332,9 +333,14 @@
     }
 
     .preview-render-portrait-mode .prompt-description-preview .preview-tag-list {
+      order: -1;
       align-content: center;
       gap: 7px;
       padding: 6px 14px 8px;
+    }
+
+    .preview-render-portrait-mode .prompt-description-preview .preview-portrait-stack .preview-image-shell {
+      order: 1;
     }
 
     .prompt-description-preview .preview-tag-chip {
@@ -620,6 +626,18 @@
 
     .prompt-description-preview .preview-tag-swipe-item.swipe-commit .preview-tag-chip {
       box-shadow: 0 10px 24px rgba(52, 211, 153, 0.14);
+    }
+
+    @keyframes swipeMissFeedback {
+      0%, 100% { transform: translateX(0); }
+      25% { transform: translateX(-4px); }
+      55% { transform: translateX(3px); }
+      78% { transform: translateX(-2px); }
+    }
+
+    .prompt-description-preview .preview-tag-swipe-item.swipe-miss-feedback,
+    .prompt-item.swipe-miss-feedback {
+      animation: swipeMissFeedback .28s ease-out;
     }
 
     .prompt-description-preview .preview-tag-swipe-item.is-swipe-action-visible .preview-tag-chip::before {
@@ -3413,6 +3431,7 @@
   let activeComposedPreviewId = null;
   let armedCoreRandomComposedId = null;
   let morphingCoreRandomComposedId = null;
+  const composedCardActionTransitionUntil = new Map();
   let frozenComboCardId = null;
   let frozenComboCardHeight = 0;
   let armedComposedCopyId = null;
@@ -4403,14 +4422,14 @@
     if (!prompt) return '';
     const preferPortrait = previewRenderMode === 'portrait';
     const imageDataCandidates = preferPortrait
-      ? [prompt.portraitImageData, prompt.imageData]
+      ? [prompt.portraitImageData]
       : [prompt.imageData, prompt.portraitImageData];
     for (const imageData of imageDataCandidates) {
       if (imageData) return imageData;
     }
 
     const imageIdCandidates = preferPortrait
-      ? [prompt.portraitImageId, prompt.imageId]
+      ? [prompt.portraitImageId]
       : [prompt.imageId, prompt.portraitImageId];
     for (const imageId of imageIdCandidates) {
       if (!imageId) continue;
@@ -4799,6 +4818,15 @@
     let startY = 0;
     let swiping = false;
 
+    const triggerSwipeMissFeedback = item => {
+      if (!item) return;
+      item.classList.remove('swipe-miss-feedback');
+      void item.offsetWidth;
+      item.classList.add('swipe-miss-feedback');
+      window.setTimeout(() => item.classList.remove('swipe-miss-feedback'), 300);
+      if (typeof navigator.vibrate === 'function') navigator.vibrate(18);
+    };
+
     const clearSwipe = () => {
       if (activeItem) activeItem._swipeStartX = 0;
       pointerId = null;
@@ -4853,6 +4881,7 @@
         activeItem.classList.add('is-swipe-action-visible');
         if (chip) {
           if (!wasActionVisible) {
+            activeItem._swipeActionTransitionUntil = performance.now() + 320;
             chip.style.setProperty('--preview-tag-swipe-width', `${chip.offsetWidth}px`);
             chip.textContent = '🎲';
           }
@@ -4864,6 +4893,8 @@
     const finishSwipe = event => {
       if (event.pointerId !== pointerId) return;
       if (swiping) event.preventDefault();
+      const swipeDx = activeItem ? event.clientX - startX : 0;
+      if (swiping && swipeDx > 0 && swipeDx < 36) triggerSwipeMissFeedback(activeItem);
       clearSwipe();
     };
 
@@ -4895,6 +4926,32 @@
       applyRandomSelectionForActiveTag();
     }, 80);
   }
+
+  function isSwipeActionTransitioning(element) {
+    return Number(element?._swipeActionTransitionUntil || 0) > performance.now();
+  }
+
+  function notifyInvalidSwipeTouch(element) {
+    if (!element) return;
+    element.classList.remove('swipe-miss-feedback');
+    void element.offsetWidth;
+    element.classList.add('swipe-miss-feedback');
+    window.setTimeout(() => element.classList.remove('swipe-miss-feedback'), 300);
+    if (typeof navigator.vibrate === 'function') navigator.vibrate(18);
+  }
+
+  document.addEventListener('pointerdown', event => {
+    const tagChip = event.target.closest?.('.preview-tag-swipe-item.is-swipe-action-visible .preview-tag-chip');
+    const promptAction = event.target.closest?.('.prompt-item.actions-open .edit-btn, .prompt-item.actions-open .del-btn, .prompt-item .combo-card-choice-btn');
+    const actionElement = tagChip || promptAction;
+    const actionOwner = tagChip
+      ? tagChip.closest('.preview-tag-swipe-item')
+      : promptAction?.closest('.prompt-item');
+    if (!actionElement || !isSwipeActionTransitioning(actionOwner)) return;
+    event.preventDefault();
+    event.stopPropagation();
+    notifyInvalidSwipeTouch(actionOwner);
+  }, true);
 
   function renderPromptTagImageGrid(preview, tag) {
     const taggedPrompts = prompts
@@ -7230,6 +7287,7 @@
     const openActions = () => {
       closeAllPromptSwipeActions(promptData.id);
       item.classList.add('actions-open');
+      item._swipeActionTransitionUntil = performance.now() + 180;
       swipeContent.style.transition = '';
       setSwipeX(openedX);
     };
@@ -7238,6 +7296,10 @@
       item.classList.remove('actions-open');
       swipeContent.style.transition = '';
       setSwipeX(closedX);
+    };
+
+    const triggerSwipeMissFeedback = () => {
+      notifyInvalidSwipeTouch(item);
     };
 
     const commitAddAnimation = () => {
@@ -7258,6 +7320,9 @@
 
       // 스와이프 커밋 후 짧은 지연 뒤 조합에 반영한다.
       window.setTimeout(() => {
+        if (item.classList.contains('combo-card-item')) {
+          composedCardActionTransitionUntil.set(promptData.id, performance.now() + 240);
+        }
         onSwipeCommit();
       }, 80);
 
@@ -7312,11 +7377,14 @@
       swipeContent.style.transition = '';
 
       if (swiping) {
+        const swipeDx = e.clientX - startX;
         if (canCommitRightSwipe() && currentX >= rightSwipeCommitX) {
           closeAllPromptSwipeActions(promptData.id);
           commitAddAnimation();
           return;
         }
+
+        if (swipeDx > 0) triggerSwipeMissFeedback();
 
         if (allowLeftSwipeActions && currentX <= openedX / 2) openActions();
         else closeActions();
@@ -7380,6 +7448,10 @@
           + (isArmedRandomCard ? ' core-random-armed' : '')
           + (isArmedCopyCard ? ' core-random-armed' : '')
           + (isMorphingRandomCard ? ' core-random-morph' : '');
+        const actionTransitionUntil = composedCardActionTransitionUntil.get(item.id) || 0;
+        if (actionTransitionUntil > performance.now()) {
+          card._swipeActionTransitionUntil = actionTransitionUntil;
+        }
         card.title = isArmedRandomCard
           ? '왼쪽은 클립보드 복사, 오른쪽은 핵심 분류 무작위 선택'
           : isArmedCopyCard
@@ -7461,10 +7533,26 @@
           const editBtn = card.querySelector('.edit-btn');
           const delBtn = card.querySelector('.del-btn');
           if (editBtn) {
-            editBtn.addEventListener('click', (e) => openEditComposedPromptModal(item.id, e));
+            editBtn.addEventListener('click', (e) => {
+              if (isSwipeActionTransitioning(card)) {
+                e.preventDefault();
+                e.stopPropagation();
+                notifyInvalidSwipeTouch(card);
+                return;
+              }
+              openEditComposedPromptModal(item.id, e);
+            });
           }
           if (delBtn) {
-            delBtn.addEventListener('click', (e) => deleteComposedPrompt(item.id, e));
+            delBtn.addEventListener('click', (e) => {
+              if (isSwipeActionTransitioning(card)) {
+                e.preventDefault();
+                e.stopPropagation();
+                notifyInvalidSwipeTouch(card);
+                return;
+              }
+              deleteComposedPrompt(item.id, e);
+            });
           }
 
           bindPromptItemSwipe(card, item, {
@@ -7625,10 +7713,26 @@
       const editBtn = item.querySelector('.edit-btn');
       const delBtn = item.querySelector('.del-btn');
       if (editBtn) {
-        editBtn.addEventListener('click', (e) => openEditPromptModal(p.id, e));
+        editBtn.addEventListener('click', (e) => {
+          if (isSwipeActionTransitioning(item)) {
+            e.preventDefault();
+            e.stopPropagation();
+            notifyInvalidSwipeTouch(item);
+            return;
+          }
+          openEditPromptModal(p.id, e);
+        });
       }
       if (delBtn) {
-        delBtn.addEventListener('click', (e) => deletePrompt(p.id, 'prompt', e));
+        delBtn.addEventListener('click', (e) => {
+          if (isSwipeActionTransitioning(item)) {
+            e.preventDefault();
+            e.stopPropagation();
+            notifyInvalidSwipeTouch(item);
+            return;
+          }
+          deletePrompt(p.id, 'prompt', e);
+        });
       }
 
       bindPromptItemSwipe(item, p);
@@ -9158,7 +9262,13 @@
     const swipeActionChip = e.target.closest('.preview-tag-swipe-item.is-swipe-action-visible .preview-tag-chip');
     if (swipeActionChip) {
       e.stopPropagation();
-      commitPreviewTagRandomSelection(swipeActionChip.closest('.preview-tag-swipe-item'), swipeActionChip);
+      const swipeItem = swipeActionChip.closest('.preview-tag-swipe-item');
+      if (isSwipeActionTransitioning(swipeItem)) {
+        e.preventDefault();
+        notifyInvalidSwipeTouch(swipeItem);
+        return;
+      }
+      commitPreviewTagRandomSelection(swipeItem, swipeActionChip);
       return;
     }
 
