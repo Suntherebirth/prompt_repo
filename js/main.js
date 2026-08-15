@@ -52,6 +52,20 @@
   });
 
   document.getElementById('prompt-description-preview').addEventListener('click', e => {
+    const tagImageSelectButton = e.target.closest('.preview-tag-image-select-btn');
+    if (tagImageSelectButton) {
+      e.stopPropagation();
+      const card = tagImageSelectButton.closest('.preview-tag-image-card');
+      if (isSwipeActionTransitioning(card)) {
+        e.preventDefault();
+        notifyInvalidSwipeTouch(card);
+        return;
+      }
+      const prompt = prompts.find(item => item.id === card?.dataset.promptId);
+      selectPromptFromTagImage(prompt);
+      return;
+    }
+
     const swipeActionChip = e.target.closest('.preview-tag-swipe-item.is-swipe-action-visible .preview-tag-chip');
     if (swipeActionChip) {
       e.stopPropagation();
@@ -115,6 +129,7 @@
     const tagImageCard = e.target.closest('.preview-tag-image-card');
     if (tagImageCard) {
       e.stopPropagation();
+      if (Date.now() < Number(tagImageCard._swipeClickSuppressUntil || 0)) return;
       const prompt = prompts.find(item => item.id === tagImageCard.dataset.promptId);
       if (!prompt) return;
       jumpToPromptCardFromTagImage(prompt);
@@ -165,10 +180,13 @@
   render();
   document.addEventListener('pointerdown', event => {
     const tagChip = event.target.closest?.('.preview-tag-swipe-item.is-swipe-action-visible .preview-tag-chip');
+    const tagImageSelectButton = event.target.closest?.('.preview-tag-image-card.is-swipe-action-visible .preview-tag-image-select-btn');
     const promptAction = event.target.closest?.('.prompt-item.actions-open .edit-btn, .prompt-item.actions-open .del-btn, .prompt-item .combo-card-choice-btn');
-    const actionElement = tagChip || promptAction;
+    const actionElement = tagChip || tagImageSelectButton || promptAction;
     const actionOwner = tagChip
       ? tagChip.closest('.preview-tag-swipe-item')
+      : tagImageSelectButton
+        ? tagImageSelectButton.closest('.preview-tag-image-card')
       : promptAction?.closest('.prompt-item');
     if (!actionElement || !isSwipeActionTransitioning(actionOwner)) return;
     event.preventDefault();

@@ -361,6 +361,79 @@
     }, 80);
   }
 
+  function bindPromptTagImageCardSwipe(preview) {
+    if (!preview || preview._tagImageCardSwipeBound) return;
+    preview._tagImageCardSwipeBound = true;
+    let pointerId = null;
+    let activeCard = null;
+    let startX = 0;
+    let startY = 0;
+    let swiping = false;
+
+    preview.addEventListener('pointerdown', event => {
+      if (event.pointerType === 'mouse' && event.button !== 0) return;
+      const card = event.target.closest('.preview-tag-image-card');
+      if (!card || event.target.closest('.preview-tag-image-select-btn')) return;
+      pointerId = event.pointerId;
+      activeCard = card;
+      startX = event.clientX;
+      startY = event.clientY;
+      swiping = false;
+      try { card.setPointerCapture(event.pointerId); } catch {}
+    });
+
+    preview.addEventListener('pointermove', event => {
+      if (event.pointerId !== pointerId || !activeCard) return;
+      const dx = event.clientX - startX;
+      const dy = event.clientY - startY;
+      if (!swiping) {
+        if (Math.abs(dx) < 8) return;
+        if (Math.abs(dx) <= Math.abs(dy) || dx < 0) {
+          pointerId = null;
+          activeCard = null;
+          return;
+        }
+        swiping = true;
+      }
+      event.preventDefault();
+      if (dx < 36) return;
+      preview.querySelectorAll('.preview-tag-image-card.is-swipe-action-visible').forEach(card => {
+        if (card !== activeCard) card.classList.remove('is-swipe-action-visible');
+      });
+      if (!activeCard.classList.contains('is-swipe-action-visible')) {
+        activeCard.classList.add('is-swipe-action-visible');
+        activeCard._swipeActionTransitionUntil = performance.now() + 240;
+      }
+    });
+
+    const finishSwipe = event => {
+      if (event.pointerId !== pointerId || !activeCard) return;
+      const card = activeCard;
+      if (swiping) {
+        event.preventDefault();
+        card._swipeClickSuppressUntil = Date.now() + 350;
+        if (!card.classList.contains('is-swipe-action-visible')) notifyInvalidSwipeTouch(card);
+      }
+      pointerId = null;
+      activeCard = null;
+      swiping = false;
+    };
+
+    preview.addEventListener('pointerup', finishSwipe);
+    preview.addEventListener('pointercancel', finishSwipe);
+  }
+
+  function selectPromptFromTagImage(prompt) {
+    if (!prompt) return;
+    const added = addPromptToComposition(prompt, { suppressToast: true });
+    if (!added) return;
+    copyPromptSilently(getComposedOutputText())
+      .then(copied => {
+        showToast(copied ? '선택한 프롬프트가 조합에 추가되고 클립보드에 복사되었습니다' : '선택한 프롬프트는 추가되었지만 복사에 실패했습니다');
+      })
+      .catch(() => showToast('선택한 프롬프트는 추가되었지만 복사에 실패했습니다'));
+  }
+
   function isSwipeActionTransitioning(element) {
     return Number(element?._swipeActionTransitionUntil || 0) > performance.now();
   }
@@ -443,7 +516,7 @@
         .join('');
       return `<div class="preview-tag-image-card${shouldAnimatePromptTagGridEntry ? ' is-entering' : ''}" data-prompt-id="${esc(prompt.id)}" title="${esc(altText)}">${imageSrc
         ? `<img src="${imageSrc}" alt="${esc(altText)}" />`
-        : '<span class="empty-state">이미지 로딩 중</span>'}<span class="tag-image-name">${esc(prompt.content)}</span>${description ? `<span class="tag-image-description">${description}</span>` : ''}</div>`;
+        : '<span class="empty-state">이미지 로딩 중</span>'}<span class="tag-image-name">${esc(prompt.content)}</span>${description ? `<span class="tag-image-description">${description}</span>` : ''}<button class="preview-tag-image-select-btn" type="button" aria-label="${esc(prompt.content)} 프롬프트 선택">프롬프트 선택</button></div>`;
     }).join('');
 
     preview.classList.add('has-image');
@@ -464,6 +537,7 @@
       sortToggleButton.classList.add('is-changing');
       shouldAnimatePromptTagSort = false;
     }
+    bindPromptTagImageCardSwipe(preview);
     lastRenderedPromptPreviewImageKey = `tag:${tag}`;
   }
 

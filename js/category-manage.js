@@ -811,6 +811,7 @@
     if (!mainCategory || !subCategory) return;
     activeCategoryPrompt = mainCategory;
     activeSubCategoryPrompt = subCategory;
+    clearPromptDescriptionPreview();
     if (getMainCategoryConfig(mainCategory).hiddenByDefault) {
       openedHiddenMainCategories.add(mainCategory);
     }
