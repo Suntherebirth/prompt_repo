@@ -1,0 +1,256 @@
+  function createDefaultCategoryConfig() {
+    return {
+      mainOrder: [],
+      mains: {},
+    };
+  }
+
+  function createDefaultComposedCategoryConfig() {
+    return {
+      mains: {},
+    };
+  }
+  function uniqueInOrder(values) {
+    const seen = new Set();
+    const result = [];
+    values.forEach(value => {
+      if (!value || seen.has(value)) return;
+      seen.add(value);
+      result.push(value);
+    });
+    return result;
+  }
+
+  function getPromptTagLayoutKey(mainCategory, subCategory) {
+    return JSON.stringify([mainCategory || '', subCategory || '']);
+  }
+
+  function getPromptTagLayout(tags) {
+    const key = getPromptTagLayoutKey(activeCategoryPrompt, activeSubCategoryPrompt);
+    const availableTags = uniqueInOrder(tags);
+    const availableSet = new Set(availableTags);
+    const stored = Array.isArray(promptTagLayouts[key]) ? promptTagLayouts[key] : [];
+    const usedTags = new Set();
+    const layout = stored.filter(item => {
+      if (!item || typeof item !== 'object') return false;
+      if (item.type === 'divider') return typeof item.id === 'string' && item.id;
+      if (item.type !== 'tag' || !availableSet.has(item.tag) || usedTags.has(item.tag)) return false;
+      usedTags.add(item.tag);
+      return true;
+    });
+    availableTags.forEach(tag => {
+      if (!usedTags.has(tag)) layout.push({ type: 'tag', tag });
+    });
+    promptTagLayouts[key] = layout;
+    return layout;
+  }
+
+  function savePromptTagLayout(layout) {
+    const key = getPromptTagLayoutKey(activeCategoryPrompt, activeSubCategoryPrompt);
+    promptTagLayouts[key] = layout;
+    save();
+  }
+
+  function ensureMainCategoryConfig(mainCategory) {
+    if (!mainCategory) return null;
+    if (!categoryConfig.mains[mainCategory]) {
+      categoryConfig.mains[mainCategory] = {
+        hiddenByDefault: false,
+        subOrder: [],
+        subSettings: {},
+      };
+    }
+    if (!categoryConfig.mains[mainCategory].subSettings || typeof categoryConfig.mains[mainCategory].subSettings !== 'object') {
+      categoryConfig.mains[mainCategory].subSettings = {};
+    }
+    return categoryConfig.mains[mainCategory];
+  }
+
+  function getMainCategoryConfig(mainCategory) {
+    if (!mainCategory) return { hiddenByDefault: false, subOrder: [], subSettings: {} };
+    const found = categoryConfig.mains[mainCategory];
+    if (found) {
+      if (!found.subSettings || typeof found.subSettings !== 'object') {
+        found.subSettings = {};
+      }
+      return found;
+    }
+    return { hiddenByDefault: false, subOrder: [], subSettings: {} };
+  }
+
+  function getSubCategoryConfig(mainCategory, subCategory) {
+    const mainConfig = getMainCategoryConfig(mainCategory);
+    if (!subCategory) return { randomSelection: false, isCore: false };
+    const found = mainConfig.subSettings?.[subCategory];
+    if (found && typeof found === 'object') return found;
+    return { randomSelection: false, isCore: false };
+  }
+
+  function isSubCategoryRandomSelectionEnabled(mainCategory, subCategory) {
+    return !!getSubCategoryConfig(mainCategory, subCategory).randomSelection;
+  }
+
+  function isSubCategoryCoreEnabled(mainCategory, subCategory) {
+    return !!getSubCategoryConfig(mainCategory, subCategory).isCore;
+  }
+
+  function findCoreSubCategorySelection() {
+    const mainCategories = getMainCategories();
+    for (const mainCategory of mainCategories) {
+      const subCategories = getSubCategories(mainCategory);
+      for (const subCategory of subCategories) {
+        if (isSubCategoryCoreEnabled(mainCategory, subCategory)) {
+          return { mainCategory, subCategory };
+        }
+      }
+    }
+    return null;
+  }
+
+  function applyCoreSubCategorySelection() {
+    const coreSelection = findCoreSubCategorySelection();
+    if (!coreSelection) return false;
+    activeCategoryPrompt = coreSelection.mainCategory;
+    activeSubCategoryPrompt = coreSelection.subCategory;
+    if (getMainCategoryConfig(coreSelection.mainCategory).hiddenByDefault) {
+      openedHiddenMainCategories.add(coreSelection.mainCategory);
+    }
+    return true;
+  }
+
+  function setSubCategoryRandomSelection(mainCategory, subCategory, enabled) {
+    if (!mainCategory || !subCategory) return;
+    const mainConfig = ensureMainCategoryConfig(mainCategory);
+    mainConfig.subSettings = mainConfig.subSettings || {};
+    mainConfig.subSettings[subCategory] = {
+      ...(mainConfig.subSettings[subCategory] || {}),
+      randomSelection: !!enabled,
+    };
+  }
+
+  function setSubCategoryCore(mainCategory, subCategory, enabled) {
+    if (!mainCategory || !subCategory) return;
+    ensureCategoryConfigConsistency();
+    const mainCategories = [...categoryConfig.mainOrder];
+    mainCategories.forEach((currentMain) => {
+      const mainConfig = ensureMainCategoryConfig(currentMain);
+      const subCategories = uniqueInOrder(mainConfig.subOrder || []);
+      subCategories.forEach((currentSub) => {
+        const prev = mainConfig.subSettings[currentSub] || {};
+        if (currentMain === mainCategory && currentSub === subCategory) {
+          mainConfig.subSettings[currentSub] = {
+            ...prev,
+            isCore: !!enabled,
+          };
+        } else if (enabled && prev.isCore) {
+          mainConfig.subSettings[currentSub] = {
+            ...prev,
+            isCore: false,
+          };
+        }
+      });
+    });
+  }
+
+  function ensureCategoryConfigConsistency() {
+    const promptMainOrder = uniqueInOrder(prompts.map(p => p.mainCategory).filter(Boolean));
+    const configuredMainKeys = Object.keys(categoryConfig.mains || {});
+    categoryConfig.mainOrder = uniqueInOrder([...(categoryConfig.mainOrder || []), ...configuredMainKeys, ...promptMainOrder]);
+
+    let hasCoreSubCategory = false;
+
+    categoryConfig.mainOrder.forEach(mainCategory => {
+      const mainConfig = ensureMainCategoryConfig(mainCategory);
+      const promptSubOrder = uniqueInOrder(
+        prompts
+          .filter(p => p.mainCategory === mainCategory)
+          .map(p => p.subCategory)
+          .filter(Boolean)
+      );
+      mainConfig.subOrder = uniqueInOrder([...(mainConfig.subOrder || []), ...promptSubOrder]);
+      if (!mainConfig.subSettings || typeof mainConfig.subSettings !== 'object') {
+        mainConfig.subSettings = {};
+      }
+      if (typeof mainConfig.hiddenByDefault !== 'boolean') {
+        mainConfig.hiddenByDefault = false;
+      }
+      mainConfig.subOrder.forEach((subCategory) => {
+        const prev = mainConfig.subSettings[subCategory];
+        const next = prev && typeof prev === 'object' ? prev : {};
+        if (typeof next.randomSelection !== 'boolean') {
+          next.randomSelection = false;
+        }
+        if (typeof next.isCore !== 'boolean') {
+          next.isCore = false;
+        }
+        if (next.isCore) {
+          if (hasCoreSubCategory) {
+            next.isCore = false;
+          } else {
+            hasCoreSubCategory = true;
+          }
+        }
+        mainConfig.subSettings[subCategory] = next;
+      });
+    });
+
+    hiddenMainCategories.forEach(mainCategory => {
+      const mainConfig = ensureMainCategoryConfig(mainCategory);
+      mainConfig.hiddenByDefault = true;
+    });
+
+    hiddenMainCategories = new Set(
+      categoryConfig.mainOrder.filter(mainCategory => getMainCategoryConfig(mainCategory).hiddenByDefault)
+    );
+  }
+
+  function applyPromptDescriptionRules() {
+    const normalizeDescription = (prompt) => {
+      if (!prompt) return prompt;
+      return {
+        ...prompt,
+        description: isSubCategoryCoreEnabled(prompt.mainCategory, prompt.subCategory)
+          ? String(prompt.description ?? '').trim()
+          : '',
+      };
+    };
+
+    prompts = prompts.map(normalizeDescription);
+    composedPrompts = composedPrompts.map((composed) => ({
+      ...composed,
+      items: Array.isArray(composed.items) ? composed.items.map(normalizeDescription) : [],
+    }));
+  }
+
+  function ensureComposedMainCategoryConfig(mainCategory) {
+    if (!mainCategory) return null;
+    if (!composedCategoryConfig.mains[mainCategory]) {
+      composedCategoryConfig.mains[mainCategory] = {
+        editOnly: false,
+      };
+    }
+    return composedCategoryConfig.mains[mainCategory];
+  }
+
+  function getComposedMainCategoryConfig(mainCategory) {
+    if (!mainCategory) return { editOnly: false };
+    return composedCategoryConfig.mains[mainCategory] || { editOnly: false };
+  }
+
+  function ensureComposedCategoryConfigConsistency() {
+    const mainCategories = uniqueInOrder(composedPrompts.map(item => item.mainCategory).filter(Boolean));
+    const nextMains = {};
+    mainCategories.forEach((mainCategory) => {
+      const prev = composedCategoryConfig.mains?.[mainCategory];
+      nextMains[mainCategory] = {
+        editOnly: !!prev?.editOnly,
+      };
+    });
+    composedCategoryConfig.mains = nextMains;
+
+    if (activeCategoryComposed && !mainCategories.includes(activeCategoryComposed)) {
+      activeCategoryComposed = null;
+    }
+  }
+
+  // ── Persistence ──
