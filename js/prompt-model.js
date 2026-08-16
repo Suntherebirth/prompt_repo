@@ -172,6 +172,7 @@
       portraitImageId: String(item.portraitImageId || '').trim(),
       portraitImageData: String(item.portraitImageData || '').trim(),
       portraitImageName: String(item.portraitImageName || '').trim(),
+      comboImagePosition: item.comboImagePosition === 'end' ? 'end' : 'start',
     };
   }
 

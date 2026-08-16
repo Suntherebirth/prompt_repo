@@ -809,6 +809,19 @@
 
   function openCoreSubCategory(mainCategory, subCategory) {
     if (!mainCategory || !subCategory) return;
+
+    const isCurrentlyFocused = leftPanelTab === 'prompt'
+      && activeCategoryPrompt === mainCategory
+      && activeSubCategoryPrompt === subCategory;
+
+    if (isCurrentlyFocused) {
+      activePromptCategoryGridMode = !activePromptCategoryGridMode;
+      activePromptTagFilter = null;
+    } else {
+      activePromptCategoryGridMode = false;
+      activePromptTagFilter = null;
+    }
+
     activeCategoryPrompt = mainCategory;
     activeSubCategoryPrompt = subCategory;
     clearPromptDescriptionPreview();

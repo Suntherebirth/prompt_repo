@@ -61,6 +61,96 @@
     return parts.join(' | ').trim();
   }
 
+  function renderPromptTagImageCards(promptItems, animateEntry = false) {
+    return promptItems.map(prompt => {
+      const imageSrc = getPromptImageSource(prompt);
+      queuePromptImageLoad(prompt);
+      const altText = prompt.imageName || getPromptDisplayName(prompt.mainCategory, prompt.subCategory);
+      const descriptionParts = String(prompt.description || '')
+        .split('|')
+        .map(part => part.trim())
+        .filter(Boolean);
+      if (descriptionParts[0]) descriptionParts[0] = formatDescriptionNamePart(descriptionParts[0]);
+      if (descriptionParts[1]) descriptionParts[1] = formatDescriptionBirthPart(descriptionParts[1]);
+      const descriptionLines = [];
+      let currentDescriptionLine = '';
+      descriptionParts.forEach(part => {
+        const candidate = currentDescriptionLine ? `${currentDescriptionLine} | ${part}` : part;
+        if (currentDescriptionLine && candidate.length > 14) {
+          descriptionLines.push(currentDescriptionLine);
+          currentDescriptionLine = part;
+        } else {
+          currentDescriptionLine = candidate;
+        }
+      });
+      if (currentDescriptionLine) descriptionLines.push(currentDescriptionLine);
+      const description = descriptionLines
+        .map(line => `<span class="tag-image-description-part">${esc(line)}</span>`)
+        .join('');
+      return `<div class="preview-tag-image-card${animateEntry ? ' is-entering' : ''}" data-prompt-id="${esc(prompt.id)}" title="${esc(altText)}">${imageSrc
+        ? `<img src="${imageSrc}" alt="${esc(altText)}" />`
+        : '<span class="empty-state">이미지 로딩 중</span>'}<span class="tag-image-name">${esc(prompt.content)}</span>${description ? `<span class="tag-image-description">${description}</span>` : ''}<button class="preview-tag-image-select-btn" type="button" aria-label="${esc(prompt.content)} 프롬프트 선택">프롬프트 선택</button></div>`;
+    }).join('');
+  }
+
+  function renderPromptCategoryGrid(preview) {
+    const categoryPrompts = prompts.filter(prompt => (
+      prompt.mainCategory === activeCategoryPrompt && prompt.subCategory === activeSubCategoryPrompt
+    )).sort((a, b) => {
+      const aText = String(a.content || '').localeCompare(String(b.content || ''), 'ko');
+      if (aText !== 0) return aText;
+      return String(a.id || '').localeCompare(String(b.id || ''), 'ko');
+    });
+
+    preview.classList.add('has-image');
+    preview.classList.remove('image-clear-feedback', 'image-switch-feedback');
+    preview.title = '';
+
+    if (!categoryPrompts.length) {
+      preview.innerHTML = '<span class="empty-state">이 중분류에 등록된 프롬프트가 없습니다.</span>';
+      lastRenderedPromptPreviewImageKey = '';
+      return;
+    }
+
+    const usesTagGridCards = isSubCategoryCoreEnabled(activeCategoryPrompt, activeSubCategoryPrompt);
+    const cards = usesTagGridCards
+      ? renderPromptTagImageCards(categoryPrompts)
+      : categoryPrompts.map(prompt => {
+      const imageSrc = getPromptImageSource(prompt);
+      queuePromptImageLoad(prompt);
+      const altText = prompt.imageName || getPromptDisplayName(prompt.mainCategory, prompt.subCategory);
+      const description = [prompt.content, prompt.description].filter(Boolean).map(part => String(part).trim()).filter(Boolean).slice(0, 2).join(' · ');
+      return `<div class="preview-tag-image-card" data-prompt-id="${esc(prompt.id)}" title="${esc(altText)}">${imageSrc
+        ? `<img src="${imageSrc}" alt="${esc(altText)}" />`
+        : '<span class="empty-state">이미지 로딩 중</span>'}<span class="tag-image-name">${esc(prompt.content)}</span>${description ? `<span class="tag-image-description"><span class="tag-image-description-part">${esc(description)}</span></span>` : ''}<button class="preview-tag-image-select-btn" type="button" aria-label="${esc(prompt.content)} 프롬프트 선택">프롬프트 선택</button></div>`;
+    }).join('');
+
+    preview.innerHTML = `<div class="preview-tag-image-grid"><div class="preview-tag-grid-header"><span class="preview-tag-chip">${esc(activeSubCategoryPrompt || activeCategoryPrompt || '카테고리')}</span><span class="tag-image-grid-total">${categoryPrompts.length}개</span></div>${cards}</div>`;
+
+    preview.querySelectorAll('.preview-tag-image-card').forEach(card => {
+      const promptId = card.dataset.promptId;
+      const prompt = prompts.find(item => String(item.id) === String(promptId));
+      const button = card.querySelector('.preview-tag-image-select-btn');
+      if (button) {
+        button.addEventListener('click', event => {
+          event.stopPropagation();
+          if (prompt) selectPromptFromTagImage(prompt);
+        });
+      }
+      card.addEventListener('click', event => {
+        if (event.target.closest('.preview-tag-image-select-btn')) return;
+        if (prompt) {
+          activePromptPreviewId = prompt.id;
+          isPromptPreviewSuppressed = false;
+          render();
+        }
+      });
+    });
+
+    bindPromptTagImageCardSwipe(preview);
+    lastRenderedPromptPreviewImageKey = `category:${activeCategoryPrompt}:${activeSubCategoryPrompt}`;
+  }
+
   function renderPromptTagBrowser(preview) {
     const categoryPrompts = prompts.filter(prompt => (
       prompt.mainCategory === activeCategoryPrompt && prompt.subCategory === activeSubCategoryPrompt
@@ -497,32 +587,7 @@
       return String(a.content || '').localeCompare(String(b.content || ''), 'ko');
     });
 
-    const cards = taggedPrompts.map(prompt => {
-      const imageSrc = getPromptImageSource(prompt);
-      queuePromptImageLoad(prompt);
-      const altText = prompt.imageName || getPromptDisplayName(prompt.mainCategory, prompt.subCategory);
-      const descriptionParts = getDescriptionParts(prompt);
-      if (descriptionParts[0]) descriptionParts[0] = formatDescriptionNamePart(descriptionParts[0]);
-      if (descriptionParts[1]) descriptionParts[1] = formatDescriptionBirthPart(descriptionParts[1]);
-      const descriptionLines = [];
-      let currentDescriptionLine = '';
-      descriptionParts.forEach(part => {
-        const candidate = currentDescriptionLine ? `${currentDescriptionLine} | ${part}` : part;
-        if (currentDescriptionLine && candidate.length > 14) {
-          descriptionLines.push(currentDescriptionLine);
-          currentDescriptionLine = part;
-        } else {
-          currentDescriptionLine = candidate;
-        }
-      });
-      if (currentDescriptionLine) descriptionLines.push(currentDescriptionLine);
-      const description = descriptionLines
-        .map(line => `<span class="tag-image-description-part">${esc(line)}</span>`)
-        .join('');
-      return `<div class="preview-tag-image-card${shouldAnimatePromptTagGridEntry ? ' is-entering' : ''}" data-prompt-id="${esc(prompt.id)}" title="${esc(altText)}">${imageSrc
-        ? `<img src="${imageSrc}" alt="${esc(altText)}" />`
-        : '<span class="empty-state">이미지 로딩 중</span>'}<span class="tag-image-name">${esc(prompt.content)}</span>${description ? `<span class="tag-image-description">${description}</span>` : ''}<button class="preview-tag-image-select-btn" type="button" aria-label="${esc(prompt.content)} 프롬프트 선택">프롬프트 선택</button></div>`;
-    }).join('');
+    const cards = renderPromptTagImageCards(taggedPrompts, shouldAnimatePromptTagGridEntry);
 
     preview.classList.add('has-image');
     preview.classList.remove('image-clear-feedback', 'image-switch-feedback');

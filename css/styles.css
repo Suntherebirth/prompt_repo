@@ -269,13 +269,13 @@
     }
 
     .custom-combo-fixed-category {
-      min-height: 38px;
-      display: flex;
+      min-height: auto;
+      display: inline-flex;
       align-items: center;
-      padding: 8px 10px;
-      border: 1px solid rgba(52, 211, 153, 0.42);
-      border-radius: 8px;
-      background: rgba(24, 63, 53, 0.56);
+      padding: 0;
+      border: none;
+      border-radius: 0;
+      background: transparent;
       color: #d1fae5;
       font-size: 0.85rem;
       font-weight: 700;
@@ -285,6 +285,24 @@
       display: flex;
       flex-direction: column;
       gap: 8px;
+    }
+
+    .custom-combo-image-position {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-top: 12px;
+    }
+
+    .custom-combo-image-position .composed-modal-editor-title {
+      margin-right: auto;
+    }
+
+    .custom-combo-image-position label {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      white-space: nowrap;
     }
 
     .custom-combo-modal-composition-list {
@@ -465,8 +483,9 @@
       display: flex;
       gap: 8px;
       overflow: hidden;
-      align-items: center;
+      align-items: stretch;
       align-content: stretch;
+      padding-bottom: 2px;
     }
 
     .custom-combo-image-tile {
@@ -479,8 +498,24 @@
       color: #dfeaff;
       text-align: center;
       flex: 1 1 0;
-      height: 100%;
-      justify-content: center;
+      height: auto;
+      justify-content: flex-start;
+      transition: transform .2s ease, box-shadow .2s ease, border-color .2s ease, opacity .2s ease;
+    }
+
+    .custom-combo-image-tile.custom-combo-focus-image {
+      animation: customComboFlowFocusPulse .8s ease;
+      border-radius: 10px;
+      box-shadow: 0 0 0 2px rgba(110, 231, 183, 0.35), 0 12px 24px rgba(52, 211, 153, 0.18);
+      border: 1px solid rgba(110, 231, 183, 0.7);
+      padding: 4px;
+      background: rgba(24, 63, 53, 0.18);
+    }
+
+    @keyframes customComboFlowFocusPulse {
+      0% { transform: scale(0.96); box-shadow: 0 0 0 0 rgba(52, 211, 153, 0.18); }
+      40% { transform: scale(1.03); box-shadow: 0 0 0 10px rgba(52, 211, 153, 0.08), 0 12px 24px rgba(52, 211, 153, 0.22); }
+      100% { transform: scale(1); box-shadow: 0 0 0 2px rgba(110, 231, 183, 0.35), 0 12px 24px rgba(52, 211, 153, 0.18); }
     }
 
     .custom-combo-image-flow-arrow {
@@ -506,7 +541,7 @@
     .custom-combo-image-shell {
       position: relative;
       width: 100%;
-      flex: 0 1 auto;
+      flex: 0 0 auto;
       min-height: 0;
       aspect-ratio: 3 / 4;
       border-radius: 8px;
@@ -540,6 +575,8 @@
       overflow: hidden;
       text-overflow: ellipsis;
       white-space: nowrap;
+      line-height: 1.2;
+      padding-bottom: 2px;
     }
 
     .prompt-description-preview.image-switch-feedback {
@@ -1986,31 +2023,65 @@
     }
 
     .core-quick-access-btn {
+      position: relative;
+      flex: 1 1 180px;
+      min-width: 180px;
+      max-width: 220px;
       border: 1px solid #2f3550;
-      background: #1a1f2f;
+      background: linear-gradient(180deg, #1b2338 0%, #171d2b 100%);
       color: #dbe6ff;
       border-radius: 999px;
-      padding: 9px 14px;
+      padding: 10px 18px;
       font-size: 0.82rem;
       font-weight: 700;
       line-height: 1.2;
-      min-height: 38px;
+      min-height: 42px;
       cursor: pointer;
-      transition: all .15s ease;
+      transition: transform .18s ease, box-shadow .18s ease, border-color .18s ease, background .18s ease, color .18s ease;
       white-space: nowrap;
+      overflow: hidden;
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.04);
+    }
+
+    .core-quick-access-btn::before {
+      content: "";
+      position: absolute;
+      inset: 0 auto 0 -40%;
+      width: 35%;
+      background: linear-gradient(90deg, rgba(255,255,255,0), rgba(138,180,255,0.26), rgba(255,255,255,0));
+      transform: translateX(-120%);
+      transition: transform .3s ease;
     }
 
     .core-quick-access-btn:hover {
       border-color: #8ab4ff;
-      background: #202b45;
+      background: linear-gradient(180deg, #23304b 0%, #1a2338 100%);
       color: #eef5ff;
+      box-shadow: 0 6px 16px rgba(119, 148, 255, 0.2), inset 0 1px 0 rgba(255,255,255,0.08);
+      transform: translateY(-1px);
+    }
+
+    .core-quick-access-btn:hover::before {
+      transform: translateX(260%);
+    }
+
+    .core-quick-access-btn:active {
+      transform: translateY(1px) scale(0.985);
+      box-shadow: 0 2px 8px rgba(0,0,0,0.18);
     }
 
     .core-quick-access-btn.active {
       border-color: #34d399;
-      background: #183f35;
+      background: linear-gradient(180deg, #1d433b 0%, #15362f 100%);
       color: #d1fae5;
-      box-shadow: 0 0 0 1px rgba(52, 211, 153, 0.18);
+      box-shadow: 0 0 0 1px rgba(52, 211, 153, 0.22), 0 8px 18px rgba(52, 211, 153, 0.14);
+      animation: coreQuickAccessPulse .28s ease;
+    }
+
+    @keyframes coreQuickAccessPulse {
+      0% { box-shadow: 0 0 0 0 rgba(52, 211, 153, 0.2); }
+      40% { box-shadow: 0 0 0 8px rgba(52, 211, 153, 0.08); }
+      100% { box-shadow: 0 0 0 1px rgba(52, 211, 153, 0.22), 0 8px 18px rgba(52, 211, 153, 0.14); }
     }
 
     .mode-toggle-btn {
@@ -2038,10 +2109,35 @@
     }
 
     .mode-toggle-btn.custom-combo-active {
-      background: rgba(52, 211, 153, 0.14);
+      position: relative;
+      background: linear-gradient(180deg, rgba(52, 211, 153, 0.18) 0%, rgba(22, 58, 49, 0.9) 100%);
       border-color: #34d399;
       color: #d1fae5;
-      box-shadow: 0 0 0 1px rgba(52, 211, 153, 0.18);
+      box-shadow: 0 0 0 1px rgba(52, 211, 153, 0.2), 0 8px 18px rgba(22, 163, 74, 0.18);
+      animation: customComboTogglePulse .38s ease;
+      overflow: hidden;
+    }
+
+    .mode-toggle-btn.custom-combo-active::before {
+      content: "";
+      position: absolute;
+      inset: 0 auto 0 -30%;
+      width: 32%;
+      background: linear-gradient(90deg, rgba(255,255,255,0), rgba(110,231,183,0.28), rgba(255,255,255,0));
+      transform: translateX(-120%);
+      animation: customComboToggleSweep .7s ease;
+    }
+
+    @keyframes customComboTogglePulse {
+      0% { transform: scale(0.98); box-shadow: 0 0 0 0 rgba(52, 211, 153, 0.22); }
+      42% { transform: scale(1.02); box-shadow: 0 0 0 10px rgba(52, 211, 153, 0.08); }
+      100% { transform: scale(1); box-shadow: 0 0 0 1px rgba(52, 211, 153, 0.2), 0 8px 18px rgba(22, 163, 74, 0.18); }
+    }
+
+    @keyframes customComboToggleSweep {
+      0% { transform: translateX(-120%); }
+      55% { transform: translateX(220%); }
+      100% { transform: translateX(260%); }
     }
 
     .panel-mode-view {
@@ -2285,10 +2381,10 @@
     }
 
     .combo-save-body {
-      border: 1px solid #2a2a3a;
-      border-radius: 8px;
-      background: #141420;
-      padding: 10px;
+      border: none;
+      border-radius: 0;
+      background: transparent;
+      padding: 0;
       display: flex;
       flex-direction: column;
       gap: 8px;
@@ -2298,21 +2394,41 @@
     }
 
     .custom-category-view-toggle {
-      min-width: 148px;
+      min-width: 188px;
+      width: 188px;
       display: inline-flex;
       align-items: center;
       justify-content: center;
       gap: 8px;
-      padding: 7px 10px;
+      padding: 9px 14px;
       overflow: hidden;
       position: relative;
+      border-radius: 999px;
+      border: 1px solid #394865;
+      background: linear-gradient(180deg, #1a1f2d 0%, #151b27 100%);
+      color: #e1ebff;
+      transition: transform .18s ease, box-shadow .18s ease, border-color .18s ease, background .18s ease;
+      cursor: pointer;
+    }
+
+    .custom-category-view-toggle:hover {
+      border-color: #8ab4ff;
+      background: linear-gradient(180deg, #202d45 0%, #181f2f 100%);
+      box-shadow: 0 6px 16px rgba(138, 180, 255, 0.18);
+      transform: translateY(-1px);
+    }
+
+    .custom-category-view-toggle:active {
+      transform: translateY(1px) scale(0.985);
     }
 
     .custom-category-view-toggle .custom-category-view-label {
       color: #8f95aa;
       font-size: 0.76rem;
       line-height: 1;
-      transition: color .2s ease, transform .2s ease;
+      transition: color .2s ease, transform .2s ease, opacity .2s ease;
+      font-weight: 700;
+      letter-spacing: 0.02em;
     }
 
     .custom-category-view-toggle .custom-category-view-label:first-child {
@@ -2336,7 +2452,7 @@
       border-radius: 999px;
       background: #20283c;
       box-shadow: inset 0 1px 3px rgba(0, 0, 0, .28);
-      transition: background .2s ease, border-color .2s ease, box-shadow .2s ease;
+      transition: background .2s ease, border-color .2s ease, box-shadow .2s ease, transform .2s ease;
     }
 
     .custom-category-switch > span {
@@ -2347,13 +2463,14 @@
       background: #aeb9d4;
       box-shadow: 0 1px 3px rgba(0, 0, 0, .35);
       transform: translateX(0);
-      transition: transform .2s cubic-bezier(.22, 1, .36, 1), background .2s ease;
+      transition: transform .25s cubic-bezier(.22, 1, .36, 1), background .2s ease, width .16s ease;
     }
 
     .custom-category-view-toggle.active .custom-category-switch {
       border-color: #34d399;
       background: #183f35;
       box-shadow: inset 0 1px 3px rgba(0, 0, 0, .24), 0 0 0 2px rgba(52, 211, 153, .08);
+      animation: categoryToggleGlow .28s ease;
     }
 
     .custom-category-view-toggle.active .custom-category-switch > span {
@@ -2365,9 +2482,21 @@
       width: 15px;
     }
 
+    .custom-category-view-toggle.active {
+      border-color: #34d399;
+      background: linear-gradient(180deg, #173e36 0%, #112e2c 100%);
+      box-shadow: 0 0 0 1px rgba(52, 211, 153, 0.2), 0 8px 18px rgba(52, 211, 153, 0.12);
+    }
+
     .custom-category-view-toggle:focus-visible {
       outline: 2px solid #8ab4ff;
       outline-offset: 2px;
+    }
+
+    @keyframes categoryToggleGlow {
+      0% { box-shadow: inset 0 1px 3px rgba(0, 0, 0, .24), 0 0 0 0 rgba(52, 211, 153, 0.18); }
+      45% { box-shadow: inset 0 1px 3px rgba(0, 0, 0, .24), 0 0 0 8px rgba(52, 211, 153, 0.06); }
+      100% { box-shadow: inset 0 1px 3px rgba(0, 0, 0, .24), 0 0 0 2px rgba(52, 211, 153, .08); }
     }
 
     .combo-edit-chip-list {
@@ -2398,13 +2527,13 @@
     }
 
     .combo-filter-wrap {
-      margin-top: 2px;
+      margin-top: 0;
       flex: 1;
       min-height: 0;
       overflow-y: auto;
       overscroll-behavior: contain;
       -webkit-overflow-scrolling: touch;
-      padding-right: 2px;
+      padding-right: 0;
     }
 
     /* ── Right Panel: Composer ── */
@@ -3044,6 +3173,18 @@
       min-height: 0;
     }
 
+    .prompt-item.combo-card-item.custom-combo-focus-target {
+      border-color: rgba(110, 231, 183, 0.9);
+      box-shadow: 0 0 0 2px rgba(52, 211, 153, 0.18), 0 12px 28px rgba(52, 211, 153, 0.16);
+      animation: customComboCardFocusPulse .8s ease;
+    }
+
+    @keyframes customComboCardFocusPulse {
+      0% { transform: scale(0.98); box-shadow: 0 0 0 0 rgba(52, 211, 153, 0.12); }
+      40% { transform: scale(1.02); box-shadow: 0 0 0 8px rgba(52, 211, 153, 0.08), 0 14px 28px rgba(52, 211, 153, 0.18); }
+      100% { transform: scale(1); box-shadow: 0 0 0 2px rgba(52, 211, 153, 0.18), 0 12px 28px rgba(52, 211, 153, 0.16); }
+    }
+
     .prompt-item.combo-card-item .prompt-item-swipe-content {
       min-height: 0;
       padding: 12px 14px;
@@ -3505,6 +3646,8 @@
       align-items: center;
       justify-content: center;
       overflow: hidden;
+      padding: 28px 64px 96px;
+      box-sizing: border-box;
     }
 
     .image-viewer-stage img {
@@ -3519,6 +3662,55 @@
       touch-action: none;
       user-select: none;
       -webkit-user-drag: none;
+    }
+
+    .image-viewer-stage.is-transition-viewer > #image-viewer-image {
+      display: none;
+    }
+
+    .image-viewer-transition {
+      position: relative;
+      width: 100%;
+      height: 100%;
+      display: none;
+      overflow: hidden;
+      border-radius: 12px;
+      background: #050816;
+      box-shadow: 0 24px 60px rgba(0, 0, 0, 0.44);
+      touch-action: none;
+    }
+
+    .image-viewer-stage.is-transition-viewer .image-viewer-transition {
+      display: block;
+    }
+
+    .image-viewer-transition img {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      max-width: none;
+      max-height: none;
+      border-radius: 0;
+      box-shadow: none;
+      object-fit: contain;
+      animation: image-viewer-transition-from 6s ease-in-out infinite;
+    }
+
+    .image-viewer-transition img:last-child {
+      animation-name: image-viewer-transition-to;
+    }
+
+    @keyframes image-viewer-transition-from {
+      0%, 22% { opacity: 1; }
+      44%, 99.9% { opacity: 0; }
+      100% { opacity: 1; }
+    }
+
+    @keyframes image-viewer-transition-to {
+      0%, 22% { opacity: 0; }
+      44%, 99.9% { opacity: 1; }
+      100% { opacity: 0; }
     }
 
     .image-viewer-close {

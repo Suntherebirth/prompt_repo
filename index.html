@@ -112,7 +112,7 @@
       <div class="composer-actions">
         <button class="btn btn-primary" onclick="copyPrompt()">📋 클립보드 복사</button>
         <button class="btn btn-secondary btn-save-composed" type="button" onclick="openSaveComposedModal()">💾 새 조합</button>
-        <button class="btn btn-danger" onclick="clearCurrentComposition()">🧹 초기화</button>
+        <button id="clear-composition-button" class="btn btn-danger" type="button" onclick="clearCurrentComposition()">🧹 초기화</button>
       </div>
     </div>
   </div>
@@ -256,6 +256,11 @@
           <div class="composed-modal-editor-title">커스텀 조합 이미지</div>
           <div class="custom-combo-modal-composition-list" id="custom-combo-modal-composition-list"></div>
         </div>
+        <div class="custom-combo-image-position">
+          <div class="composed-modal-editor-title">커스텀 콤보 이미지 위치</div>
+          <label><input type="radio" name="custom-combo-image-position" value="start" checked /> 흐름 맨앞</label>
+          <label><input type="radio" name="custom-combo-image-position" value="end" /> 흐름 맨뒤</label>
+        </div>
         <div class="prompt-image-block">
           <label>커스텀 콤보 이미지</label>
           <div class="image-orientation-tabs" role="tablist" aria-label="커스텀 콤보 이미지 방향 선택">
@@ -367,6 +372,10 @@
   <div class="image-viewer-stage" role="dialog" aria-modal="true" aria-labelledby="image-viewer-title">
     <button class="btn btn-secondary btn-sm image-viewer-close" type="button" onclick="closeImageViewer()">닫기</button>
     <img id="image-viewer-image" alt="" />
+    <div class="image-viewer-transition" id="image-viewer-transition" aria-hidden="true">
+      <img id="image-viewer-transition-from" alt="" />
+      <img id="image-viewer-transition-to" alt="" />
+    </div>
     <span id="image-viewer-title" style="display:none">설명 이미지 전체 보기</span>
   </div>
 </div>

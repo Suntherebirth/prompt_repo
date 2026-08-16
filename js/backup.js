@@ -35,6 +35,7 @@
         portraitImageId: item.portraitImageId || '',
         portraitImageData: !item.portraitImageId && item.portraitImageData ? item.portraitImageData : '',
         portraitImageName: item.portraitImageName || '',
+        comboImagePosition: item.comboImagePosition === 'end' ? 'end' : 'start',
       })),
       categoryConfig,
       composedCategoryConfig,
@@ -62,6 +63,7 @@
         portraitImageId: String(item.portraitImageId || '').trim(),
         portraitImageData: String(item.portraitImageData || '').trim(),
         portraitImageName: String(item.portraitImageName || '').trim(),
+        comboImagePosition: item.comboImagePosition === 'end' ? 'end' : 'start',
       }))
       : [];
     const nextHidden = Array.isArray(parsed.hiddenMainCategories) ? parsed.hiddenMainCategories.filter(Boolean) : [];

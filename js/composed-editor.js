@@ -486,6 +486,7 @@
     const submitButton = document.querySelector('#save-custom-combo-modal .modal-actions .btn-primary');
     if (title) title.textContent = '커스텀 콤보 저장';
     if (submitButton) submitButton.textContent = '저장';
+    setCustomComboImagePosition('start');
     pendingCustomComboImages = { landscape: null, portrait: null };
     pendingCustomComboItemImages = {};
     renderCustomComboCompositionImageList(selectedCustomCombo.map(item => item.id));
@@ -503,6 +504,7 @@
     const submitButton = document.querySelector('#save-custom-combo-modal .modal-actions .btn-primary');
     if (title) title.textContent = '커스텀 콤보 편집';
     if (submitButton) submitButton.textContent = '수정 저장';
+    setCustomComboImagePosition(customCombo.comboImagePosition || 'start');
     pendingCustomComboItemImages = Object.fromEntries(
       Object.entries(customCombo.itemImages || {}).map(([itemId, image]) => [itemId, { ...image, file: null }])
     );
@@ -523,6 +525,19 @@
     setCustomComboImageEditOrientation('landscape');
     document.getElementById('save-custom-combo-modal')?.classList.add('open');
     nameInput?.focus();
+  }
+
+  function setCustomComboImagePosition(position) {
+    const normalizedPosition = position === 'end' ? 'end' : 'start';
+    document.querySelectorAll('input[name="custom-combo-image-position"]').forEach(input => {
+      input.checked = input.value === normalizedPosition;
+    });
+  }
+
+  function getCustomComboImagePosition() {
+    return document.querySelector('input[name="custom-combo-image-position"]:checked')?.value === 'end'
+      ? 'end'
+      : 'start';
   }
 
   function closeSaveCustomComboModal() {

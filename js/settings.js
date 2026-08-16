@@ -136,12 +136,24 @@
     setTapComposeMode(nextMode, { notify: true });
   }
 
-  function openImageViewer() {
-    const image = leftPanelTab === 'combo'
-      ? getActiveComposedPreviewImage()
-      : getActivePromptPreviewImage();
-    if (!image) return;
-    activeImageViewer = image;
+  async function openImageViewer(options = {}) {
+    let gallery = Array.isArray(options.gallery) && options.gallery.length > 0
+      ? options.gallery
+      : (
+        leftPanelTab === 'combo' && isCustomComboTabOpen
+          ? await getCustomComboFlowGallery()
+          : [leftPanelTab === 'combo' ? getActiveComposedPreviewImage() : getActivePromptPreviewImage()]
+      );
+
+    gallery = gallery.filter(Boolean);
+    if (!gallery.length) return;
+    const desiredIndex = Number.isInteger(options.index) ? options.index : 0;
+    const safeIndex = Math.min(Math.max(desiredIndex, 0), gallery.length - 1);
+    activeImageViewer = {
+      ...gallery[safeIndex],
+      gallery,
+      index: safeIndex,
+    };
     imageViewerLastGestureAt = 0;
     renderImageViewer();
   }

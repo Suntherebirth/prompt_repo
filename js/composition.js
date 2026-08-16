@@ -260,10 +260,22 @@
   }
 
   function clearCurrentComposition() {
-    if (!confirm('현재 조합된 프롬프트를 모두 초기화하시겠습니까?')) return;
+    const resetButton = document.getElementById('clear-composition-button');
+    if (resetButton?.dataset.resetArmed !== 'true') {
+      if (resetButton) {
+        resetButton.dataset.resetArmed = 'true';
+        resetButton.textContent = '🧹 초기화!';
+      }
+      return;
+    }
+
     clearOutputOverride();
     selected = [];
     render();
+    if (resetButton) {
+      resetButton.dataset.resetArmed = 'false';
+      resetButton.textContent = '🧹 초기화';
+    }
     showToast('현재 조합이 초기화되었습니다');
   }
 
@@ -308,6 +320,7 @@
     }
 
     const existingCombo = editingCustomComboId ? customCombos.find(item => item.id === editingCustomComboId) : null;
+    const comboImagePosition = getCustomComboImagePosition();
     let imageId = existingCombo?.imageId || '';
     let portraitImageId = existingCombo?.portraitImageId || '';
     const landscapeImage = pendingCustomComboImages.landscape;
@@ -371,6 +384,7 @@
           portraitImageId,
           portraitImageData: portraitImageId ? '' : (portraitImage?.dataUrl || item.portraitImageData || ''),
           portraitImageName: imageName,
+          comboImagePosition,
           itemImages,
         }
         : item);
@@ -389,6 +403,7 @@
         portraitImageId,
         portraitImageData: portraitImageId ? '' : (portraitImage?.dataUrl || ''),
         portraitImageName: imageName,
+        comboImagePosition,
       });
     }
     save();

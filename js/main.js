@@ -159,7 +159,15 @@
     openImageViewer();
   });
 
-  document.getElementById('composed-description-preview').addEventListener('click', (e) => {
+  document.getElementById('composed-description-preview').addEventListener('click', async (e) => {
+    const customComboTile = e.target.closest('.custom-combo-image-tile');
+    if (customComboTile) {
+      e.stopPropagation();
+      const gallery = await getCustomComboFlowGallery();
+      const targetIndex = Number(customComboTile.dataset.flowIndex ?? 0);
+      openImageViewer({ gallery, index: targetIndex });
+      return;
+    }
     if (!e.target.closest('img')) return;
     openImageViewer();
   });
@@ -170,6 +178,13 @@
   imageViewerImage.addEventListener('pointermove', onImageViewerPointerMove);
   imageViewerImage.addEventListener('pointerup', onImageViewerPointerEnd);
   imageViewerImage.addEventListener('pointercancel', onImageViewerPointerEnd);
+
+  const imageViewerTransition = document.getElementById('image-viewer-transition');
+  imageViewerTransition.addEventListener('click', handleImageViewerImageTap);
+  imageViewerTransition.addEventListener('pointerdown', onImageViewerPointerDown);
+  imageViewerTransition.addEventListener('pointermove', onImageViewerPointerMove);
+  imageViewerTransition.addEventListener('pointerup', onImageViewerPointerEnd);
+  imageViewerTransition.addEventListener('pointercancel', onImageViewerPointerEnd);
 
   // ── Category selectors ──
   const categoryInput = document.getElementById('input-main-category');

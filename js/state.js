@@ -1,11 +1,12 @@
   // ── State ──
   let prompts = [];          // [{id, mainCategory, subCategory, content, description, imageId, imageName, portraitImageId, portraitImageName}] 개별 프롬프트
   let composedPrompts = [];  // [{id, mainCategory, subCategory, items, content}] 조합 저장 프롬프트
-  let customCombos = [];     // [{id, mainCategory, subCategory, items: [composedPromptId]}]
+  let customCombos = [];     // [{id, mainCategory, subCategory, items: [composedPromptId], comboImagePosition}]
   let selected = [];         // [{id, mainCategory, subCategory, content, description, source}]
   let activeCategoryPrompt = null;
   let activeSubCategoryPrompt = null;
   let activeCategoryComposed = null;
+  let activeComposedCategoryGridMode = false;
   let isComposedEditOnlyView = false;
   let leftPanelTab = 'prompt';
   let isCustomComboTabOpen = false;
@@ -38,6 +39,9 @@
   let editingComposedPortraitImageData = '';
   let activePromptPreviewId = null;
   let activePromptTagFilter = null;
+  let activePromptCategoryGridMode = false;
+  let activeCustomComboFocusId = null;
+  let customComboFocusTimer = null;
   let promptTagLayouts = {};
   let promptTagDragIndex = null;
   let isPromptTagEditMode = false;
@@ -76,6 +80,8 @@
   let imageViewerDragPointerId = null;
   let imageViewerDragOffsetX = 0;
   let imageViewerDragOffsetY = 0;
+  let imageViewerSwipeStartX = 0;
+  let imageViewerSwipeStartY = 0;
   let imageViewerLastGestureAt = 0;
   let doubleTapTouchLockUntil = 0;
   const PROMPT_SWIPE_ACTION_WIDTH = 124;

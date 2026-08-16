@@ -195,6 +195,14 @@
           chip.className = 'cat-chip' + (used ? ' used' : '') + (activeCategoryPrompt === mainCategory && activeSubCategoryPrompt === subCategory ? ' active' : '');
           chip.innerHTML = `<span class="cat-chip-mark${used ? '' : ' hidden'}">✓</span>${esc(subCategory)}`;
           bindPressAction(chip, () => {
+            const isCurrentlyFocused = activeCategoryPrompt === mainCategory && activeSubCategoryPrompt === subCategory;
+            if (isCurrentlyFocused) {
+              activePromptCategoryGridMode = !activePromptCategoryGridMode;
+              activePromptTagFilter = null;
+            } else {
+              activePromptCategoryGridMode = false;
+              activePromptTagFilter = null;
+            }
             clearPromptDescriptionPreview({ feedback: true });
             activeCategoryPrompt = mainCategory;
             activeSubCategoryPrompt = subCategory;
@@ -228,7 +236,13 @@
       chip.className = 'cat-chip' + (activeCategoryComposed === c ? ' active' : '');
       chip.textContent = c;
       bindPressAction(chip, () => {
-        activeCategoryComposed = (activeCategoryComposed === c) ? null : c;
+        const isCurrentlySelected = activeCategoryComposed === c;
+        if (isCurrentlySelected) {
+          activeComposedCategoryGridMode = !activeComposedCategoryGridMode;
+        } else {
+          activeComposedCategoryGridMode = false;
+        }
+        activeCategoryComposed = c;
         activeComposedPreviewId = null;
         render();
       });
@@ -327,6 +341,39 @@
     clearOutputOverride();
     selected = item.items.map(entry => ({ ...normalizeSelected(entry), source: 'prompt' })).filter(entry => entry && entry.content);
     render();
+
+    requestAnimationFrame(() => {
+      const target = document.querySelector(`.prompt-item.combo-card-item[data-prompt-id="${CSS.escape(String(id))}"]`);
+      if (target) {
+        target.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'nearest' });
+      }
+    });
+  }
+
+  function openComposedPromptCardAndCopy(id) {
+    const item = composedPrompts.find(p => p.id === id);
+    if (!item) {
+      showToast('해당 커스텀 조합을 찾지 못했습니다');
+      return;
+    }
+
+    activeCustomComboFocusId = id;
+    if (customComboFocusTimer) {
+      window.clearTimeout(customComboFocusTimer);
+    }
+    customComboFocusTimer = window.setTimeout(() => {
+      activeCustomComboFocusId = null;
+      render();
+    }, 1200);
+
+    loadComposedPrompt(id);
+
+    const copyText = getComposedOutputText();
+    copyPromptSilently(copyText)
+      .then((copied) => {
+        showToast(copied ? '커스텀 조합 카드로 이동해 클립보드에 복사했습니다' : '커스텀 조합으로 이동했지만 복사할 내용이 없습니다');
+      })
+      .catch(() => showToast('클립보드 복사에 실패했습니다'));
   }
 
   async function deleteComposedPrompt(id, e) {
@@ -901,6 +948,8 @@
           const frozenHeight = getFrozenComboCardHeight(item.id);
           if (frozenHeight) card.style.minHeight = `${frozenHeight}px`;
         }
+        const isFocusedFlowCard = activeCustomComboFocusId === item.id;
+        card.classList.toggle('custom-combo-focus-target', isFocusedFlowCard);
         card.innerHTML = isArmedRandomCard
           ? `
           <div class="prompt-item-swipe-content">
@@ -1358,6 +1407,10 @@
                 render();
               });
             }
+            card.addEventListener('click', (event) => {
+              if (event.target.closest('.chip-remove')) return;
+              openComposedPromptCardAndCopy(item.id);
+            });
             customPreviewContainer.appendChild(card);
 
             if (index < selectedCustomCombo.length - 1) {
