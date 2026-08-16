@@ -6,8 +6,18 @@
 
   function renderLibraryLayout() {
     const panel = document.querySelector('.panel-library');
+    const composer = document.querySelector('.panel-composer');
+    const composerTitle = document.getElementById('composer-panel-title');
     if (!panel) return;
+    const isCustomComboMode = leftPanelTab === 'combo' && isCustomComboTabOpen;
     panel.classList.toggle('combo-mode', leftPanelTab === 'combo');
+    panel.classList.toggle('custom-combo-mode', isCustomComboMode);
+    if (composer) composer.classList.toggle('custom-combo-mode', isCustomComboMode);
+    if (composerTitle) {
+      composerTitle.textContent = isCustomComboMode
+        ? `커스텀 콤보 (${selectedCustomCombo.length})`
+        : '조합된 프롬프트';
+    }
   }
 
   function ensureActiveCategoryState() {
@@ -222,6 +232,29 @@
       });
       el.appendChild(chip);
     });
+  }
+
+  function renderCustomComboCollection() {
+    return;
+  }
+
+  function addComposedPromptToCustomCombo(item) {
+    if (!item || !item.id) return false;
+    if (selectedCustomCombo.some(entry => entry.id === item.id)) {
+      showToast('이미 조합된 커스텀 조합 목록에 있습니다');
+      return false;
+    }
+
+    const entry = {
+      ...item,
+      source: 'composed',
+      content: item.content || item.subCategory || '커스텀 조합',
+    };
+
+    selectedCustomCombo.push(entry);
+    render();
+    showToast('조합된 커스텀 조합에 추가되었습니다');
+    return true;
   }
 
   function renderComposedLoadList() {
@@ -889,7 +922,6 @@
             <div class="prompt-item-body">
               <div class="combo-card-text">
                 <span class="combo-card-name combo-card-random-name"><span class="combo-card-random-icon">📋</span><span>클립보드 복사</span></span>
-                <span class="combo-card-preview" title="${esc(composedText)}">${esc(composedText)}</span>
               </div>
             </div>
           </div>
@@ -963,6 +995,10 @@
             allowRightSwipeCommit: true,
             requireSwipeComposeMode: true,
             onSwipeCommit: () => {
+              if (isCustomComboTabOpen) {
+                addComposedPromptToCustomCombo(item);
+                return;
+              }
               const frozenHeight = card.getBoundingClientRect().height;
               if (isEditOnlyCategory) {
                 armComposedCardCopyShortcut(item.id, { frozenHeight });
@@ -971,6 +1007,22 @@
               }
             },
             onTap: () => {
+              if (isCustomComboTabOpen) {
+                if (tapComposeMode === PROMPT_ADD_MODE.SWIPE) {
+                  return;
+                }
+                if (tapComposeMode === PROMPT_ADD_MODE.DOUBLE_TAP_PREVIEW) {
+                  if (activeComposedPreviewId === item.id) {
+                    addComposedPromptToCustomCombo(item);
+                  } else {
+                    activeComposedPreviewId = item.id;
+                    render();
+                  }
+                  return;
+                }
+                addComposedPromptToCustomCombo(item);
+                return;
+              }
               if (isArmedRandomCard) {
                 runComposedSwipeShortcut(item.id);
                 return;
@@ -1164,6 +1216,7 @@
     renderPromptList();
     renderSelected();
     renderComposedModalItemEditor();
+    renderCustomComboCollection();
     renderPromptDescriptionPreview();
     renderComposedDescriptionPreview();
     if (document.getElementById('category-manage-modal')?.classList.contains('open')) {
@@ -1193,11 +1246,121 @@
   function renderSelected() {
     const container = document.getElementById('selected-chips');
     if (!container) return;
+    const customPreviewContainer = document.getElementById('custom-combo-preview-chips');
 
     container.ondragover = dragOverSelectedContainer;
     container.ondrop = dropOnSelectedContainer;
 
     container.innerHTML = '';
+
+    if (leftPanelTab === 'combo' && isCustomComboTabOpen) {
+      const renderCustomComboChips = (target, includeEmptyId) => {
+        target.innerHTML = '';
+        if (selectedCustomCombo.length === 0) {
+          const empty = document.createElement('span');
+          if (includeEmptyId) empty.id = 'chips-empty';
+          empty.className = 'empty-state';
+          empty.textContent = '선택된 커스텀 조합이 없습니다';
+          target.appendChild(empty);
+          return;
+        }
+
+        selectedCustomCombo.forEach((item, index) => {
+          const chip = document.createElement('div');
+          chip.className = 'selected-chip';
+          chip.dataset.idx = String(index);
+          chip.title = '이 커스텀 조합 카드를 제거합니다';
+          chip.innerHTML = `
+            <span class="chip-cat">커스텀 조합</span>
+            <span>${esc(item.subCategory || item.content || '커스텀 조합')}</span>
+            <button class="chip-remove" title="제거" data-custom-combo-index="${index}">×</button>
+          `;
+          const removeBtn = chip.querySelector('.chip-remove');
+          if (removeBtn) {
+            removeBtn.addEventListener('click', (event) => {
+              event.stopPropagation();
+              selectedCustomCombo.splice(index, 1);
+              render();
+            });
+          }
+          target.appendChild(chip);
+        });
+      };
+
+      container.innerHTML = '';
+      if (selectedCustomCombo.length === 0) {
+        const empty = document.createElement('span');
+        empty.id = 'chips-empty';
+        empty.className = 'empty-state';
+        empty.textContent = '선택된 커스텀 조합이 없습니다';
+        container.appendChild(empty);
+      } else {
+        const comboCard = document.createElement('div');
+        comboCard.className = 'prompt-item custom-combo-selected-card';
+        comboCard.innerHTML = `
+          <div class="prompt-item-swipe-content">
+            <div class="prompt-item-body">
+              <div class="custom-combo-selected-card-body">
+                <div class="custom-combo-selected-card-title">
+                  <span class="custom-combo-selected-card-order">커스텀 콤보 1</span>
+                  <button class="chip-remove" title="커스텀 콤보 제거" type="button">×</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        `;
+        const removeBtn = comboCard.querySelector('.chip-remove');
+        if (removeBtn) {
+          removeBtn.addEventListener('click', (event) => {
+            event.stopPropagation();
+            selectedCustomCombo.length = 0;
+            render();
+          });
+        }
+        container.appendChild(comboCard);
+      }
+      if (customPreviewContainer) {
+        customPreviewContainer.innerHTML = '';
+        if (selectedCustomCombo.length === 0) {
+          const empty = document.createElement('span');
+          empty.className = 'empty-state';
+          empty.textContent = '선택된 커스텀 조합이 없습니다';
+          customPreviewContainer.appendChild(empty);
+        } else {
+          selectedCustomCombo.forEach((item, index) => {
+            const card = document.createElement('div');
+            card.className = 'custom-combo-flow-card';
+            card.title = '이 커스텀 조합 카드를 제거합니다';
+            card.innerHTML = `
+              <span class="custom-combo-flow-order">${index + 1}</span>
+              <span class="custom-combo-flow-label">${esc(item.subCategory || item.content || '커스텀 조합')}</span>
+              <button class="chip-remove" title="제거" data-custom-combo-index="${index}">×</button>
+            `;
+            const removeBtn = card.querySelector('.chip-remove');
+            if (removeBtn) {
+              removeBtn.addEventListener('click', (event) => {
+                event.stopPropagation();
+                selectedCustomCombo.splice(index, 1);
+                render();
+              });
+            }
+            customPreviewContainer.appendChild(card);
+
+            if (index < selectedCustomCombo.length - 1) {
+              const arrow = document.createElement('span');
+              arrow.className = 'custom-combo-flow-arrow';
+              arrow.setAttribute('aria-hidden', 'true');
+              arrow.textContent = '↓';
+              customPreviewContainer.appendChild(arrow);
+            }
+          });
+        }
+      }
+      updateOutput();
+      return;
+    }
+
+    if (customPreviewContainer) customPreviewContainer.innerHTML = '';
 
     if (selected.length === 0) {
       const e = document.createElement('span');

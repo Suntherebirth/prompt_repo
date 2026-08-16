@@ -1,5 +1,6 @@
   const STORAGE_KEY = 'prompt_repo_v1';
   const COMPOSED_STORAGE_KEY = 'prompt_repo_composed_v1';
+  const CUSTOM_COMBO_STORAGE_KEY = 'prompt_repo_custom_combo_v1';
   const LEFT_PANEL_TAB_KEY = 'prompt_repo_left_panel_tab_v1';
   const CATEGORY_CONFIG_KEY = 'prompt_repo_category_config_v1';
   const COMPOSED_CATEGORY_CONFIG_KEY = 'prompt_repo_composed_category_config_v1';

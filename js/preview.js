@@ -82,6 +82,37 @@
     preview.classList.toggle('preview-animation-level-3', previewAnimationLevel === 3);
     preview.classList.toggle('preview-animation-enabled', previewAnimationLevel > 0);
 
+    if (leftPanelTab === 'combo' && isCustomComboTabOpen) {
+      const items = selectedCustomCombo;
+      if (items.length === 0) {
+        preview.classList.remove('has-image');
+        preview.title = '';
+        preview.innerHTML = '<span class="empty-state">선택된 커스텀 조합이 없습니다.</span>';
+        lastRenderedComposedPreviewImageKey = '';
+        return;
+      }
+
+      const imageMarkup = items.map((item, index) => {
+        const label = item.subCategory || item.content || '커스텀 조합';
+        const imageSrc = getPromptImageSource(item);
+        const tile = imageSrc
+          ? `<img src="${imageSrc}" alt="${esc(label)}" />`
+          : `<div class="custom-combo-image-placeholder">${esc(label)}</div>`;
+        return `<div class="custom-combo-image-tile"><div class="custom-combo-image-shell">${tile}</div><span>${esc(label)}</span></div>`;
+      }).join('');
+
+      preview.classList.add('has-image');
+      preview.classList.remove('image-switch-feedback');
+      preview.title = '커스텀 콤보의 조합 흐름을 확인하는 영역입니다';
+      preview.innerHTML = `
+        <div class="custom-combo-preview-split">
+          <div class="custom-combo-preview-images">${imageMarkup}</div>
+        </div>
+      `;
+      lastRenderedComposedPreviewImageKey = '';
+      return;
+    }
+
     const composed = getActiveComposedPreviewItem();
     const imageSrc = getPromptImageSource(composed);
     queuePromptImageLoad(composed);

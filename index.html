@@ -86,6 +86,10 @@
       <button class="btn btn-primary" style="width:100%" type="button" onclick="openAddPromptModal()">+ 새 프롬프트</button>
     </div>
     <div class="combo-library-footer">
+      <div class="custom-combo-flow-panel">
+        <div class="custom-combo-preview-chips selected-chips" id="custom-combo-preview-chips"></div>
+        <button class="btn btn-secondary custom-combo-save-btn" type="button" onclick="openSaveCustomComboModal()">＋ 새 콤보</button>
+      </div>
       <div class="prompt-description-preview" id="composed-description-preview">
         <span class="empty-state">선택한 커스텀 조합의 설명 이미지가 표시됩니다.</span>
       </div>
@@ -95,7 +99,7 @@
   <!-- Right: Composer -->
   <div class="panel-composer">
     <div class="panel-header" style="padding:14px 16px 10px;font-size:0.78rem;text-transform:uppercase;letter-spacing:.08em;color:#888;border-bottom:1px solid #1e1e2e;display:flex;align-items:center;gap:8px">
-      <span>조합된 프롬프트</span>
+      <span id="composer-panel-title">조합된 프롬프트</span>
     </div>
     <div class="selected-chips" id="selected-chips">
       <span class="empty-state" id="chips-empty">선택된 프롬프트가 없습니다</span>

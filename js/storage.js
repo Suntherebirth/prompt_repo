@@ -12,6 +12,12 @@
     } catch { composedPrompts = []; }
 
     try {
+      const rawCustomCombos = localStorage.getItem(CUSTOM_COMBO_STORAGE_KEY);
+      const loadedCustomCombos = rawCustomCombos ? JSON.parse(rawCustomCombos) : [];
+      customCombos = Array.isArray(loadedCustomCombos) ? loadedCustomCombos.filter(item => item && item.id) : [];
+    } catch { customCombos = []; }
+
+    try {
       const rawHidden = localStorage.getItem(HIDDEN_MAIN_CATEGORIES_KEY);
       const loadedHidden = rawHidden ? JSON.parse(rawHidden) : [];
       hiddenMainCategories = new Set(Array.isArray(loadedHidden) ? loadedHidden.filter(Boolean) : []);
@@ -108,6 +114,7 @@
 
     localStorage.setItem(STORAGE_KEY, JSON.stringify(promptPayload));
     localStorage.setItem(COMPOSED_STORAGE_KEY, JSON.stringify(composedPayload));
+    localStorage.setItem(CUSTOM_COMBO_STORAGE_KEY, JSON.stringify(customCombos));
     localStorage.setItem(HIDDEN_MAIN_CATEGORIES_KEY, JSON.stringify([...hiddenMainCategories]));
     localStorage.setItem(CATEGORY_CONFIG_KEY, JSON.stringify(categoryConfig));
     localStorage.setItem(COMPOSED_CATEGORY_CONFIG_KEY, JSON.stringify(composedCategoryConfig));

@@ -297,6 +297,30 @@
   async function saveComposedPrompt() {
     const mainCategoryInput = document.getElementById('combo-main-category');
     const subCategoryInput = document.getElementById('combo-sub-category');
+    if (savingCustomCombo) {
+      const mainCategory = mainCategoryInput.value.trim();
+      const subCategory = subCategoryInput.value.trim();
+      if (!mainCategory) {
+        showToast('커스텀 대분류를 입력하세요');
+        return;
+      }
+      if (!subCategory) {
+        showToast('커스텀 콤보 이름을 입력하세요');
+        return;
+      }
+      customCombos.push({
+        id: uid(),
+        mainCategory,
+        subCategory,
+        category: mainCategory,
+        items: selectedCustomCombo.map(item => item.id),
+        content: selectedCustomCombo.map(item => item.content || item.subCategory || '').filter(Boolean).join(', '),
+      });
+      save();
+      closeSaveComposedModal();
+      showToast('커스텀 콤보가 저장되었습니다');
+      return;
+    }
     const isEditMode = !!editingComposedPromptId;
     const mainCategory = mainCategoryInput.value.trim();
     const subCategory = subCategoryInput.value.trim();

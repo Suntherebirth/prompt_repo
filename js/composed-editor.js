@@ -394,8 +394,27 @@
   }
 
   function setLeftPanelTab(tab) {
+    const isComboTabRequest = tab === 'combo';
+    const isAlreadyOnComboTab = leftPanelTab === 'combo';
+    const comboBtn = document.getElementById('mode-btn-combo');
+
+    if (isComboTabRequest && isAlreadyOnComboTab) {
+      isCustomComboTabOpen = !isCustomComboTabOpen;
+      if (isCustomComboTabOpen) {
+        clearCoreRandomVisualState();
+      }
+      comboBtn.textContent = isCustomComboTabOpen ? '커스텀 콤보' : '커스텀 조합';
+      comboBtn.classList.toggle('active', !isCustomComboTabOpen);
+      comboBtn.classList.toggle('custom-combo-active', isCustomComboTabOpen);
+      render();
+      return;
+    }
+
     const previousTab = leftPanelTab;
-    leftPanelTab = tab === 'combo' ? 'combo' : 'prompt';
+    leftPanelTab = isComboTabRequest ? 'combo' : 'prompt';
+    isCustomComboTabOpen = false;
+    comboBtn.textContent = '커스텀 조합';
+
     if (previousTab !== leftPanelTab) {
       clearPromptDescriptionPreview({ feedback: true });
     }
@@ -408,6 +427,7 @@
     document.getElementById('panel-view-combo').classList.toggle('active', !isPromptTab);
     document.getElementById('mode-btn-prompt').classList.toggle('active', isPromptTab);
     document.getElementById('mode-btn-combo').classList.toggle('active', !isPromptTab);
+    document.getElementById('mode-btn-combo').classList.toggle('custom-combo-active', false);
     localStorage.setItem(LEFT_PANEL_TAB_KEY, leftPanelTab);
     render();
   }
@@ -439,6 +459,7 @@
   }
 
   function openSaveComposedModal() {
+    savingCustomCombo = false;
     editingComposedPromptId = null;
     editingComposedImageId = '';
     editingComposedImageData = '';
@@ -454,6 +475,26 @@
     document.getElementById('combo-main-category').focus();
   }
 
+  function openSaveCustomComboModal() {
+    if (selectedCustomCombo.length === 0) {
+      showToast('저장할 커스텀 조합이 없습니다');
+      return;
+    }
+    savingCustomCombo = true;
+    editingComposedPromptId = null;
+    editingComposedImageId = '';
+    editingComposedImageData = '';
+    editingComposedPortraitImageId = '';
+    editingComposedPortraitImageData = '';
+    renderSaveComposedModalMode();
+    renderComposedCategorySelectors();
+    clearPendingComposedImage({ all: true });
+    const modal = document.getElementById('save-composed-modal');
+    modal.classList.add('open');
+    document.querySelector('#save-composed-modal .composed-modal-editor')?.classList.add('custom-combo-save-hidden');
+    document.getElementById('combo-main-category').focus();
+  }
+
   function closeSaveComposedModal() {
     const modal = document.getElementById('save-composed-modal');
     modal.classList.remove('open');
@@ -463,6 +504,8 @@
     editingComposedPortraitImageId = '';
     editingComposedPortraitImageData = '';
     clearPendingComposedImage({ all: true });
+    savingCustomCombo = false;
+    document.querySelector('#save-composed-modal .composed-modal-editor')?.classList.remove('custom-combo-save-hidden');
     renderSaveComposedModalMode();
   }
 
@@ -471,10 +514,10 @@
     const submitBtn = document.querySelector('#save-composed-modal .modal-actions .btn-primary');
     const isEditMode = !!editingComposedPromptId;
     if (title) {
-      title.textContent = isEditMode ? '조합 편집' : '조합 저장';
+      title.textContent = savingCustomCombo ? '커스텀 콤보 저장' : (isEditMode ? '조합 편집' : '조합 저장');
     }
     if (submitBtn) {
-      submitBtn.textContent = isEditMode ? '수정 저장' : '저장';
+      submitBtn.textContent = savingCustomCombo ? '콤보 저장' : (isEditMode ? '수정 저장' : '저장');
     }
   }
 

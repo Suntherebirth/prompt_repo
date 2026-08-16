@@ -1,11 +1,14 @@
   // ── State ──
   let prompts = [];          // [{id, mainCategory, subCategory, content, description, imageId, imageName, portraitImageId, portraitImageName}] 개별 프롬프트
   let composedPrompts = [];  // [{id, mainCategory, subCategory, items, content}] 조합 저장 프롬프트
+  let customCombos = [];     // [{id, mainCategory, subCategory, items: [composedPromptId]}]
   let selected = [];         // [{id, mainCategory, subCategory, content, description, source}]
   let activeCategoryPrompt = null;
   let activeSubCategoryPrompt = null;
   let activeCategoryComposed = null;
   let leftPanelTab = 'prompt';
+  let isCustomComboTabOpen = false;
+  let selectedCustomCombo = [];
   let categoryManageTab = 'prompt';
   let hiddenMainCategories = new Set();
   let categoryConfig = { mainOrder: [], mains: {} };
@@ -23,6 +26,7 @@
   let editingPromptPortraitImageId = '';
   let editingPromptPortraitImageData = '';
   let editingComposedPromptId = null;
+  let savingCustomCombo = false;
   let editingComposedImageId = '';
   let editingComposedImageData = '';
   let editingComposedPortraitImageId = '';
