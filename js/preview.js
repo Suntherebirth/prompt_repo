@@ -92,25 +92,28 @@
         return;
       }
 
+      const activeCustomCombo = customCombos.find(item => item.id === activeCustomComboId);
       const imageMarkup = items.map((item, index) => {
         const label = item.subCategory || item.content || '커스텀 조합';
-        const imageSrc = getPromptImageSource(item);
+        const comboItemImage = activeCustomCombo?.itemImages?.[item.id] || null;
+        const imageSrc = getPromptImageSource(comboItemImage) || getPromptImageSource(item);
+        queuePromptImageLoad(comboItemImage || item);
         const tile = imageSrc
           ? `<img src="${imageSrc}" alt="${esc(label)}" />`
           : `<div class="custom-combo-image-placeholder">${esc(label)}</div>`;
-        return `<div class="custom-combo-image-tile"><div class="custom-combo-image-shell">${tile}</div><span>${esc(label)}</span></div>`;
+        const isLastItem = index === items.length - 1;
+        return `<div class="custom-combo-image-tile${isLastItem ? ' custom-combo-flow-end-tile' : ''}"><div class="custom-combo-image-shell">${tile}</div><span>${esc(label)}</span></div>`;
       }).join('');
-      const activeCustomCombo = customCombos.find(item => item.id === activeCustomComboId);
       const comboImageSource = getPromptImageSource(activeCustomCombo);
       queuePromptImageLoad(activeCustomCombo);
       const finalImageMarkup = activeCustomCombo ? `
-        <div class="custom-combo-image-tile custom-combo-final-image-tile">
+        <div class="custom-combo-image-tile custom-combo-combo-image-tile">
           <div class="custom-combo-image-shell">
             ${comboImageSource
               ? `<img src="${comboImageSource}" alt="${esc(activeCustomCombo.subCategory || '커스텀 콤보')}" />`
               : `<div class="custom-combo-image-placeholder">${esc(activeCustomCombo.subCategory || '커스텀 콤보')}</div>`}
           </div>
-          <span>${esc(activeCustomCombo.subCategory || '커스텀 콤보')}</span>
+          <span>원본</span>
         </div>
       ` : '';
 
@@ -119,7 +122,7 @@
       preview.title = '커스텀 콤보의 조합 흐름을 확인하는 영역입니다';
       preview.innerHTML = `
         <div class="custom-combo-preview-split">
-          <div class="custom-combo-preview-images">${imageMarkup}${finalImageMarkup}</div>
+          <div class="custom-combo-preview-images">${finalImageMarkup}${imageMarkup}</div>
         </div>
       `;
       lastRenderedComposedPreviewImageKey = '';

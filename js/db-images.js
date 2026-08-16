@@ -188,6 +188,9 @@
     customCombos.forEach((combo) => {
       if (combo?.imageId) ids.add(combo.imageId);
       if (combo?.portraitImageId) ids.add(combo.portraitImageId);
+      Object.values(combo?.itemImages || {}).forEach((image) => {
+        if (image?.imageId) ids.add(image.imageId);
+      });
     });
     return ids;
   }

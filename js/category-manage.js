@@ -826,9 +826,33 @@
     const row = document.getElementById('core-quick-access-row');
     if (!row) return;
     const isPromptTab = leftPanelTab === 'prompt';
+    const isComboTab = leftPanelTab === 'combo';
     const coreSelections = getCoreSubCategorySelections();
     row.innerHTML = '';
-    row.classList.toggle('visible', isPromptTab && coreSelections.length > 0);
+    row.classList.toggle('visible', (isPromptTab && coreSelections.length > 0) || isComboTab);
+
+    if (isComboTab) {
+      const button = document.createElement('button');
+      button.type = 'button';
+      button.className = 'core-quick-access-btn custom-category-view-toggle';
+      button.classList.toggle('active', isComposedEditOnlyView);
+      button.setAttribute('aria-pressed', String(isComposedEditOnlyView));
+      button.innerHTML = `
+        <span class="custom-category-view-label">일반</span>
+        <span class="custom-category-switch" aria-hidden="true"><span></span></span>
+        <span class="custom-category-view-label">편집용</span>
+      `;
+      button.title = isComposedEditOnlyView ? '일반 커스텀 카테고리로 전환' : '편집용 커스텀 카테고리로 전환';
+      button.onclick = () => {
+        isComposedEditOnlyView = !isComposedEditOnlyView;
+        activeCategoryComposed = null;
+        activeComposedPreviewId = null;
+        render();
+      };
+      row.appendChild(button);
+      return;
+    }
+
     if (!isPromptTab || !coreSelections.length) return;
 
     coreSelections.forEach(({ mainCategory, subCategory }) => {

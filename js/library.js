@@ -212,12 +212,14 @@
   }
 
   function renderComposedFilter() {
-    const cats = getStandardComposedCategories();
+    const cats = isComposedEditOnlyView
+      ? getComposedEditOnlyMainCategories()
+      : getStandardComposedCategories();
     const el = document.getElementById('combo-filter');
     el.innerHTML = '';
 
     if (cats.length === 0) {
-      el.innerHTML = '<div class="combo-load-guide">일반 조합으로 표시할 커스텀 대분류가 없습니다.</div>';
+      el.innerHTML = `<div class="combo-load-guide">${isComposedEditOnlyView ? '편집용' : '일반'} 커스텀 대분류가 없습니다.</div>`;
       return;
     }
 
@@ -290,41 +292,6 @@
     }
     save();
     render();
-  }
-
-  function renderComposedLoadList() {
-    const list = document.getElementById('combo-load-list');
-    const editList = document.getElementById('combo-edit-load-list');
-    if (!list || !editList) return;
-
-    const editOnlyCategoryOrder = getComposedEditOnlyMainCategories();
-
-    list.innerHTML = '';
-    editList.innerHTML = '';
-
-    if (leftPanelTab !== 'combo') {
-      return;
-    }
-
-    if (editOnlyCategoryOrder.length === 0) {
-      const empty = document.createElement('div');
-      empty.className = 'combo-load-empty-block';
-      empty.textContent = '편집용으로 표시된 커스텀 대분류가 없습니다.';
-      editList.appendChild(empty);
-      return;
-    }
-
-    editOnlyCategoryOrder.forEach(mainCategory => {
-      const chip = document.createElement('span');
-      chip.className = 'cat-chip' + (activeCategoryComposed === mainCategory ? ' active' : '');
-      chip.textContent = mainCategory;
-      bindPressAction(chip, () => {
-        activeCategoryComposed = activeCategoryComposed === mainCategory ? null : mainCategory;
-        activeComposedPreviewId = null;
-        render();
-      });
-      editList.appendChild(chip);
-    });
   }
 
   function buildComposedLoadItem(item, options = {}) {
@@ -1242,7 +1209,6 @@
     renderMainCategoryFilter();
     renderAddFilterTabs();
     renderComposedFilter();
-    renderComposedLoadList();
     renderLibraryHeader();
     renderLibraryLayout();
     renderCategorySelectors();

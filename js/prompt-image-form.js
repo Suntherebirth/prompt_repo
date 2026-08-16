@@ -235,14 +235,14 @@
     if (!prompt) return '';
     const preferPortrait = previewRenderMode === 'portrait';
     const imageDataCandidates = preferPortrait
-      ? [prompt.portraitImageData]
+        ? [prompt.portraitImageData, prompt.imageData]
       : [prompt.imageData, prompt.portraitImageData];
     for (const imageData of imageDataCandidates) {
       if (imageData) return imageData;
     }
 
     const imageIdCandidates = preferPortrait
-      ? [prompt.portraitImageId]
+        ? [prompt.portraitImageId, prompt.imageId]
       : [prompt.imageId, prompt.portraitImageId];
     for (const imageId of imageIdCandidates) {
       if (!imageId) continue;
@@ -256,10 +256,10 @@
     if (!prompt) return { imageId: '', alt: '' };
     const preferPortrait = previewRenderMode === 'portrait';
     const imageId = preferPortrait
-      ? (prompt.portraitImageId || prompt.imageId || '')
+        ? (prompt.portraitImageId || prompt.imageId || '')
       : (prompt.imageId || prompt.portraitImageId || '');
     const imageName = preferPortrait
-      ? (prompt.portraitImageName || prompt.imageName || '')
+        ? (prompt.portraitImageName || prompt.imageName || '')
       : (prompt.imageName || prompt.portraitImageName || '');
     return {
       imageId,
@@ -271,10 +271,10 @@
     if (!prompt) return;
     const preferPortrait = previewRenderMode === 'portrait';
     const preferredImageId = preferPortrait
-      ? (prompt.portraitImageId || prompt.imageId || '')
+        ? (prompt.portraitImageId || prompt.imageId || '')
       : (prompt.imageId || prompt.portraitImageId || '');
     const preferredImageData = preferPortrait
-      ? (prompt.portraitImageData || prompt.imageData || '')
+        ? (prompt.portraitImageData || prompt.imageData || '')
       : (prompt.imageData || prompt.portraitImageData || '');
     if (!preferredImageId || preferredImageData || promptImageUrlCache.has(preferredImageId)) return;
 

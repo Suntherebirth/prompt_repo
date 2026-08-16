@@ -6,6 +6,7 @@
   let activeCategoryPrompt = null;
   let activeSubCategoryPrompt = null;
   let activeCategoryComposed = null;
+  let isComposedEditOnlyView = false;
   let leftPanelTab = 'prompt';
   let isCustomComboTabOpen = false;
   let selectedCustomCombo = [];
@@ -21,6 +22,7 @@
   let pendingPromptImages = { landscape: null, portrait: null };
   let pendingComposedImages = { landscape: null, portrait: null };
   let pendingCustomComboImages = { landscape: null, portrait: null };
+  let pendingCustomComboItemImages = {};
   let promptFormMode = 'add';
   let editingPromptId = null;
   let editingPromptImageId = '';

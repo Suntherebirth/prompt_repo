@@ -151,6 +151,13 @@
   }
 
   function normalizeCustomCombo(item) {
+    const itemImages = Object.fromEntries(
+      Object.entries(item.itemImages && typeof item.itemImages === 'object' ? item.itemImages : {}).map(([itemId, image]) => [itemId, {
+        imageId: String(image?.imageId || '').trim(),
+        imageData: String(image?.imageData || '').trim(),
+        imageName: String(image?.imageName || '').trim(),
+      }])
+    );
     return {
       id: item.id || uid(),
       mainCategory: '콤보',
@@ -158,6 +165,7 @@
       category: '콤보',
       items: Array.isArray(item.items) ? item.items.filter(Boolean) : [],
       content: String(item.content || '').trim(),
+      itemImages,
       imageId: String(item.imageId || '').trim(),
       imageData: String(item.imageData || '').trim(),
       imageName: String(item.imageName || '').trim(),
@@ -173,6 +181,10 @@
       ...normalized,
       imageData: normalized.imageId ? '' : normalized.imageData,
       portraitImageData: normalized.portraitImageId ? '' : normalized.portraitImageData,
+      itemImages: Object.fromEntries(Object.entries(normalized.itemImages).map(([itemId, image]) => [itemId, {
+        ...image,
+        imageData: image.imageId ? '' : image.imageData,
+      }])),
     };
   }
 

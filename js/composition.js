@@ -334,6 +334,29 @@
       return;
     }
     const imageName = buildComposedImageName('콤보', subCategory, '');
+    const itemImages = {};
+    try {
+      for (const [itemId, pendingImage] of Object.entries(pendingCustomComboItemImages)) {
+        if (!pendingImage) continue;
+        let itemImageId = pendingImage.imageId || '';
+        if (pendingImage.file instanceof File) {
+          itemImageId = await saveImageBlobRecord({
+            id: itemImageId,
+            blob: pendingImage.file,
+            mimeType: pendingImage.mimeType || pendingImage.file.type || '',
+            fileName: pendingImage.fileName || pendingImage.file.name || '',
+          });
+        }
+        itemImages[itemId] = {
+          imageId: itemImageId,
+          imageData: itemImageId ? '' : (pendingImage.dataUrl || ''),
+          imageName: pendingImage.fileName || '',
+        };
+      }
+    } catch {
+      showToast('커스텀 조합 이미지 저장 중 오류가 발생했습니다');
+      return;
+    }
 
     if (editingCustomComboId) {
       customCombos = customCombos.map(item => item.id === editingCustomComboId
@@ -348,6 +371,7 @@
           portraitImageId,
           portraitImageData: portraitImageId ? '' : (portraitImage?.dataUrl || item.portraitImageData || ''),
           portraitImageName: imageName,
+          itemImages,
         }
         : item);
     } else {
@@ -358,6 +382,7 @@
         category: '콤보',
         items: selectedCustomCombo.map(item => item.id),
         content: selectedCustomCombo.map(item => item.content || item.subCategory || '').filter(Boolean).join(', '),
+        itemImages,
         imageId,
         imageData: imageId ? '' : (landscapeImage?.dataUrl || ''),
         imageName,

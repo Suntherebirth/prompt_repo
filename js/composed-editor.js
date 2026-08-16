@@ -487,6 +487,8 @@
     if (title) title.textContent = '커스텀 콤보 저장';
     if (submitButton) submitButton.textContent = '저장';
     pendingCustomComboImages = { landscape: null, portrait: null };
+    pendingCustomComboItemImages = {};
+    renderCustomComboCompositionImageList(selectedCustomCombo.map(item => item.id));
     setCustomComboImageEditOrientation('landscape');
     document.getElementById('save-custom-combo-modal')?.classList.add('open');
     nameInput?.focus();
@@ -501,6 +503,10 @@
     const submitButton = document.querySelector('#save-custom-combo-modal .modal-actions .btn-primary');
     if (title) title.textContent = '커스텀 콤보 편집';
     if (submitButton) submitButton.textContent = '수정 저장';
+    pendingCustomComboItemImages = Object.fromEntries(
+      Object.entries(customCombo.itemImages || {}).map(([itemId, image]) => [itemId, { ...image, file: null }])
+    );
+    renderCustomComboCompositionImageList(customCombo.items || []);
     pendingCustomComboImages = {
       landscape: customCombo.imageData ? { dataUrl: customCombo.imageData, fileName: customCombo.imageName || '', mimeType: '', file: null } : null,
       portrait: customCombo.portraitImageData ? { dataUrl: customCombo.portraitImageData, fileName: customCombo.portraitImageName || '', mimeType: '', file: null } : null,
@@ -523,6 +529,7 @@
     document.getElementById('save-custom-combo-modal')?.classList.remove('open');
     editingCustomComboId = null;
     pendingCustomComboImages = { landscape: null, portrait: null };
+    pendingCustomComboItemImages = {};
   }
 
   function handleSaveCustomComboModalBackdrop(event) {
@@ -577,6 +584,55 @@
     const fileInput = document.getElementById('custom-combo-image-file');
     if (fileInput) fileInput.value = '';
     renderPendingCustomComboImagePreview();
+  }
+
+  function renderCustomComboCompositionImageList(itemIds) {
+    const list = document.getElementById('custom-combo-modal-composition-list');
+    if (!list) return;
+    list.innerHTML = '';
+    const uniqueIds = uniqueInOrder(Array.isArray(itemIds) ? itemIds.filter(Boolean) : []);
+    if (uniqueIds.length === 0) {
+      list.innerHTML = '<span class="empty-state">선택된 커스텀 조합이 없습니다.</span>';
+      return;
+    }
+
+    uniqueIds.forEach((itemId) => {
+      const composed = composedPrompts.find(item => item.id === itemId);
+      if (!composed) return;
+      const override = pendingCustomComboItemImages[itemId];
+      const imageSource = getPromptImageSource(override) || getPromptImageSource(composed);
+      queuePromptImageLoad(override || composed);
+      const row = document.createElement('div');
+      row.className = 'custom-combo-modal-composition-row';
+      row.innerHTML = `
+        <div class="custom-combo-modal-composition-preview">
+          ${imageSource
+            ? `<img src="${imageSource}" alt="${esc(composed.subCategory || '커스텀 조합')}" />`
+            : '<span class="empty-state">이미지 없음</span>'}
+        </div>
+        <div class="custom-combo-modal-composition-info">
+          <span>${esc(composed.subCategory || '이름없는 커스텀 조합')}</span>
+          <input type="file" accept="image/*" data-custom-combo-item-image="${esc(itemId)}" />
+        </div>
+      `;
+      const input = row.querySelector('[data-custom-combo-item-image]');
+      input?.addEventListener('change', async (event) => {
+        const file = event.target.files?.[0];
+        if (!file) return;
+        try {
+          pendingCustomComboItemImages[itemId] = {
+            dataUrl: await readFileAsDataUrl(file),
+            file,
+            fileName: file.name || '',
+            mimeType: file.type || '',
+          };
+          renderCustomComboCompositionImageList(uniqueIds);
+        } catch {
+          showToast('이미지를 읽지 못했습니다');
+        }
+      });
+      list.appendChild(row);
+    });
   }
 
   function closeSaveComposedModal() {
