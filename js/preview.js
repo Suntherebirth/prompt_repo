@@ -86,6 +86,7 @@
       const items = selectedCustomCombo;
       if (items.length === 0) {
         preview.classList.remove('has-image');
+        preview.style.removeProperty('--custom-combo-flow-count');
         preview.title = '';
         preview.innerHTML = '<span class="empty-state">선택된 커스텀 조합이 없습니다.</span>';
         lastRenderedComposedPreviewImageKey = '';
@@ -93,7 +94,7 @@
       }
 
       const activeCustomCombo = customCombos.find(item => item.id === activeCustomComboId);
-      const imageMarkup = items.map((item, index) => {
+      const imageTiles = items.map((item, index) => {
         const label = item.subCategory || item.content || '커스텀 조합';
         const comboItemImage = activeCustomCombo?.itemImages?.[item.id] || null;
         const imageSrc = getPromptImageSource(comboItemImage) || getPromptImageSource(item);
@@ -103,7 +104,8 @@
           : `<div class="custom-combo-image-placeholder">${esc(label)}</div>`;
         const isLastItem = index === items.length - 1;
         return `<div class="custom-combo-image-tile${isLastItem ? ' custom-combo-flow-end-tile' : ''}"><div class="custom-combo-image-shell">${tile}</div><span>${esc(label)}</span></div>`;
-      }).join('');
+      });
+      const imageMarkup = imageTiles.join('<span class="custom-combo-image-flow-arrow" aria-hidden="true">→</span>');
       const comboImageSource = getPromptImageSource(activeCustomCombo);
       queuePromptImageLoad(activeCustomCombo);
       const finalImageMarkup = activeCustomCombo ? `
@@ -116,13 +118,16 @@
           <span>원본</span>
         </div>
       ` : '';
+      const flowCount = items.length + (activeCustomCombo ? 1 : 0);
+      const flowTiles = [finalImageMarkup, imageMarkup].filter(Boolean).join('<span class="custom-combo-image-flow-arrow" aria-hidden="true">→</span>');
 
       preview.classList.add('has-image');
       preview.classList.remove('image-switch-feedback');
+      preview.style.setProperty('--custom-combo-flow-count', String(Math.max(1, flowCount)));
       preview.title = '커스텀 콤보의 조합 흐름을 확인하는 영역입니다';
       preview.innerHTML = `
         <div class="custom-combo-preview-split">
-          <div class="custom-combo-preview-images">${finalImageMarkup}${imageMarkup}</div>
+          <div class="custom-combo-preview-images">${flowTiles}</div>
         </div>
       `;
       lastRenderedComposedPreviewImageKey = '';
@@ -130,6 +135,7 @@
     }
 
     const composed = getActiveComposedPreviewItem();
+    preview.style.removeProperty('--custom-combo-flow-count');
     const imageSrc = getPromptImageSource(composed);
     queuePromptImageLoad(composed);
     if (imageSrc) {
@@ -150,6 +156,7 @@
 
     preview.classList.remove('has-image');
     preview.classList.remove('image-switch-feedback');
+    preview.style.removeProperty('--custom-combo-flow-count');
     preview.title = '';
     preview.innerHTML = '<span class="empty-state">선택한 커스텀 조합의 설명 이미지가 표시됩니다.</span>';
     lastRenderedComposedPreviewImageKey = '';

@@ -1298,12 +1298,15 @@
       } else {
         customCombos.forEach((customCombo) => {
           const comboCard = document.createElement('div');
-          comboCard.className = 'prompt-item custom-combo-selected-card';
+          const isActive = activeCustomComboId === customCombo.id;
+          comboCard.className = `prompt-item custom-combo-selected-card${isActive ? ' selected' : ''}`;
+          comboCard.dataset.customComboId = customCombo.id;
           comboCard.innerHTML = `
             <div class="prompt-item-swipe-content">
               <div class="prompt-item-body">
                 <div class="custom-combo-selected-card-body">
                   <div class="custom-combo-selected-card-title">
+                    ${isActive ? '<span class="custom-combo-selected-mark">✓</span>' : ''}
                     <span class="custom-combo-selected-card-order">${esc(customCombo.subCategory || '이름없는 커스텀 콤보')}</span>
                   </div>
                 </div>
