@@ -185,6 +185,10 @@
         if (item?.portraitImageId) ids.add(item.portraitImageId);
       });
     });
+    customCombos.forEach((combo) => {
+      if (combo?.imageId) ids.add(combo.imageId);
+      if (combo?.portraitImageId) ids.add(combo.portraitImageId);
+    });
     return ids;
   }
 

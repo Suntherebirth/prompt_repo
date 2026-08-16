@@ -1,6 +1,6 @@
   function buildBackupPayload() {
     return {
-      version: 5,
+      version: 7,
       exportedAt: new Date().toISOString(),
       prompts: prompts.map(cleanPrompt),
       composedPrompts: composedPrompts.map(item => ({
@@ -10,6 +10,20 @@
         category: item.category,
         items: Array.isArray(item.items) ? item.items.map(cleanPrompt) : [],
         content: item.content,
+        imageId: item.imageId || '',
+        imageData: !item.imageId && item.imageData ? item.imageData : '',
+        imageName: item.imageName || '',
+        portraitImageId: item.portraitImageId || '',
+        portraitImageData: !item.portraitImageId && item.portraitImageData ? item.portraitImageData : '',
+        portraitImageName: item.portraitImageName || '',
+      })),
+      customCombos: customCombos.map(item => ({
+        id: item.id,
+        mainCategory: item.mainCategory || '콤보',
+        subCategory: item.subCategory || '',
+        category: item.category || '콤보',
+        items: Array.isArray(item.items) ? item.items.filter(Boolean) : [],
+        content: item.content || '',
         imageId: item.imageId || '',
         imageData: !item.imageId && item.imageData ? item.imageData : '',
         imageName: item.imageName || '',
@@ -28,6 +42,22 @@
   function applyImportedBackupData(parsed) {
     const nextPrompts = Array.isArray(parsed.prompts) ? parsed.prompts.map(normalizePrompt).filter(Boolean) : [];
     const nextComposed = Array.isArray(parsed.composedPrompts) ? parsed.composedPrompts.map(normalizeComposedPrompt).filter(Boolean) : [];
+    const nextCustomCombos = Array.isArray(parsed.customCombos)
+      ? parsed.customCombos.filter(item => item && item.id).map(item => ({
+        id: item.id,
+        mainCategory: '콤보',
+        subCategory: String(item.subCategory || '').trim(),
+        category: '콤보',
+        items: Array.isArray(item.items) ? item.items.filter(Boolean) : [],
+        content: String(item.content || '').trim(),
+        imageId: String(item.imageId || '').trim(),
+        imageData: String(item.imageData || '').trim(),
+        imageName: String(item.imageName || '').trim(),
+        portraitImageId: String(item.portraitImageId || '').trim(),
+        portraitImageData: String(item.portraitImageData || '').trim(),
+        portraitImageName: String(item.portraitImageName || '').trim(),
+      }))
+      : [];
     const nextHidden = Array.isArray(parsed.hiddenMainCategories) ? parsed.hiddenMainCategories.filter(Boolean) : [];
     const nextCategoryConfig = parsed.categoryConfig && typeof parsed.categoryConfig === 'object' ? parsed.categoryConfig : null;
     const nextComposedCategoryConfig = parsed.composedCategoryConfig && typeof parsed.composedCategoryConfig === 'object' ? parsed.composedCategoryConfig : null;
@@ -35,12 +65,13 @@
       ? parsed.promptTagLayouts
       : {};
 
-    if (nextPrompts.length === 0 && nextComposed.length === 0) {
+    if (nextPrompts.length === 0 && nextComposed.length === 0 && nextCustomCombos.length === 0) {
       throw new Error('EMPTY_DATA');
     }
 
     prompts = nextPrompts;
     composedPrompts = nextComposed;
+    customCombos = nextCustomCombos;
     hiddenMainCategories = new Set(nextHidden);
     promptTagLayouts = nextPromptTagLayouts;
     if (nextCategoryConfig) {
@@ -83,7 +114,7 @@
   }
 
   async function exportJSONBackup() {
-    if (prompts.length === 0 && composedPrompts.length === 0) {
+    if (prompts.length === 0 && composedPrompts.length === 0 && customCombos.length === 0) {
       showToast('내보낼 프롬프트가 없습니다');
       return;
     }

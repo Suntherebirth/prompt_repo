@@ -157,6 +157,10 @@
       display: none;
     }
 
+    .panel-library:not(.custom-combo-mode) .custom-combo-flow-panel {
+      display: none;
+    }
+
     .panel-library.custom-combo-mode .custom-combo-preview-chips {
       display: flex;
       flex-direction: column;
@@ -232,8 +236,15 @@
       flex: 0 0 auto;
     }
 
-    .custom-combo-save-btn {
-      width: 100%;
+    .custom-combo-flow-actions {
+      display: flex;
+      flex: 0 0 auto;
+      gap: 8px;
+    }
+
+    .custom-combo-save-btn,
+    .custom-combo-reset-btn {
+      flex: 1;
       margin: 0;
       border-radius: 0;
       border-left: 0;
@@ -242,7 +253,6 @@
       border-color: rgba(52, 211, 153, 0.42);
       color: #d1fae5;
       background: rgba(24, 63, 53, 0.56);
-      flex: 0 0 auto;
     }
 
     .custom-combo-save-btn:hover {
@@ -250,8 +260,25 @@
       background: rgba(29, 75, 62, 0.86);
     }
 
+    .custom-combo-reset-btn {
+      border-color: rgba(248, 113, 113, 0.52);
+    }
+
     .custom-combo-save-hidden {
       display: none;
+    }
+
+    .custom-combo-fixed-category {
+      min-height: 38px;
+      display: flex;
+      align-items: center;
+      padding: 8px 10px;
+      border: 1px solid rgba(52, 211, 153, 0.42);
+      border-radius: 8px;
+      background: rgba(24, 63, 53, 0.56);
+      color: #d1fae5;
+      font-size: 0.85rem;
+      font-weight: 700;
     }
 
     .prompt-random-slot {
@@ -387,6 +414,15 @@
       font-size: 0.72rem;
       color: #dfeaff;
       text-align: center;
+    }
+
+    .custom-combo-final-image-tile {
+      color: #d1fae5;
+    }
+
+    .custom-combo-final-image-tile .custom-combo-image-shell {
+      border-color: rgba(52, 211, 153, 0.72);
+      box-shadow: 0 0 0 1px rgba(52, 211, 153, 0.14);
     }
 
     .custom-combo-image-shell {
@@ -2369,7 +2405,7 @@
       z-index: 3;
     }
 
-.main.preview-render-portrait .panel-library.custom-combo-mode .combo-library-footer > .prompt-description-preview {
+.main.preview-render-portrait .panel-library.custom-combo-mode > .combo-library-footer.custom-combo-footer > .prompt-description-preview {
       position: absolute;
       top: 0;
       right: 0;
@@ -2383,7 +2419,7 @@
       z-index: 3;
     }
 
-    .main.preview-render-portrait .panel-library.custom-combo-mode > .combo-library-footer {
+    .main.preview-render-portrait .panel-library.custom-combo-mode > .combo-library-footer.custom-combo-footer {
       position: absolute;
       top: 0;
       right: 0;
@@ -2402,17 +2438,7 @@
       z-index: 4;
     }
 
-    .main.preview-render-portrait .panel-library.custom-combo-mode > .combo-library-footer > .custom-combo-preview-chips {
-      flex: 1;
-      min-height: 0;
-      overflow-y: auto;
-      align-content: flex-start;
-      border: 0;
-      padding: 12px;
-      pointer-events: auto;
-    }
-
-    .main.preview-render-portrait .panel-library.custom-combo-mode > .combo-library-footer > .custom-combo-flow-panel {
+    .main.preview-render-portrait .panel-library.custom-combo-mode > .combo-library-footer.custom-combo-footer > .custom-combo-flow-panel {
       position: absolute;
       top: 0;
       left: var(--portrait-center-width);
@@ -2428,7 +2454,17 @@
       pointer-events: auto;
     }
 
-    .main.preview-render-portrait .panel-library.custom-combo-mode > .combo-library-footer > .prompt-description-preview {
+    .main.preview-render-portrait .panel-library.custom-combo-mode > .combo-library-footer.custom-combo-footer > .custom-combo-flow-panel > .custom-combo-preview-chips {
+      flex: 1;
+      min-height: 0;
+      overflow-y: auto;
+      align-content: flex-start;
+      border: 0;
+      padding: 12px;
+      pointer-events: auto;
+    }
+
+    .main.preview-render-portrait .panel-library.custom-combo-mode > .combo-library-footer.custom-combo-footer > .prompt-description-preview {
       position: static;
       position: absolute;
       top: 50%;
@@ -2503,43 +2539,6 @@
       border-top: 0;
       border-right: 1px solid #2a2a3a;
       overflow: hidden;
-    }
-
-    .main.preview-render-portrait .panel-composer.custom-combo-mode {
-      grid-column: 1;
-      grid-template-columns: 1fr;
-      grid-template-rows: auto minmax(0, 1fr) minmax(0, 1fr);
-    }
-
-    .main.preview-render-portrait .panel-composer.custom-combo-mode > .panel-header {
-      grid-column: 1;
-      grid-row: 1;
-    }
-
-    .main.preview-render-portrait .panel-composer.custom-combo-mode > .selected-chips {
-      grid-column: 1;
-      grid-row: 2;
-      border-left: 0;
-      border-right: 0;
-      min-height: 0;
-      height: 100%;
-    }
-
-    .main.preview-render-portrait .panel-composer.custom-combo-mode > .custom-combo-composer-preview {
-      grid-column: 1;
-      grid-row: 3;
-      width: auto;
-      height: auto;
-      min-height: 0;
-      margin: 0;
-      border-top: 1px solid #2a2a3a;
-      border-radius: 0;
-      aspect-ratio: auto;
-      padding: 8px;
-    }
-
-    .main.preview-render-portrait .panel-composer.custom-combo-mode > .composer-output {
-      display: none;
     }
 
     .main.preview-render-portrait .panel-composer > .panel-header {
@@ -2634,7 +2633,7 @@
       margin-bottom: 8px;
       border-color: rgba(52, 211, 153, 0.56);
       background: linear-gradient(135deg, #183f35, #16352d);
-      cursor: default;
+      cursor: pointer;
       box-shadow: inset 0 0 0 1px rgba(52, 211, 153, 0.12);
     }
 
@@ -2678,43 +2677,6 @@
       gap: 12px;
       overflow: hidden;
       min-height: 0;
-    }
-
-    .panel-composer.custom-combo-mode {
-      overflow: hidden;
-    }
-
-    .panel-composer.custom-combo-mode > .composer-output {
-      display: none;
-    }
-
-    .panel-composer.custom-combo-mode > .selected-chips {
-      flex: 1 1 50%;
-      min-height: 0;
-      width: 100%;
-      overflow-y: auto;
-      padding-bottom: 16px;
-    }
-
-    .panel-composer.custom-combo-mode > .custom-combo-composer-preview {
-      flex: 1 1 50%;
-      width: auto;
-      height: auto;
-      min-height: 0;
-      margin: 0;
-      border-top: 1px solid #2a2a3a;
-      border-radius: 0;
-      aspect-ratio: auto;
-      padding: 10px 12px;
-    }
-
-    .custom-combo-composer-preview .custom-combo-preview-split {
-      display: block;
-    }
-
-    .custom-combo-composer-preview .custom-combo-preview-images {
-      height: 100%;
-      grid-template-columns: repeat(auto-fit, minmax(110px, 1fr));
     }
 
     .output-box {

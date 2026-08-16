@@ -459,7 +459,6 @@
   }
 
   function openSaveComposedModal() {
-    savingCustomCombo = false;
     editingComposedPromptId = null;
     editingComposedImageId = '';
     editingComposedImageData = '';
@@ -480,19 +479,104 @@
       showToast('저장할 커스텀 조합이 없습니다');
       return;
     }
-    savingCustomCombo = true;
-    editingComposedPromptId = null;
-    editingComposedImageId = '';
-    editingComposedImageData = '';
-    editingComposedPortraitImageId = '';
-    editingComposedPortraitImageData = '';
-    renderSaveComposedModalMode();
-    renderComposedCategorySelectors();
-    clearPendingComposedImage({ all: true });
-    const modal = document.getElementById('save-composed-modal');
-    modal.classList.add('open');
-    document.querySelector('#save-composed-modal .composed-modal-editor')?.classList.add('custom-combo-save-hidden');
-    document.getElementById('combo-main-category').focus();
+    editingCustomComboId = null;
+    const nameInput = document.getElementById('custom-combo-name');
+    if (nameInput) nameInput.value = '';
+    const title = document.getElementById('save-custom-combo-title');
+    const submitButton = document.querySelector('#save-custom-combo-modal .modal-actions .btn-primary');
+    if (title) title.textContent = '커스텀 콤보 저장';
+    if (submitButton) submitButton.textContent = '저장';
+    pendingCustomComboImages = { landscape: null, portrait: null };
+    setCustomComboImageEditOrientation('landscape');
+    document.getElementById('save-custom-combo-modal')?.classList.add('open');
+    nameInput?.focus();
+  }
+
+  function openEditCustomComboModal(customCombo) {
+    if (!customCombo?.id) return;
+    editingCustomComboId = customCombo.id;
+    const nameInput = document.getElementById('custom-combo-name');
+    if (nameInput) nameInput.value = customCombo.subCategory || '';
+    const title = document.getElementById('save-custom-combo-title');
+    const submitButton = document.querySelector('#save-custom-combo-modal .modal-actions .btn-primary');
+    if (title) title.textContent = '커스텀 콤보 편집';
+    if (submitButton) submitButton.textContent = '수정 저장';
+    pendingCustomComboImages = {
+      landscape: customCombo.imageData ? { dataUrl: customCombo.imageData, fileName: customCombo.imageName || '', mimeType: '', file: null } : null,
+      portrait: customCombo.portraitImageData ? { dataUrl: customCombo.portraitImageData, fileName: customCombo.portraitImageName || '', mimeType: '', file: null } : null,
+    };
+    Promise.all([
+      !pendingCustomComboImages.landscape && customCombo.imageId ? getPromptImageObjectUrl(customCombo.imageId) : Promise.resolve(''),
+      !pendingCustomComboImages.portrait && customCombo.portraitImageId ? getPromptImageObjectUrl(customCombo.portraitImageId) : Promise.resolve(''),
+    ]).then(([landscapeUrl, portraitUrl]) => {
+      if (editingCustomComboId !== customCombo.id) return;
+      if (landscapeUrl) pendingCustomComboImages.landscape = { dataUrl: landscapeUrl, fileName: customCombo.imageName || '', mimeType: '', file: null };
+      if (portraitUrl) pendingCustomComboImages.portrait = { dataUrl: portraitUrl, fileName: customCombo.portraitImageName || '', mimeType: '', file: null };
+      renderPendingCustomComboImagePreview();
+    });
+    setCustomComboImageEditOrientation('landscape');
+    document.getElementById('save-custom-combo-modal')?.classList.add('open');
+    nameInput?.focus();
+  }
+
+  function closeSaveCustomComboModal() {
+    document.getElementById('save-custom-combo-modal')?.classList.remove('open');
+    editingCustomComboId = null;
+    pendingCustomComboImages = { landscape: null, portrait: null };
+  }
+
+  function handleSaveCustomComboModalBackdrop(event) {
+    if (event.target.id === 'save-custom-combo-modal') {
+      closeSaveCustomComboModal();
+    }
+  }
+
+  function setCustomComboImageEditOrientation(orientation) {
+    customComboImageEditOrientation = normalizeImageOrientation(orientation);
+    renderPendingCustomComboImagePreview();
+  }
+
+  function renderPendingCustomComboImagePreview() {
+    const preview = document.getElementById('custom-combo-image-preview');
+    const nameInput = document.getElementById('custom-combo-image-name');
+    const meta = document.getElementById('custom-combo-image-meta');
+    const landscapeButton = document.getElementById('custom-combo-image-tab-landscape');
+    const portraitButton = document.getElementById('custom-combo-image-tab-portrait');
+    if (!preview || !nameInput || !meta) return;
+    const name = document.getElementById('custom-combo-name')?.value.trim() || '커스텀 콤보';
+    const orientation = customComboImageEditOrientation;
+    const imageName = buildComposedImageName('콤보', name, '');
+    const pendingImage = pendingCustomComboImages[orientation];
+    nameInput.value = imageName;
+    preview.classList.toggle('orientation-portrait', orientation === 'portrait');
+    preview.style.setProperty('--preview-aspect-ratio', orientation === 'portrait' ? '3 / 4' : '4 / 3');
+    landscapeButton?.classList.toggle('active', orientation === 'landscape');
+    portraitButton?.classList.toggle('active', orientation === 'portrait');
+    if (pendingImage?.dataUrl) {
+      preview.innerHTML = `<img src="${pendingImage.dataUrl}" alt="${esc(imageName)}" />`;
+      meta.textContent = `${getImageOrientationLabel(orientation)} 이미지 편집 중 · ${imageName}`;
+    } else {
+      preview.innerHTML = '<span class="empty-state" style="padding:0">선택한 커스텀 콤보 이미지가 여기에 표시됩니다.</span>';
+      meta.textContent = `${getImageOrientationLabel(orientation)} 이미지가 비어 있습니다. ${imageName} 이름으로 저장됩니다.`;
+    }
+  }
+
+  function setPendingCustomComboImage(file, dataUrl) {
+    const orientation = customComboImageEditOrientation;
+    pendingCustomComboImages[orientation] = file && dataUrl ? {
+      dataUrl,
+      fileName: file.name || '',
+      mimeType: file.type || '',
+      file,
+    } : null;
+    renderPendingCustomComboImagePreview();
+  }
+
+  function clearPendingCustomComboImage() {
+    pendingCustomComboImages[customComboImageEditOrientation] = null;
+    const fileInput = document.getElementById('custom-combo-image-file');
+    if (fileInput) fileInput.value = '';
+    renderPendingCustomComboImagePreview();
   }
 
   function closeSaveComposedModal() {
@@ -504,8 +588,6 @@
     editingComposedPortraitImageId = '';
     editingComposedPortraitImageData = '';
     clearPendingComposedImage({ all: true });
-    savingCustomCombo = false;
-    document.querySelector('#save-composed-modal .composed-modal-editor')?.classList.remove('custom-combo-save-hidden');
     renderSaveComposedModalMode();
   }
 
@@ -514,10 +596,10 @@
     const submitBtn = document.querySelector('#save-composed-modal .modal-actions .btn-primary');
     const isEditMode = !!editingComposedPromptId;
     if (title) {
-      title.textContent = savingCustomCombo ? '커스텀 콤보 저장' : (isEditMode ? '조합 편집' : '조합 저장');
+      title.textContent = isEditMode ? '조합 편집' : '조합 저장';
     }
     if (submitBtn) {
-      submitBtn.textContent = savingCustomCombo ? '콤보 저장' : (isEditMode ? '수정 저장' : '저장');
+      submitBtn.textContent = isEditMode ? '수정 저장' : '저장';
     }
   }
 

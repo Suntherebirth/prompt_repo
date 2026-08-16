@@ -150,6 +150,32 @@
     };
   }
 
+  function normalizeCustomCombo(item) {
+    return {
+      id: item.id || uid(),
+      mainCategory: '콤보',
+      subCategory: String(item.subCategory || '').trim(),
+      category: '콤보',
+      items: Array.isArray(item.items) ? item.items.filter(Boolean) : [],
+      content: String(item.content || '').trim(),
+      imageId: String(item.imageId || '').trim(),
+      imageData: String(item.imageData || '').trim(),
+      imageName: String(item.imageName || '').trim(),
+      portraitImageId: String(item.portraitImageId || '').trim(),
+      portraitImageData: String(item.portraitImageData || '').trim(),
+      portraitImageName: String(item.portraitImageName || '').trim(),
+    };
+  }
+
+  function cleanCustomCombo(item) {
+    const normalized = normalizeCustomCombo(item);
+    return {
+      ...normalized,
+      imageData: normalized.imageId ? '' : normalized.imageData,
+      portraitImageData: normalized.portraitImageId ? '' : normalized.portraitImageData,
+    };
+  }
+
   function getComposedItemText(item) {
     if (!item) return '';
     if (Array.isArray(item.items) && item.items.length > 0) {

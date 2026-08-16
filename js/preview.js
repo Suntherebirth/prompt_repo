@@ -100,13 +100,26 @@
           : `<div class="custom-combo-image-placeholder">${esc(label)}</div>`;
         return `<div class="custom-combo-image-tile"><div class="custom-combo-image-shell">${tile}</div><span>${esc(label)}</span></div>`;
       }).join('');
+      const activeCustomCombo = customCombos.find(item => item.id === activeCustomComboId);
+      const comboImageSource = getPromptImageSource(activeCustomCombo);
+      queuePromptImageLoad(activeCustomCombo);
+      const finalImageMarkup = activeCustomCombo ? `
+        <div class="custom-combo-image-tile custom-combo-final-image-tile">
+          <div class="custom-combo-image-shell">
+            ${comboImageSource
+              ? `<img src="${comboImageSource}" alt="${esc(activeCustomCombo.subCategory || '커스텀 콤보')}" />`
+              : `<div class="custom-combo-image-placeholder">${esc(activeCustomCombo.subCategory || '커스텀 콤보')}</div>`}
+          </div>
+          <span>${esc(activeCustomCombo.subCategory || '커스텀 콤보')}</span>
+        </div>
+      ` : '';
 
       preview.classList.add('has-image');
       preview.classList.remove('image-switch-feedback');
       preview.title = '커스텀 콤보의 조합 흐름을 확인하는 영역입니다';
       preview.innerHTML = `
         <div class="custom-combo-preview-split">
-          <div class="custom-combo-preview-images">${imageMarkup}</div>
+          <div class="custom-combo-preview-images">${imageMarkup}${finalImageMarkup}</div>
         </div>
       `;
       lastRenderedComposedPreviewImageKey = '';

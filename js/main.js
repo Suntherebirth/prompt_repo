@@ -41,6 +41,25 @@
     }
   });
 
+  document.getElementById('custom-combo-image-file').addEventListener('change', async e => {
+    const file = e.target.files && e.target.files[0];
+    if (!file) {
+      clearPendingCustomComboImage();
+      return;
+    }
+    try {
+      setPendingCustomComboImage(file, await readFileAsDataUrl(file));
+    } catch {
+      pendingCustomComboImages[normalizeImageOrientation(customComboImageEditOrientation)] = null;
+      renderPendingCustomComboImagePreview();
+      showToast('이미지를 읽지 못했습니다');
+    }
+  });
+
+  document.getElementById('custom-combo-name').addEventListener('input', () => {
+    renderPendingCustomComboImagePreview();
+  });
+
   document.addEventListener('keydown', e => {
     if (e.key === 'Escape') {
       closeAddPromptModal();

@@ -294,33 +294,87 @@
     });
   }
 
+  async function saveCustomCombo() {
+    const nameInput = document.getElementById('custom-combo-name');
+    const subCategory = nameInput?.value.trim() || '';
+    if (!subCategory) {
+      showToast('커스텀 콤보 이름을 입력하세요');
+      nameInput?.focus();
+      return;
+    }
+    if (!editingCustomComboId && selectedCustomCombo.length === 0) {
+      showToast('저장할 커스텀 조합이 없습니다');
+      return;
+    }
+
+    const existingCombo = editingCustomComboId ? customCombos.find(item => item.id === editingCustomComboId) : null;
+    let imageId = existingCombo?.imageId || '';
+    let portraitImageId = existingCombo?.portraitImageId || '';
+    const landscapeImage = pendingCustomComboImages.landscape;
+    const portraitImage = pendingCustomComboImages.portrait;
+    try {
+      if (landscapeImage?.file instanceof File) {
+        imageId = await saveImageBlobRecord({
+          id: imageId,
+          blob: landscapeImage.file,
+          mimeType: landscapeImage.mimeType || landscapeImage.file.type || '',
+          fileName: landscapeImage.fileName || landscapeImage.file.name || '',
+        });
+      }
+      if (portraitImage?.file instanceof File) {
+        portraitImageId = await saveImageBlobRecord({
+          id: portraitImageId,
+          blob: portraitImage.file,
+          mimeType: portraitImage.mimeType || portraitImage.file.type || '',
+          fileName: portraitImage.fileName || portraitImage.file.name || '',
+        });
+      }
+    } catch {
+      showToast('커스텀 콤보 이미지 저장 중 오류가 발생했습니다');
+      return;
+    }
+    const imageName = buildComposedImageName('콤보', subCategory, '');
+
+    if (editingCustomComboId) {
+      customCombos = customCombos.map(item => item.id === editingCustomComboId
+        ? {
+          ...item,
+          mainCategory: '콤보',
+          category: '콤보',
+          subCategory,
+          imageId,
+          imageData: imageId ? '' : (landscapeImage?.dataUrl || item.imageData || ''),
+          imageName,
+          portraitImageId,
+          portraitImageData: portraitImageId ? '' : (portraitImage?.dataUrl || item.portraitImageData || ''),
+          portraitImageName: imageName,
+        }
+        : item);
+    } else {
+      customCombos.push({
+        id: uid(),
+        mainCategory: '콤보',
+        subCategory,
+        category: '콤보',
+        items: selectedCustomCombo.map(item => item.id),
+        content: selectedCustomCombo.map(item => item.content || item.subCategory || '').filter(Boolean).join(', '),
+        imageId,
+        imageData: imageId ? '' : (landscapeImage?.dataUrl || ''),
+        imageName,
+        portraitImageId,
+        portraitImageData: portraitImageId ? '' : (portraitImage?.dataUrl || ''),
+        portraitImageName: imageName,
+      });
+    }
+    save();
+    closeSaveCustomComboModal();
+    render();
+    showToast('커스텀 콤보가 저장되었습니다');
+  }
+
   async function saveComposedPrompt() {
     const mainCategoryInput = document.getElementById('combo-main-category');
     const subCategoryInput = document.getElementById('combo-sub-category');
-    if (savingCustomCombo) {
-      const mainCategory = mainCategoryInput.value.trim();
-      const subCategory = subCategoryInput.value.trim();
-      if (!mainCategory) {
-        showToast('커스텀 대분류를 입력하세요');
-        return;
-      }
-      if (!subCategory) {
-        showToast('커스텀 콤보 이름을 입력하세요');
-        return;
-      }
-      customCombos.push({
-        id: uid(),
-        mainCategory,
-        subCategory,
-        category: mainCategory,
-        items: selectedCustomCombo.map(item => item.id),
-        content: selectedCustomCombo.map(item => item.content || item.subCategory || '').filter(Boolean).join(', '),
-      });
-      save();
-      closeSaveComposedModal();
-      showToast('커스텀 콤보가 저장되었습니다');
-      return;
-    }
     const isEditMode = !!editingComposedPromptId;
     const mainCategory = mainCategoryInput.value.trim();
     const subCategory = subCategoryInput.value.trim();

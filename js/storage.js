@@ -14,7 +14,7 @@
     try {
       const rawCustomCombos = localStorage.getItem(CUSTOM_COMBO_STORAGE_KEY);
       const loadedCustomCombos = rawCustomCombos ? JSON.parse(rawCustomCombos) : [];
-      customCombos = Array.isArray(loadedCustomCombos) ? loadedCustomCombos.filter(item => item && item.id) : [];
+      customCombos = Array.isArray(loadedCustomCombos) ? loadedCustomCombos.filter(item => item && item.id).map(normalizeCustomCombo) : [];
     } catch { customCombos = []; }
 
     try {
@@ -114,7 +114,7 @@
 
     localStorage.setItem(STORAGE_KEY, JSON.stringify(promptPayload));
     localStorage.setItem(COMPOSED_STORAGE_KEY, JSON.stringify(composedPayload));
-    localStorage.setItem(CUSTOM_COMBO_STORAGE_KEY, JSON.stringify(customCombos));
+    localStorage.setItem(CUSTOM_COMBO_STORAGE_KEY, JSON.stringify(customCombos.map(cleanCustomCombo)));
     localStorage.setItem(HIDDEN_MAIN_CATEGORIES_KEY, JSON.stringify([...hiddenMainCategories]));
     localStorage.setItem(CATEGORY_CONFIG_KEY, JSON.stringify(categoryConfig));
     localStorage.setItem(COMPOSED_CATEGORY_CONFIG_KEY, JSON.stringify(composedCategoryConfig));

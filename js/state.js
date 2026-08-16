@@ -9,6 +9,7 @@
   let leftPanelTab = 'prompt';
   let isCustomComboTabOpen = false;
   let selectedCustomCombo = [];
+  let activeCustomComboId = null;
   let categoryManageTab = 'prompt';
   let hiddenMainCategories = new Set();
   let categoryConfig = { mainOrder: [], mains: {} };
@@ -19,6 +20,7 @@
   let tapComposeMode = PROMPT_ADD_MODE.SWIPE;
   let pendingPromptImages = { landscape: null, portrait: null };
   let pendingComposedImages = { landscape: null, portrait: null };
+  let pendingCustomComboImages = { landscape: null, portrait: null };
   let promptFormMode = 'add';
   let editingPromptId = null;
   let editingPromptImageId = '';
@@ -26,7 +28,8 @@
   let editingPromptPortraitImageId = '';
   let editingPromptPortraitImageData = '';
   let editingComposedPromptId = null;
-  let savingCustomCombo = false;
+  let editingCustomComboId = null;
+  let customComboImageEditOrientation = 'landscape';
   let editingComposedImageId = '';
   let editingComposedImageData = '';
   let editingComposedPortraitImageId = '';

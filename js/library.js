@@ -6,16 +6,16 @@
 
   function renderLibraryLayout() {
     const panel = document.querySelector('.panel-library');
-    const composer = document.querySelector('.panel-composer');
+    const comboFooter = document.querySelector('.combo-library-footer');
     const composerTitle = document.getElementById('composer-panel-title');
     if (!panel) return;
     const isCustomComboMode = leftPanelTab === 'combo' && isCustomComboTabOpen;
     panel.classList.toggle('combo-mode', leftPanelTab === 'combo');
     panel.classList.toggle('custom-combo-mode', isCustomComboMode);
-    if (composer) composer.classList.toggle('custom-combo-mode', isCustomComboMode);
+    if (comboFooter) comboFooter.classList.toggle('custom-combo-footer', isCustomComboMode);
     if (composerTitle) {
       composerTitle.textContent = isCustomComboMode
-        ? `커스텀 콤보 (${selectedCustomCombo.length})`
+        ? `커스텀 콤보 (${customCombos.length})`
         : '조합된 프롬프트';
     }
   }
@@ -255,6 +255,41 @@
     render();
     showToast('조합된 커스텀 조합에 추가되었습니다');
     return true;
+  }
+
+  function loadCustomCombo(customCombo) {
+    if (!customCombo?.id) return;
+    const itemIds = Array.isArray(customCombo.items) ? customCombo.items : [];
+    selectedCustomCombo = itemIds
+      .map(itemId => composedPrompts.find(item => item.id === itemId))
+      .filter(Boolean)
+      .map(item => ({
+        ...item,
+        source: 'composed',
+        content: item.content || item.subCategory || '커스텀 조합',
+      }));
+    activeCustomComboId = customCombo.id;
+    render();
+  }
+
+  function clearCustomComboSelection() {
+    if (selectedCustomCombo.length === 0) return;
+    if (!confirm('선택된 커스텀 조합을 모두 초기화하시겠습니까?')) return;
+    selectedCustomCombo = [];
+    activeCustomComboId = null;
+    render();
+  }
+
+  function deleteCustomCombo(customCombo) {
+    if (!customCombo?.id) return;
+    if (!confirm(`'${customCombo.subCategory || '커스텀 콤보'}'을(를) 삭제하시겠습니까?`)) return;
+    customCombos = customCombos.filter(item => item.id !== customCombo.id);
+    if (activeCustomComboId === customCombo.id) {
+      activeCustomComboId = null;
+      selectedCustomCombo = [];
+    }
+    save();
+    render();
   }
 
   function renderComposedLoadList() {
@@ -1288,36 +1323,46 @@
       };
 
       container.innerHTML = '';
-      if (selectedCustomCombo.length === 0) {
+      if (customCombos.length === 0) {
         const empty = document.createElement('span');
         empty.id = 'chips-empty';
         empty.className = 'empty-state';
-        empty.textContent = '선택된 커스텀 조합이 없습니다';
+        empty.textContent = '저장된 커스텀 콤보가 없습니다';
         container.appendChild(empty);
       } else {
-        const comboCard = document.createElement('div');
-        comboCard.className = 'prompt-item custom-combo-selected-card';
-        comboCard.innerHTML = `
-          <div class="prompt-item-swipe-content">
-            <div class="prompt-item-body">
-              <div class="custom-combo-selected-card-body">
-                <div class="custom-combo-selected-card-title">
-                  <span class="custom-combo-selected-card-order">커스텀 콤보 1</span>
-                  <button class="chip-remove" title="커스텀 콤보 제거" type="button">×</button>
+        customCombos.forEach((customCombo) => {
+          const comboCard = document.createElement('div');
+          comboCard.className = 'prompt-item custom-combo-selected-card';
+          comboCard.innerHTML = `
+            <div class="prompt-item-swipe-content">
+              <div class="prompt-item-body">
+                <div class="custom-combo-selected-card-body">
+                  <div class="custom-combo-selected-card-title">
+                    <span class="custom-combo-selected-card-order">${esc(customCombo.subCategory || '이름없는 커스텀 콤보')}</span>
+                  </div>
                 </div>
               </div>
             </div>
-          </div>
-        `;
-        const removeBtn = comboCard.querySelector('.chip-remove');
-        if (removeBtn) {
-          removeBtn.addEventListener('click', (event) => {
+            <div class="prompt-item-actions">
+              <button class="edit-btn" title="편집" type="button">편집</button>
+              <button class="del-btn" title="삭제" type="button">삭제</button>
+            </div>
+          `;
+          comboCard.querySelector('.edit-btn')?.addEventListener('click', (event) => {
             event.stopPropagation();
-            selectedCustomCombo.length = 0;
-            render();
+            openEditCustomComboModal(customCombo);
           });
-        }
-        container.appendChild(comboCard);
+          comboCard.querySelector('.del-btn')?.addEventListener('click', (event) => {
+            event.stopPropagation();
+            deleteCustomCombo(customCombo);
+          });
+          bindPromptItemSwipe(comboCard, customCombo, {
+            allowRightSwipeCommit: false,
+            requireSwipeComposeMode: false,
+            onTap: () => loadCustomCombo(customCombo),
+          });
+          container.appendChild(comboCard);
+        });
       }
       if (customPreviewContainer) {
         customPreviewContainer.innerHTML = '';
