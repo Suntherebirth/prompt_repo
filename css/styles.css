@@ -483,9 +483,10 @@
       display: flex;
       gap: 8px;
       overflow: hidden;
-      align-items: stretch;
+      align-items: center;
       align-content: stretch;
       padding-bottom: 2px;
+      container-type: size;
     }
 
     .custom-combo-image-tile {
@@ -494,12 +495,13 @@
       gap: 6px;
       min-width: 0;
       min-height: 0;
+      box-sizing: border-box;
       font-size: 0.72rem;
       color: #dfeaff;
       text-align: center;
       flex: 1 1 0;
-      height: auto;
-      justify-content: flex-start;
+      max-width: calc((100cqh - 1.2em - 8px) * 3 / 4);
+      justify-content: center;
       transition: transform .2s ease, box-shadow .2s ease, border-color .2s ease, opacity .2s ease;
     }
 
@@ -572,6 +574,7 @@
 
     .custom-combo-preview-images .custom-combo-image-tile span {
       display: block;
+      min-height: 1.2em;
       overflow: hidden;
       text-overflow: ellipsis;
       white-space: nowrap;
@@ -3629,7 +3632,6 @@
       display: none;
       align-items: center;
       justify-content: center;
-      padding: 20px;
       background: rgba(3, 4, 8, 0.92);
       z-index: 10000;
     }
@@ -3640,13 +3642,13 @@
 
     .image-viewer-stage {
       position: relative;
-      width: min(96vw, 1600px);
-      height: min(96vh, 1200px);
+      width: 100%;
+      height: 100%;
       display: flex;
       align-items: center;
       justify-content: center;
       overflow: hidden;
-      padding: 28px 64px 96px;
+      padding: 16px;
       box-sizing: border-box;
     }
 
@@ -3694,7 +3696,7 @@
       border-radius: 0;
       box-shadow: none;
       object-fit: contain;
-      animation: image-viewer-transition-from 6s ease-in-out infinite;
+      animation: image-viewer-transition-from 3s ease-in-out infinite;
     }
 
     .image-viewer-transition img:last-child {
@@ -3702,22 +3704,35 @@
     }
 
     @keyframes image-viewer-transition-from {
-      0%, 22% { opacity: 1; }
-      44%, 99.9% { opacity: 0; }
-      100% { opacity: 1; }
+      0%, 15% { opacity: 1; }
+      30%, 70% { opacity: 0; }
+      85%, 100% { opacity: 1; }
     }
 
     @keyframes image-viewer-transition-to {
-      0%, 22% { opacity: 0; }
-      44%, 99.9% { opacity: 1; }
-      100% { opacity: 0; }
+      0%, 15% { opacity: 0; }
+      30%, 70% { opacity: 1; }
+      85%, 100% { opacity: 0; }
     }
 
     .image-viewer-close {
       position: absolute;
-      top: 0;
-      right: 0;
-      transform: translateY(-100%);
+      top: 16px;
+      right: 16px;
+      z-index: 1;
+      width: 40px;
+      height: 40px;
+      border: 1px solid rgba(255, 255, 255, 0.38);
+      border-radius: 50%;
+      background: rgba(3, 4, 8, 0.72);
+      color: #fff;
+      cursor: pointer;
+      font-size: 1.8rem;
+      line-height: 1;
+    }
+
+    .image-viewer-close:hover {
+      background: rgba(255, 255, 255, 0.18);
     }
 
     .category-manage-main-list {

@@ -368,9 +368,9 @@
 
 <div id="toast">복사되었습니다!</div>
 
-<div class="image-viewer-modal" id="image-viewer-modal" onclick="handleImageViewerBackdrop(event)">
+<div class="image-viewer-modal" id="image-viewer-modal">
   <div class="image-viewer-stage" role="dialog" aria-modal="true" aria-labelledby="image-viewer-title">
-    <button class="btn btn-secondary btn-sm image-viewer-close" type="button" onclick="closeImageViewer()">닫기</button>
+    <button class="image-viewer-close" type="button" onclick="closeImageViewer()" aria-label="이미지 크게보기 닫기" title="닫기">×</button>
     <img id="image-viewer-image" alt="" />
     <div class="image-viewer-transition" id="image-viewer-transition" aria-hidden="true">
       <img id="image-viewer-transition-from" alt="" />

@@ -199,7 +199,5 @@
 
   function handleImageViewerImageTap(e) {
     e.stopPropagation();
-    if (Date.now() - imageViewerLastGestureAt < 220) return;
-    closeImageViewer();
   }
 

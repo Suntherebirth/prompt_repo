@@ -181,6 +181,7 @@
               ? `<img src="${comboImageSource}" alt="${esc(activeCustomCombo.subCategory || '커스텀 콤보')}" />`
               : `<div class="custom-combo-image-placeholder">${esc(activeCustomCombo.subCategory || '커스텀 콤보')}</div>`}
           </div>
+          <span class="custom-combo-image-label" aria-hidden="true"></span>
         </div>
       ` : '';
       const flowCount = items.length + (activeCustomCombo ? 1 : 0);
