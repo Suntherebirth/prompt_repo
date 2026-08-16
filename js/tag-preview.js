@@ -127,26 +127,7 @@
 
     preview.innerHTML = `<div class="preview-tag-image-grid"><div class="preview-tag-grid-header"><span class="preview-tag-chip">${esc(activeSubCategoryPrompt || activeCategoryPrompt || '카테고리')}</span><span class="tag-image-grid-total">${categoryPrompts.length}개</span></div>${cards}</div>`;
 
-    preview.querySelectorAll('.preview-tag-image-card').forEach(card => {
-      const promptId = card.dataset.promptId;
-      const prompt = prompts.find(item => String(item.id) === String(promptId));
-      const button = card.querySelector('.preview-tag-image-select-btn');
-      if (button) {
-        button.addEventListener('click', event => {
-          event.stopPropagation();
-          if (prompt) selectPromptFromTagImage(prompt);
-        });
-      }
-      card.addEventListener('click', event => {
-        if (event.target.closest('.preview-tag-image-select-btn')) return;
-        if (prompt) {
-          activePromptPreviewId = prompt.id;
-          isPromptPreviewSuppressed = false;
-          render();
-        }
-      });
-    });
-
+    // 클릭 처리는 태그 그리드와 동일하게 main.js의 위임 리스너에 맡겨 카드마다 리스너/조회를 반복하지 않는다.
     bindPromptTagImageCardSwipe(preview);
     lastRenderedPromptPreviewImageKey = `category:${activeCategoryPrompt}:${activeSubCategoryPrompt}`;
   }
@@ -614,6 +595,7 @@
   function jumpToPromptCardFromTagImage(prompt) {
     if (!prompt) return;
     activePromptTagFilter = null;
+    activePromptCategoryGridMode = false;
     lastRenderedPromptPreviewImageKey = '';
     activePromptPreviewId = prompt.id;
     isPromptPreviewSuppressed = false;
