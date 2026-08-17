@@ -176,7 +176,7 @@
       const imageTiles = items.map((item, index) => {
         const label = item.subCategory || item.content || '커스텀 조합';
         const comboItemImage = activeCustomCombo?.itemImages?.[item.id] || null;
-        const imageSrc = getPromptImageSource(comboItemImage) || getPromptImageSource(item);
+        const imageSrc = comboItemImage ? getPromptImageSource(comboItemImage) : getPromptImageSource(item);
         queuePromptImageLoad(comboItemImage ? { ...comboItemImage, id: item.id } : item);
         const tile = imageSrc
           ? `<img src="${imageSrc}" alt="${esc(label)}" />`
@@ -282,14 +282,14 @@
     const items = selectedCustomCombo.map((item) => {
       const override = activeCustomCombo?.itemImages?.[item.id] || null;
       const itemPrompt = override
-        ? { ...item, imageId: override.imageId || item.imageId || '', imageData: override.imageData || item.imageData || '', imageName: override.imageName || item.imageName || '' }
+        ? { ...override, id: item.id }
         : item;
-      const src = getPromptImageSource(itemPrompt) || getPromptImageSource(item);
+      const src = getPromptImageSource(itemPrompt);
       if (!src) return null;
       return {
         src,
         alt: item.subCategory || item.content || '커스텀 조합',
-        imageId: override?.imageId || item.imageId || item.id,
+        imageId: override ? (override.imageId || item.id) : (item.imageId || item.id),
         label: item.subCategory || item.content || '커스텀 조합',
       };
     }).filter(Boolean);
@@ -325,92 +325,9 @@
     return canvas.toDataURL('image/png');
   }
 
-  function loadImageFromSource(src) {
-    return new Promise((resolve) => {
-      if (!src) {
-        resolve(null);
-        return;
-      }
-      const image = new Image();
-      image.onload = () => resolve(image);
-      image.onerror = () => resolve(null);
-      image.src = src;
-    });
-  }
-
-  async function buildCustomComboFlowOverviewImage(entries) {
-    if (!Array.isArray(entries) || entries.length === 0) return '';
-    const canvas = document.createElement('canvas');
-    const width = 1600;
-    const height = 1000;
-    canvas.width = width;
-    canvas.height = height;
-    const ctx = canvas.getContext('2d');
-    if (!ctx) return '';
-
-    ctx.fillStyle = '#050816';
-    ctx.fillRect(0, 0, width, height);
-
-    const count = entries.length;
-    const padding = 42;
-    const gap = count <= 2 ? 32 : 24;
-    const cols = count <= 1 ? 1 : count === 2 ? 2 : count === 3 ? 3 : Math.min(2, count === 4 ? 2 : 3);
-    const rows = Math.ceil(count / cols);
-    const cellWidth = (width - padding * 2 - gap * (cols - 1)) / cols;
-    const cellHeight = (height - padding * 2 - gap * (rows - 1)) / rows;
-    const baseScale = count === 1 ? 0.94 : count === 2 ? 0.90 : count === 3 ? 0.82 : 0.78;
-
-    for (let index = 0; index < entries.length; index += 1) {
-      const entry = entries[index];
-      const img = await loadImageFromSource(entry.src || '');
-      const col = index % cols;
-      const row = Math.floor(index / cols);
-      const x = padding + col * (cellWidth + gap);
-      const y = padding + row * (cellHeight + gap);
-      const drawW = cellWidth * baseScale;
-      const drawH = cellHeight * baseScale;
-      const dx = x + (cellWidth - drawW) / 2;
-      const dy = y + (cellHeight - drawH) / 2;
-
-      if (img) {
-        const sourceRatio = img.width / img.height;
-        const targetRatio = drawW / drawH;
-        let drawX = dx;
-        let drawY = dy;
-        let drawWidth = drawW;
-        let drawHeight = drawH;
-
-        if (sourceRatio > targetRatio) {
-          drawHeight = drawH;
-          drawWidth = drawH * sourceRatio;
-          drawX = dx + (drawW - drawWidth) / 2;
-          drawY = dy;
-        } else {
-          drawWidth = drawW;
-          drawHeight = drawW / sourceRatio;
-          drawX = dx;
-          drawY = dy + (drawH - drawHeight) / 2;
-        }
-
-        ctx.save();
-        ctx.beginPath();
-        ctx.rect(dx, dy, drawW, drawH);
-        ctx.clip();
-        ctx.drawImage(img, drawX, drawY, drawWidth, drawHeight);
-        ctx.restore();
-      } else {
-        ctx.fillStyle = '#111827';
-        ctx.fillRect(dx, dy, drawW, drawH);
-      }
-    }
-
-    return canvas.toDataURL('image/png');
-  }
-
   async function getCustomComboFlowGallery() {
     const entries = getCustomComboFlowEntries();
     if (entries.length === 0) return [];
-    const overviewSource = await buildCustomComboFlowOverviewImage(entries);
     const firstEntry = entries[0];
     const lastEntry = entries[entries.length - 1];
     const transitionEntry = entries.length > 1 && firstEntry?.src && lastEntry?.src
@@ -429,7 +346,6 @@
     return [
       ...entries,
       ...(transitionEntry ? [transitionEntry] : []),
-      ...(overviewSource ? [{ src: overviewSource, alt: '커스텀 콤보 전체 흐름', label: '전체 흐름', imageId: 'custom-combo-flow-overview' }] : []),
     ];
   }
 
