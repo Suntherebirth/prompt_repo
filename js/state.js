@@ -40,6 +40,7 @@
   let activePromptPreviewId = null;
   let activePromptTagFilter = null;
   let activePromptCategoryGridMode = false;
+  let activeSelectedPromptGridMode = false;
   let activeCustomComboFocusId = null;
   let customComboFocusTimer = null;
   let promptTagLayouts = {};

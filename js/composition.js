@@ -133,6 +133,7 @@
       return;
     }
 
+    clearSelectedPromptGridMode();
     isPromptPreviewSuppressed = false;
     activePromptTagFilter = null;
 
@@ -166,6 +167,8 @@
   function addPromptToComposition(p, options = {}) {
     isPromptPreviewSuppressed = false;
     activePromptTagFilter = null;
+    activePromptCategoryGridMode = false;
+    activeSelectedPromptGridMode = false;
     const suppressToast = !!options.suppressToast;
     const idx = selected.findIndex(s => s.id === p.id && s.source === 'prompt');
     if (idx >= 0) {

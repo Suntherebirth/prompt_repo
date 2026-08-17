@@ -267,6 +267,34 @@
     };
   }
 
+  function updatePromptImageElements(promptId, url) {
+    if (!promptId || !url) return;
+
+    document.querySelectorAll('.preview-tag-image-card, .custom-combo-image-tile[data-composed-id]').forEach((card) => {
+      const cardId = card.dataset.promptId || card.dataset.composedId;
+      if (String(cardId) !== String(promptId)) return;
+      const loadingState = card.querySelector('.empty-state, .custom-combo-image-placeholder');
+      if (loadingState) {
+        const image = document.createElement('img');
+        image.src = url;
+        image.alt = card.title || '';
+        loadingState.replaceWith(image);
+        return;
+      }
+      const image = card.querySelector('img');
+      if (image && image.src !== url) image.src = url;
+    });
+
+    if (activePromptPreviewId === promptId) {
+      const previewImage = document.querySelector('#prompt-description-preview .preview-image-shell img');
+      if (previewImage && previewImage.src !== url) previewImage.src = url;
+    }
+    if (activeComposedPreviewId === promptId) {
+      const previewImage = document.querySelector('#composed-description-preview .preview-image-shell img');
+      if (previewImage && previewImage.src !== url) previewImage.src = url;
+    }
+  }
+
   function queuePromptImageLoad(prompt) {
     if (!prompt) return;
     const preferPortrait = previewRenderMode === 'portrait';
@@ -281,8 +309,10 @@
     getPromptImageObjectUrl(preferredImageId)
       .then((url) => {
         if (!url) return;
-        renderPromptDescriptionPreview();
-        renderComposedDescriptionPreview();
+        updatePromptImageElements(prompt.id, url);
+        if (activePromptPreviewId === prompt.id && !isPromptPreviewSuppressed) {
+          renderPromptDescriptionPreview();
+        }
         if (activeImageViewer?.imageId === preferredImageId && activeImageViewer.src !== url) {
           activeImageViewer = { ...activeImageViewer, src: url };
           renderImageViewer();

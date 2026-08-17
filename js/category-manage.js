@@ -810,6 +810,7 @@
   function openCoreSubCategory(mainCategory, subCategory) {
     if (!mainCategory || !subCategory) return;
 
+    clearSelectedPromptGridMode();
     const isCurrentlyFocused = leftPanelTab === 'prompt'
       && activeCategoryPrompt === mainCategory
       && activeSubCategoryPrompt === subCategory;

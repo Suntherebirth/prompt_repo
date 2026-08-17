@@ -8,8 +8,11 @@
     const panel = document.querySelector('.panel-library');
     const comboFooter = document.querySelector('.combo-library-footer');
     const composerTitle = document.getElementById('composer-panel-title');
+    const selectedPromptGridButton = document.getElementById('selected-prompt-grid-button');
     if (!panel) return;
     const isCustomComboMode = leftPanelTab === 'combo' && isCustomComboTabOpen;
+    const hasSelectedPrompts = selected.some(item => item.source === 'prompt');
+    if (!hasSelectedPrompts) activeSelectedPromptGridMode = false;
     panel.classList.toggle('combo-mode', leftPanelTab === 'combo');
     panel.classList.toggle('custom-combo-mode', isCustomComboMode);
     if (comboFooter) comboFooter.classList.toggle('custom-combo-footer', isCustomComboMode);
@@ -17,6 +20,12 @@
       composerTitle.textContent = isCustomComboMode
         ? `커스텀 콤보 (${customCombos.length})`
         : '조합된 프롬프트';
+    }
+    if (selectedPromptGridButton) {
+      selectedPromptGridButton.hidden = isCustomComboMode;
+      selectedPromptGridButton.disabled = !hasSelectedPrompts;
+      selectedPromptGridButton.removeAttribute('aria-pressed');
+      selectedPromptGridButton.textContent = '현재 조합 보기';
     }
   }
 
@@ -195,7 +204,12 @@
           chip.className = 'cat-chip' + (used ? ' used' : '') + (activeCategoryPrompt === mainCategory && activeSubCategoryPrompt === subCategory ? ' active' : '');
           chip.innerHTML = `<span class="cat-chip-mark${used ? '' : ' hidden'}">✓</span>${esc(subCategory)}`;
           bindPressAction(chip, () => {
+            clearSelectedPromptGridMode();
             const isCurrentlyFocused = activeCategoryPrompt === mainCategory && activeSubCategoryPrompt === subCategory;
+            if (used && !isCurrentlyFocused && jumpToSelectedPromptCardInCategory(mainCategory, subCategory)) {
+              return;
+            }
+
             if (isCurrentlyFocused) {
               activePromptCategoryGridMode = !activePromptCategoryGridMode;
               activePromptTagFilter = null;
@@ -236,6 +250,7 @@
       chip.className = 'cat-chip' + (activeCategoryComposed === c ? ' active' : '');
       chip.textContent = c;
       bindPressAction(chip, () => {
+        clearSelectedPromptGridMode();
         const isCurrentlySelected = activeCategoryComposed === c;
         if (isCurrentlySelected) {
           activeComposedCategoryGridMode = !activeComposedCategoryGridMode;
@@ -1291,6 +1306,27 @@
       }
       return false;
     });
+  }
+
+  function jumpToSelectedPromptCardInCategory(mainCategory, subCategory) {
+    const selectedPrompt = selected.find(item => (
+      item.source === 'prompt'
+      && item.mainCategory === mainCategory
+      && item.subCategory === subCategory
+    ));
+    if (!selectedPrompt) return false;
+
+    activePromptCategoryGridMode = false;
+    activePromptTagFilter = null;
+    activeCategoryPrompt = mainCategory;
+    activeSubCategoryPrompt = subCategory;
+    render();
+
+    requestAnimationFrame(() => {
+      const card = document.querySelector(`.prompt-item[data-prompt-id="${CSS.escape(String(selectedPrompt.id))}"]`);
+      if (card) card.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'nearest' });
+    });
+    return true;
   }
 
   function renderSelected() {

@@ -135,6 +135,61 @@
       background: #13131c;
     }
 
+    .library-footer-actions {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 8px;
+      margin-top: 10px;
+    }
+
+    .library-footer-actions .btn {
+      position: relative;
+      width: 100%;
+      min-width: 0;
+      padding: 9px 14px;
+      border-radius: 8px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      overflow: hidden;
+      transition: transform .16s cubic-bezier(.22, 1, .36, 1), box-shadow .16s ease, background .18s ease, border-color .18s ease, color .18s ease;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    .library-footer-actions .btn::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: rgba(255, 255, 255, 0.18);
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity .16s ease;
+    }
+
+    .library-footer-actions .btn:hover:not(:disabled) {
+      transform: translateY(-1px);
+      box-shadow: 0 5px 14px rgba(0, 0, 0, 0.2);
+    }
+
+    .library-footer-actions .btn:active:not(:disabled) {
+      transform: translateY(1px) scale(0.975);
+      box-shadow: inset 0 2px 5px rgba(0, 0, 0, 0.2), 0 1px 3px rgba(0, 0, 0, 0.16);
+    }
+
+    .library-footer-actions .btn:active:not(:disabled)::after {
+      opacity: 1;
+    }
+
+    .library-footer-actions .btn:focus-visible {
+      outline: 2px solid #f0c674;
+      outline-offset: 2px;
+    }
+
+    .library-footer-actions .btn:disabled {
+      opacity: 0.42;
+      cursor: not-allowed;
+      filter: saturate(0.55);
+    }
+
     .panel-library.combo-mode .library-footer {
       display: none;
     }
@@ -1132,6 +1187,68 @@
       background: #181820;
       cursor: zoom-in;
       touch-action: manipulation;
+    }
+
+    .prompt-description-preview .preview-tag-image-card.is-composition-core {
+      border-color: #34d399aa;
+      background: #183f35;
+      box-shadow: inset 0 0 0 1px rgba(52, 211, 153, 0.14), 0 2px 8px rgba(52, 211, 153, 0.1);
+    }
+
+    .prompt-description-preview .preview-composition-core-mark {
+      position: absolute;
+      top: 5px;
+      left: 5px;
+      z-index: 2;
+      display: inline-flex;
+      align-items: center;
+      min-height: 20px;
+      padding: 0 5px;
+      border-radius: 4px;
+      color: #10251f;
+      background: #34d399;
+      font-size: 0.65rem;
+      font-weight: 800;
+      line-height: 1;
+      pointer-events: none;
+    }
+
+    .prompt-description-preview .preview-composition-remove-btn {
+      position: absolute;
+      top: 5px;
+      right: 5px;
+      z-index: 2;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 22px;
+      height: 22px;
+      padding: 0;
+      border: 1px solid rgba(224, 173, 92, 0.35);
+      border-radius: 5px;
+      color: #d8c9aa;
+      background: rgba(33, 31, 28, 0.92);
+      font: inherit;
+      font-size: 0.9rem;
+      font-weight: 700;
+      line-height: 1;
+      cursor: pointer;
+      transition: transform .16s ease, color .16s ease, background .16s ease, border-color .16s ease, box-shadow .16s ease;
+    }
+
+    .prompt-description-preview .preview-composition-remove-btn:hover {
+      border-color: rgba(224, 173, 92, 0.75);
+      color: #fff2cf;
+      background: #2a2620;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.22);
+    }
+
+    .prompt-description-preview .preview-composition-remove-btn:active {
+      transform: translateY(1px) scale(0.9);
+      border-color: rgba(224, 173, 92, 0.9);
+      color: #fff2cf;
+      background: #211f1c;
+      box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.28);
     }
 
     .prompt-description-preview .preview-tag-image-select-btn {
@@ -2637,10 +2754,14 @@
       z-index: 3;
     }
 
-    .main.preview-render-portrait .panel-library > .library-footer > .btn {
+    .main.preview-render-portrait .panel-library > .library-footer > .library-footer-actions {
       grid-column: 1;
       grid-row: 4;
       margin: 0;
+      gap: 0;
+    }
+
+    .main.preview-render-portrait .panel-library > .library-footer > .library-footer-actions .btn {
       border-radius: 0;
       border-top: 1px solid #1e1e2e;
     }

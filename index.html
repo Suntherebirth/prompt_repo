@@ -78,7 +78,10 @@
       <div class="prompt-description-preview" id="prompt-description-preview">
         <span class="empty-state">선택한 프롬프트의 설명 이미지를 표시할 영역입니다.</span>
       </div>
-      <button class="btn btn-primary" style="width:100%" type="button" onclick="openAddPromptModal()">+ 새 프롬프트</button>
+      <div class="library-footer-actions">
+        <button class="btn btn-primary" type="button" onclick="openAddPromptModal()">+ 새 프롬프트</button>
+        <button id="selected-prompt-grid-button" class="btn btn-secondary" type="button" onclick="showSelectedPromptGrid()">현재 조합 보기</button>
+      </div>
     </div>
     <div class="combo-library-footer">
       <div class="custom-combo-flow-panel">

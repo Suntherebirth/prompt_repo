@@ -13,6 +13,15 @@
     preview.classList.toggle('preview-animation-level-3', previewAnimationLevel === 3);
     preview.classList.toggle('preview-animation-enabled', previewAnimationLevel > 0);
 
+    if (activeSelectedPromptGridMode) {
+      const selectedPrompts = selected.filter(item => item.source === 'prompt');
+      if (selectedPrompts.length) {
+        renderSelectedPromptGrid(preview, selectedPrompts);
+        return;
+      }
+      activeSelectedPromptGridMode = false;
+    }
+
     if (activePromptCategoryGridMode && leftPanelTab === 'prompt' && activeCategoryPrompt && activeSubCategoryPrompt) {
       renderPromptCategoryGrid(preview);
       return;
@@ -34,6 +43,13 @@
 
     const imageSrc = getPromptImageSource(prompt);
     queuePromptImageLoad(prompt);
+    if (!imageSrc && !prompt) {
+      const selectedPrompts = selected.filter(item => item.source === 'prompt');
+      if (selectedPrompts.length) {
+        renderSelectedPromptGrid(preview, selectedPrompts);
+        return;
+      }
+    }
     if (imageSrc) {
       const altText = prompt.imageName || getPromptDisplayName(prompt.mainCategory, prompt.subCategory);
       const nextImageKey = `${prompt.id || ''}:${imageSrc}`;
@@ -76,6 +92,24 @@
     preview.title = '';
     preview.innerHTML = '<span class="empty-state">설명 이미지가 표시됩니다.</span>';
     lastRenderedPromptPreviewImageKey = '';
+  }
+
+  function showSelectedPromptGrid() {
+    if (selected.filter(item => item.source === 'prompt').length === 0) return;
+    activeSelectedPromptGridMode = true;
+    activePromptPreviewId = null;
+    activePromptTagFilter = null;
+    activePromptCategoryGridMode = false;
+    activeCategoryPrompt = null;
+    activeSubCategoryPrompt = null;
+    selectingFromPreviewId = null;
+    isPromptPreviewSuppressed = true;
+    if (leftPanelTab !== 'prompt') setLeftPanelTab('prompt');
+    render();
+  }
+
+  function clearSelectedPromptGridMode() {
+    activeSelectedPromptGridMode = false;
   }
 
   function getActiveComposedPreviewItem() {

@@ -93,6 +93,31 @@
     }).join('');
   }
 
+  function renderSelectedPromptGrid(preview, selectedPrompts) {
+    const sortedPrompts = [...selectedPrompts].sort((a, b) => {
+      const aIsCore = isSubCategoryCoreEnabled(a.mainCategory, a.subCategory);
+      const bIsCore = isSubCategoryCoreEnabled(b.mainCategory, b.subCategory);
+      return Number(bIsCore) - Number(aIsCore);
+    });
+    const cards = sortedPrompts.map(prompt => {
+      const imageSrc = getPromptImageSource(prompt);
+      queuePromptImageLoad(prompt);
+      const altText = prompt.imageName || getPromptDisplayName(prompt.mainCategory, prompt.subCategory);
+      const description = [prompt.mainCategory, prompt.subCategory].filter(Boolean).join(' · ');
+      const isCore = isSubCategoryCoreEnabled(prompt.mainCategory, prompt.subCategory);
+      return `<div class="preview-tag-image-card is-composition-selected${isCore ? ' is-composition-core' : ''}" data-prompt-id="${esc(prompt.id)}" title="${esc(altText)}">${imageSrc
+        ? `<img src="${imageSrc}" alt="${esc(altText)}" />`
+        : '<span class="empty-state">이미지 로딩 중</span>'}${isCore ? '<span class="preview-composition-core-mark">핵심</span>' : ''}<span class="tag-image-name">${esc(prompt.content)}</span>${description ? `<span class="tag-image-description"><span class="tag-image-description-part">${esc(description)}</span></span>` : ''}<button class="preview-composition-remove-btn" type="button" aria-label="${esc(prompt.content)} 선택 제외">×</button></div>`;
+    }).join('');
+
+    preview.classList.add('has-image');
+    preview.classList.remove('image-clear-feedback', 'image-switch-feedback');
+    preview.title = '현재 조합에 선택된 프롬프트입니다';
+    preview.innerHTML = `<div class="preview-tag-image-grid"><div class="preview-tag-grid-header"><span class="preview-tag-chip">현재 조합</span><span class="tag-image-grid-total">${sortedPrompts.length}개</span></div>${cards}</div>`;
+    bindPromptTagImageCardSwipe(preview);
+    lastRenderedPromptPreviewImageKey = `selected:${sortedPrompts.map(prompt => prompt.id).join(',')}`;
+  }
+
   function renderPromptCategoryGrid(preview) {
     const categoryPrompts = prompts.filter(prompt => (
       prompt.mainCategory === activeCategoryPrompt && prompt.subCategory === activeSubCategoryPrompt
@@ -444,7 +469,7 @@
     preview.addEventListener('pointerdown', event => {
       if (event.pointerType === 'mouse' && event.button !== 0) return;
       const card = event.target.closest('.preview-tag-image-card');
-      if (!card || event.target.closest('.preview-tag-image-select-btn')) return;
+      if (!card || event.target.closest('.preview-tag-image-select-btn, .preview-composition-remove-btn')) return;
       pointerId = event.pointerId;
       activeCard = card;
       startX = event.clientX;

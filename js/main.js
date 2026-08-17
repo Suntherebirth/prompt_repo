@@ -71,6 +71,16 @@
   });
 
   document.getElementById('prompt-description-preview').addEventListener('click', e => {
+    const compositionRemoveButton = e.target.closest('.preview-composition-remove-btn');
+    if (compositionRemoveButton) {
+      e.stopPropagation();
+      const card = compositionRemoveButton.closest('.preview-tag-image-card');
+      const promptIndex = selected.findIndex(item => item.source === 'prompt' && String(item.id) === String(card?.dataset.promptId));
+      if (promptIndex >= 0) removeSelected(promptIndex);
+      return;
+    }
+
+    clearSelectedPromptGridMode();
     const tagImageSelectButton = e.target.closest('.preview-tag-image-select-btn');
     if (tagImageSelectButton) {
       e.stopPropagation();
