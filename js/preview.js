@@ -177,7 +177,7 @@
         const label = item.subCategory || item.content || '커스텀 조합';
         const comboItemImage = activeCustomCombo?.itemImages?.[item.id] || null;
         const imageSrc = getPromptImageSource(comboItemImage) || getPromptImageSource(item);
-        queuePromptImageLoad(comboItemImage || item);
+        queuePromptImageLoad(comboItemImage ? { ...comboItemImage, id: item.id } : item);
         const tile = imageSrc
           ? `<img src="${imageSrc}" alt="${esc(label)}" />`
           : `<div class="custom-combo-image-placeholder">${esc(label)}</div>`;
@@ -189,7 +189,7 @@
       const comboImageSource = getPromptImageSource(activeCustomCombo);
       queuePromptImageLoad(activeCustomCombo);
       const comboImageMarkup = activeCustomCombo ? `
-        <div class="custom-combo-image-tile custom-combo-combo-image-tile" data-flow-index="${items.length}">
+        <div class="custom-combo-image-tile custom-combo-combo-image-tile" data-flow-index="${items.length}" data-composed-id="${esc(String(activeCustomCombo.id))}">
           <div class="custom-combo-image-shell">
             ${comboImageSource
               ? `<img src="${comboImageSource}" alt="${esc(activeCustomCombo.subCategory || '커스텀 콤보')}" />`

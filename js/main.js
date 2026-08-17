@@ -215,6 +215,7 @@
 
   // ── Init ──
   preventSafariDoubleTapZoom();
+  bindWorkspaceTitleSwipe();
   loadSettings();
   renderSettingsDrawer();
   renderPreviewRenderMode();

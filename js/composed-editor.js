@@ -429,6 +429,89 @@
     setLeftPanelTab(leftPanelTab === 'prompt' ? 'combo' : 'prompt');
   }
 
+  function bindWorkspaceTitleSwipe() {
+    const title = document.getElementById('workspace-title-btn');
+    if (!title) return;
+
+    const SWIPE_COMMIT_X = 56;
+    const SWIPE_PREVIEW_MAX_X = 82;
+    let pointerId = null;
+    let startX = 0;
+    let startY = 0;
+    let tracking = false;
+    let swiping = false;
+
+    title.addEventListener('pointerdown', event => {
+      if (event.pointerType === 'mouse' && event.button !== 0) return;
+      pointerId = event.pointerId;
+      startX = event.clientX;
+      startY = event.clientY;
+      tracking = true;
+      swiping = false;
+      try { title.setPointerCapture(pointerId); } catch {}
+    });
+
+    title.addEventListener('pointermove', event => {
+      if (!tracking || event.pointerId !== pointerId) return;
+
+      const deltaX = event.clientX - startX;
+      const deltaY = event.clientY - startY;
+      if (!swiping) {
+        if (Math.abs(deltaX) < 8) return;
+        if (Math.abs(deltaX) <= Math.abs(deltaY)) {
+          tracking = false;
+          return;
+        }
+        swiping = true;
+      }
+
+      if (leftPanelTab !== 'combo') return;
+      if (deltaX > 0) {
+        event.preventDefault();
+        const previewX = Math.min(deltaX, SWIPE_PREVIEW_MAX_X);
+        title.style.transform = `translateX(${previewX * 0.34}px)`;
+        title.classList.toggle('workspace-title-swipe-ready', deltaX >= SWIPE_COMMIT_X);
+      } else {
+        title.style.transform = '';
+        title.classList.remove('workspace-title-swipe-ready');
+      }
+    });
+
+    const endSwipe = event => {
+      if (!tracking || event.pointerId !== pointerId) return;
+      tracking = false;
+
+      const deltaX = event.clientX - startX;
+      if (swiping && leftPanelTab === 'combo' && deltaX >= SWIPE_COMMIT_X) {
+        event.preventDefault();
+        title.blur();
+        title.dataset.suppressClickUntil = String(Date.now() + 500);
+        title.style.transform = '';
+        title.classList.remove('workspace-title-swipe-ready');
+        toggleCustomComboTab();
+      } else if (swiping && leftPanelTab === 'combo' && deltaX > 0) {
+        title.style.transform = '';
+        title.classList.remove('workspace-title-swipe-ready');
+        title.classList.remove('workspace-title-swipe-miss');
+        void title.offsetWidth;
+        title.classList.add('workspace-title-swipe-miss');
+      } else {
+        title.style.transform = '';
+        title.classList.remove('workspace-title-swipe-ready');
+      }
+      pointerId = null;
+    };
+
+    title.addEventListener('pointerup', endSwipe);
+    title.addEventListener('pointercancel', endSwipe);
+    title.addEventListener('click', event => {
+      if (Date.now() < Number(title.dataset.suppressClickUntil || 0)) {
+        event.preventDefault();
+        event.stopPropagation();
+      }
+    }, true);
+  }
+
   function toggleCustomComboTab() {
     if (leftPanelTab === 'combo') {
       setLeftPanelTab('combo');
@@ -492,6 +575,8 @@
     setCustomComboImagePosition('start');
     pendingCustomComboImages = { landscape: null, portrait: null };
     pendingCustomComboItemImages = {};
+    const imageFileInput = document.getElementById('custom-combo-image-file');
+    if (imageFileInput) imageFileInput.value = '';
     renderCustomComboCompositionImageList(selectedCustomCombo.map(item => item.id));
     setCustomComboImageEditOrientation('landscape');
     document.getElementById('save-custom-combo-modal')?.classList.add('open');
@@ -511,6 +596,8 @@
     pendingCustomComboItemImages = Object.fromEntries(
       Object.entries(customCombo.itemImages || {}).map(([itemId, image]) => [itemId, { ...image, file: null }])
     );
+    const imageFileInput = document.getElementById('custom-combo-image-file');
+    if (imageFileInput) imageFileInput.value = '';
     renderCustomComboCompositionImageList(customCombo.items || []);
     pendingCustomComboImages = {
       landscape: customCombo.imageData ? { dataUrl: customCombo.imageData, fileName: customCombo.imageName || '', mimeType: '', file: null } : null,
@@ -619,7 +706,7 @@
       if (!composed) return;
       const override = pendingCustomComboItemImages[itemId];
       const imageSource = getPromptImageSource(override) || getPromptImageSource(composed);
-      queuePromptImageLoad(override || composed);
+      queuePromptImageLoad(override ? { ...override, id: itemId } : composed);
       const row = document.createElement('div');
       row.className = 'custom-combo-modal-composition-row';
       row.innerHTML = `
@@ -639,6 +726,7 @@
         if (!file) return;
         try {
           pendingCustomComboItemImages[itemId] = {
+            imageId: pendingCustomComboItemImages[itemId]?.imageId || '',
             dataUrl: await readFileAsDataUrl(file),
             file,
             fileName: file.name || '',

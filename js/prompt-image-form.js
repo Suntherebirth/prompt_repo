@@ -313,6 +313,9 @@
         if (activePromptPreviewId === prompt.id && !isPromptPreviewSuppressed) {
           renderPromptDescriptionPreview();
         }
+        if (activeComposedPreviewId === prompt.id) {
+          renderComposedDescriptionPreview();
+        }
         if (activeImageViewer?.imageId === preferredImageId && activeImageViewer.src !== url) {
           activeImageViewer = { ...activeImageViewer, src: url };
           renderImageViewer();
