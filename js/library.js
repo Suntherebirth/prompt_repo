@@ -9,8 +9,10 @@
     const isCustomComboMode = isComboTab && isCustomComboTabOpen;
     if (workspaceTitle) {
       const nextTitle = isComboTab ? '커스텀 저장소' : '프롬프트 저장소';
-      const titleState = isComboTab ? 'combo' : 'prompt';
-      workspaceTitle.textContent = nextTitle;
+      const titleState = isComboTab ? (isCustomComboMode ? 'custom-combo' : 'combo') : 'prompt';
+      workspaceTitle.innerHTML = Array.from(nextTitle, (character) => (
+        `<span class="workspace-title-char${character === ' ' ? ' workspace-title-space' : ''}" aria-hidden="true">${character === ' ' ? '&nbsp;' : esc(character)}</span>`
+      )).join('');
       workspaceTitle.setAttribute('aria-label', isComboTab ? '프롬프트 관리로 이동' : '커스텀 조합으로 이동');
       if (workspaceTitle.dataset.workspaceState !== titleState) {
         workspaceTitle.dataset.workspaceState = titleState;
@@ -39,24 +41,17 @@
     const panel = document.querySelector('.panel-library');
     const main = document.querySelector('.main');
     const comboFooter = document.querySelector('.combo-library-footer');
-    const composerTitle = document.getElementById('composer-panel-title');
     const selectedPromptGridButton = document.getElementById('selected-prompt-grid-button');
     if (!panel) return;
     const isCustomComboMode = leftPanelTab === 'combo' && isCustomComboTabOpen;
-    const isEditOnlyCombinationMode = leftPanelTab === 'combo' && isComposedEditOnlyView && !isCustomComboMode;
+    const isEditOnlyCombinationMode = leftPanelTab === 'combo' && isComposedEditOnlyView;
     const hasSelectedPrompts = selected.some(item => item.source === 'prompt');
     if (!hasSelectedPrompts) activeSelectedPromptGridMode = false;
     panel.classList.toggle('combo-mode', leftPanelTab === 'combo');
     panel.classList.toggle('custom-combo-mode', isCustomComboMode);
     if (main) main.classList.toggle('edit-only-combination-mode', isEditOnlyCombinationMode);
+    if (main) main.classList.toggle('custom-combo-theme', isCustomComboMode);
     if (comboFooter) comboFooter.classList.toggle('custom-combo-footer', isCustomComboMode);
-    if (composerTitle) {
-      composerTitle.textContent = isCustomComboMode
-        ? `커스텀 콤보 (${customCombos.length})`
-        : '조합된 프롬프트';
-      composerTitle.classList.toggle('combo-title', leftPanelTab === 'combo' && !isCustomComboMode);
-      composerTitle.classList.toggle('edit-only-title', isEditOnlyCombinationMode);
-    }
     if (selectedPromptGridButton) {
       selectedPromptGridButton.hidden = isCustomComboMode;
       selectedPromptGridButton.disabled = !hasSelectedPrompts;
@@ -284,8 +279,13 @@
 
     cats.forEach(c => {
       const chip = document.createElement('span');
-      chip.className = 'cat-chip' + (activeCategoryComposed === c ? ' active' : '');
-      chip.textContent = c;
+      const isEditOnlyCategory = isComposedEditOnlyView;
+      chip.className = 'cat-chip'
+        + (activeCategoryComposed === c ? ' active' : '')
+        + (isEditOnlyCategory ? ' edit-only-category-chip' : '');
+      chip.innerHTML = isEditOnlyCategory
+        ? `<span class="cat-chip-edit-label" aria-hidden="true">편집</span><span class="cat-chip-text">${esc(c)}</span>`
+        : esc(c);
       bindPressAction(chip, () => {
         clearSelectedPromptGridMode();
         const isCurrentlySelected = activeCategoryComposed === c;

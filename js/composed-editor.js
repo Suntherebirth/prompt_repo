@@ -239,6 +239,7 @@
     const box = document.getElementById('output-box');
     const text = getComposedOutputText();
     box.textContent = text || OUTPUT_PLACEHOLDER;
+    box.classList.toggle('is-placeholder', !text);
   }
 
   function renderCategorySuggestions() {

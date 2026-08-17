@@ -875,7 +875,7 @@
       button.className = 'core-quick-access-btn';
       const isActive = leftPanelTab === 'prompt' && activeCategoryPrompt === mainCategory && activeSubCategoryPrompt === subCategory;
       if (isActive) button.classList.add('active');
-      button.textContent = `핵심 : ${mainCategory}/${subCategory}`;
+      button.textContent = `핵심 : ${subCategory}`;
       button.title = `${mainCategory} > ${subCategory} 핵심 분류 바로 열기`;
       button.onclick = () => openCoreSubCategory(mainCategory, subCategory);
       row.appendChild(button);
