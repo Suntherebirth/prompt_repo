@@ -231,12 +231,13 @@
       } else {
         subCategories.forEach(subCategory => {
           const used = isSubCategoryUsed(mainCategory, subCategory);
+          const isActive = activeCategoryPrompt === mainCategory && activeSubCategoryPrompt === subCategory;
           const chip = document.createElement('span');
-          chip.className = 'cat-chip' + (used ? ' used' : '') + (activeCategoryPrompt === mainCategory && activeSubCategoryPrompt === subCategory ? ' active' : '');
-          chip.innerHTML = `<span class="cat-chip-mark${used ? '' : ' hidden'}">✓</span>${esc(subCategory)}`;
+          chip.className = 'cat-chip' + (used ? ' used' : '') + (isActive ? ' active' : '');
+          chip.innerHTML = `<span class="cat-chip-mark${used || isActive ? '' : ' hidden'}">✓</span>${esc(subCategory)}`;
           bindPressAction(chip, () => {
             clearSelectedPromptGridMode();
-            const isCurrentlyFocused = activeCategoryPrompt === mainCategory && activeSubCategoryPrompt === subCategory;
+            const isCurrentlyFocused = isActive;
             if (used && !isCurrentlyFocused && jumpToSelectedPromptCardInCategory(mainCategory, subCategory)) {
               return;
             }
@@ -1547,7 +1548,7 @@
         chip.innerHTML = `
           ${isCore ? '<span class="chip-core-mark">핵심</span>' : ''}
           <span class="chip-cat">${esc(p.mainCategory || p.category)}</span>
-          <span class="chip-cat" style="color:#8ab4ff">${esc(p.subCategory || '')}</span>
+          <span class="chip-cat">${esc(p.subCategory || '')}</span>
           <span>${esc(p.content)}</span>
           <button class="chip-remove" title="제거" onclick="removeSelected(${i})">×</button>
         `;
