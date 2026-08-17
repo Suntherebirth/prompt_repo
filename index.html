@@ -71,15 +71,17 @@
       <span id="library-title">개별 프롬프트</span>
       <span id="count-badge" style="font-size:0.8rem;font-weight:700"></span>
     </div>
-    <div class="prompt-random-slot" id="prompt-random-slot"></div>
-    <div class="prompt-list" id="prompt-list"></div>
+    <div class="prompt-list-wrapper">
+      <div class="prompt-random-slot" id="prompt-random-slot"></div>
+      <div class="prompt-list" id="prompt-list"></div>
+    </div>
+    <div class="library-footer-actions">
+      <button class="btn btn-primary" type="button" onclick="openAddPromptModal()">+ 새 프롬프트</button>
+      <button id="selected-prompt-grid-button" class="btn btn-secondary" type="button" onclick="showSelectedPromptGrid()">현재 조합 보기</button>
+    </div>
     <div class="library-footer">
       <div class="prompt-description-preview" id="prompt-description-preview">
         <span class="empty-state">선택한 프롬프트의 설명 이미지를 표시할 영역입니다.</span>
-      </div>
-      <div class="library-footer-actions">
-        <button class="btn btn-primary" type="button" onclick="openAddPromptModal()">+ 새 프롬프트</button>
-        <button id="selected-prompt-grid-button" class="btn btn-secondary" type="button" onclick="showSelectedPromptGrid()">현재 조합 보기</button>
       </div>
     </div>
     <div class="combo-library-footer">
@@ -87,7 +89,7 @@
         <div class="custom-combo-preview-chips selected-chips" id="custom-combo-preview-chips"></div>
         <div class="custom-combo-flow-actions">
           <button class="btn btn-secondary custom-combo-save-btn" type="button" onclick="openSaveCustomComboModal()">＋ 새 콤보</button>
-          <button class="btn btn-danger custom-combo-reset-btn" type="button" onclick="clearCustomComboSelection()">🧹 초기화</button>
+          <button class="btn btn-reset-soft custom-combo-reset-btn" type="button" onclick="clearCustomComboSelection()">🧹 초기화</button>
         </div>
       </div>
       <div class="prompt-description-preview" id="composed-description-preview">
@@ -112,9 +114,9 @@
         <button class="btn btn-primary btn-sm" onclick="applyOutputEdit()">적용</button>
       </div>
       <div class="composer-actions">
-        <button class="btn btn-primary" onclick="copyPrompt()">📋 클립보드 복사</button>
+        <button class="btn btn-copy" onclick="copyPrompt()">📋 클립보드 복사</button>
         <button class="btn btn-secondary btn-save-composed" type="button" onclick="openSaveComposedModal()">💾 새 조합</button>
-        <button id="clear-composition-button" class="btn btn-danger" type="button" onclick="clearCurrentComposition()">🧹 초기화</button>
+        <button id="clear-composition-button" class="btn btn-reset-soft" type="button" onclick="clearCurrentComposition()">🧹 초기화</button>
       </div>
     </div>
   </div>

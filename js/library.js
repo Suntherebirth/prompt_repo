@@ -37,20 +37,25 @@
 
   function renderLibraryLayout() {
     const panel = document.querySelector('.panel-library');
+    const main = document.querySelector('.main');
     const comboFooter = document.querySelector('.combo-library-footer');
     const composerTitle = document.getElementById('composer-panel-title');
     const selectedPromptGridButton = document.getElementById('selected-prompt-grid-button');
     if (!panel) return;
     const isCustomComboMode = leftPanelTab === 'combo' && isCustomComboTabOpen;
+    const isEditOnlyCombinationMode = leftPanelTab === 'combo' && isComposedEditOnlyView && !isCustomComboMode;
     const hasSelectedPrompts = selected.some(item => item.source === 'prompt');
     if (!hasSelectedPrompts) activeSelectedPromptGridMode = false;
     panel.classList.toggle('combo-mode', leftPanelTab === 'combo');
     panel.classList.toggle('custom-combo-mode', isCustomComboMode);
+    if (main) main.classList.toggle('edit-only-combination-mode', isEditOnlyCombinationMode);
     if (comboFooter) comboFooter.classList.toggle('custom-combo-footer', isCustomComboMode);
     if (composerTitle) {
       composerTitle.textContent = isCustomComboMode
         ? `커스텀 콤보 (${customCombos.length})`
         : '조합된 프롬프트';
+      composerTitle.classList.toggle('combo-title', leftPanelTab === 'combo' && !isCustomComboMode);
+      composerTitle.classList.toggle('edit-only-title', isEditOnlyCombinationMode);
     }
     if (selectedPromptGridButton) {
       selectedPromptGridButton.hidden = isCustomComboMode;
@@ -234,7 +239,7 @@
           const isActive = activeCategoryPrompt === mainCategory && activeSubCategoryPrompt === subCategory;
           const chip = document.createElement('span');
           chip.className = 'cat-chip' + (used ? ' used' : '') + (isActive ? ' active' : '');
-          chip.innerHTML = `<span class="cat-chip-mark${used || isActive ? '' : ' hidden'}">✓</span>${esc(subCategory)}`;
+          chip.innerHTML = `<span class="cat-chip-mark${used ? '' : ' hidden'}">✓</span>${esc(subCategory)}`;
           bindPressAction(chip, () => {
             clearSelectedPromptGridMode();
             const isCurrentlyFocused = isActive;
