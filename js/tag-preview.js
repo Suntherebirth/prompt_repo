@@ -100,14 +100,16 @@
       return Number(bIsCore) - Number(aIsCore);
     });
     const cards = sortedPrompts.map(prompt => {
-      const imageSrc = getPromptImageSource(prompt);
-      queuePromptImageLoad(prompt);
+      const isCore = isSubCategoryCoreEnabled(prompt.mainCategory, prompt.subCategory);
+      const isWideCard = isCore && isCoreCategoryWideCardEnabled;
+      const forceOrientation = isWideCard ? 'landscape' : undefined;
+      const imageSrc = getPromptImageSource(prompt, forceOrientation);
+      queuePromptImageLoad(prompt, forceOrientation);
       const altText = prompt.imageName || getPromptDisplayName(prompt.mainCategory, prompt.subCategory);
       const description = [prompt.mainCategory, prompt.subCategory].filter(Boolean).join(' · ');
-      const isCore = isSubCategoryCoreEnabled(prompt.mainCategory, prompt.subCategory);
-      return `<div class="preview-tag-image-card is-composition-selected${isCore ? ' is-composition-core' : ''}" data-prompt-id="${esc(prompt.id)}" title="${esc(altText)}">${imageSrc
+      return `<div class="preview-tag-image-card is-composition-selected${isCore ? ' is-composition-core' : ''}${isWideCard ? ' is-composition-core-wide' : ''}" data-prompt-id="${esc(prompt.id)}" title="${esc(altText)}">${imageSrc
         ? `<img src="${imageSrc}" alt="${esc(altText)}" />`
-        : '<span class="empty-state">이미지 로딩 중</span>'}${isCore ? '<span class="preview-composition-core-mark">핵심</span>' : ''}<span class="tag-image-name">${esc(prompt.content)}</span>${description ? `<span class="tag-image-description"><span class="tag-image-description-part">${esc(description)}</span></span>` : ''}<button class="preview-composition-remove-btn" type="button" aria-label="${esc(prompt.content)} 선택 제외">×</button></div>`;
+        : '<span class="empty-state">이미지 로딩 중</span>'}${isCore ? '<span class="preview-composition-core-mark">핵심</span>' : ''}<span class="tag-image-name">${esc(prompt.content)}</span>${(!isWideCard && description) ? `<span class="tag-image-description"><span class="tag-image-description-part">${esc(description)}</span></span>` : ''}<button class="preview-composition-remove-btn" type="button" aria-label="${esc(prompt.content)} 선택 제외">×</button></div>`;
     }).join('');
 
     preview.classList.add('has-image');
@@ -521,6 +523,10 @@
 
   function selectPromptFromTagImage(prompt) {
     if (!prompt) return;
+    activePromptCategoryGridMode = false;
+    activePromptTagFilter = null;
+    activePromptPreviewId = prompt.id;
+    isPromptPreviewSuppressed = false;
     if (isSubCategoryCoreEnabled(prompt.mainCategory, prompt.subCategory)) {
       selected = selected.filter(item => !(item.source === 'prompt'
         && item.mainCategory === prompt.mainCategory

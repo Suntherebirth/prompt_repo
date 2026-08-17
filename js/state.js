@@ -69,6 +69,7 @@
   let previewAnimationLevel = 2;
   let previewTransitionMode = 'scale';
   let previewRenderMode = 'landscape';
+  let isCoreCategoryWideCardEnabled = false;
   let promptImageEditOrientation = 'landscape';
   let composedImageEditOrientation = 'landscape';
   let activeImageViewer = null;

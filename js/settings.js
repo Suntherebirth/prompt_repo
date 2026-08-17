@@ -193,6 +193,33 @@
     }
   }
 
+  function normalizeCoreCategoryWideCard(value) {
+    if (value === true || value === '1' || value === 1) return true;
+    return false;
+  }
+
+  function renderCoreCategoryWideCardToggle() {
+    const btn = document.getElementById('core-category-wide-card-toggle-btn');
+    if (!btn) return;
+    btn.classList.toggle('active', isCoreCategoryWideCardEnabled);
+    btn.setAttribute('aria-pressed', isCoreCategoryWideCardEnabled ? 'true' : 'false');
+    btn.textContent = isCoreCategoryWideCardEnabled ? '가로 카드 켜짐' : '가로 카드 꺼짐';
+  }
+
+  function setCoreCategoryWideCard(enabled, options = {}) {
+    isCoreCategoryWideCardEnabled = normalizeCoreCategoryWideCard(enabled);
+    saveSettings();
+    renderCoreCategoryWideCardToggle();
+    renderPromptDescriptionPreview();
+    if (options.notify) {
+      showToast(isCoreCategoryWideCardEnabled ? '핵심 분류 가로 카드가 켜졌습니다' : '핵심 분류 가로 카드가 꺼졌습니다');
+    }
+  }
+
+  function toggleCoreCategoryWideCard() {
+    setCoreCategoryWideCard(!isCoreCategoryWideCardEnabled, { notify: true });
+  }
+
   function setPreviewTransitionMode(mode, options = {}) {
     previewTransitionMode = normalizePreviewTransitionMode(mode);
     saveSettings();
@@ -245,6 +272,11 @@
   function toggleSettingsDrawer() {
     isSettingsDrawerOpen = !isSettingsDrawerOpen;
     renderSettingsDrawer();
+  }
+
+  function openCategoryManageFromSettings() {
+    closeSettingsDrawer();
+    openCategoryManageModal();
   }
 
   function handleSettingsDrawerBackdrop(e) {

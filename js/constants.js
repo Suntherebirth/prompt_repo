@@ -18,5 +18,6 @@
     DOUBLE_TAP_PREVIEW: 'double_tap_preview',
   };
   const PROMPT_PREVIEW_SIZE_LEVEL_KEY = 'prompt_repo_prompt_preview_size_level_v1';
+  const CORE_CATEGORY_WIDE_CARD_KEY = 'prompt_repo_core_category_wide_card_v1';
   const IMAGE_DB_NAME = 'prompt_repo_images_v1';
   const IMAGE_STORE_NAME = 'images';

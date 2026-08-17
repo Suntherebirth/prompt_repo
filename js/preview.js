@@ -125,7 +125,7 @@
     preview.classList.toggle('preview-animation-level-3', previewAnimationLevel === 3);
     preview.classList.toggle('preview-animation-enabled', previewAnimationLevel > 0);
 
-    if (leftPanelTab === 'combo' && activeCategoryComposed && activeComposedCategoryGridMode) {
+    if (leftPanelTab === 'combo' && !isCustomComboTabOpen && activeCategoryComposed && activeComposedCategoryGridMode) {
       const categoryItems = composedPrompts.filter(item => item.mainCategory === activeCategoryComposed).sort((a, b) => {
         const aText = String(a.subCategory || '').localeCompare(String(b.subCategory || ''), 'ko');
         if (aText !== 0) return aText;
@@ -145,39 +145,19 @@
         const imageSrc = getPromptImageSource(item);
         queuePromptImageLoad(item);
         const label = item.subCategory || '이름없음';
-        const text = getComposedItemText(item);
-        return `<div class="preview-tag-image-card" data-composed-id="${esc(item.id)}" title="${esc(label)}">${imageSrc
+        return `<div class="preview-tag-image-card composed-card-summary" data-composed-id="${esc(item.id)}" title="${esc(label)}">${imageSrc
           ? `<img src="${imageSrc}" alt="${esc(label)}" />`
-          : '<span class="empty-state">이미지 로딩 중</span>'}<span class="tag-image-name">${esc(label)}</span>${text ? `<span class="tag-image-description"><span class="tag-image-description-part">${esc(text)}</span></span>` : ''}<button class="preview-tag-image-select-btn" type="button" aria-label="${esc(label)} 조합 선택">선택</button></div>`;
+          : '<span class="empty-state">이미지 로딩 중</span>'}<span class="tag-image-name">${esc(label)}</span></div>`;
       }).join('');
 
       preview.innerHTML = `<div class="preview-tag-image-grid"><div class="preview-tag-grid-header"><span class="preview-tag-chip">${esc(activeCategoryComposed || '카테고리')}</span><span class="tag-image-grid-total">${categoryItems.length}개</span></div>${cards}</div>`;
 
-      preview.querySelectorAll('.preview-tag-image-card').forEach(card => {
-        const itemId = card.dataset.composedId;
-        const item = composedPrompts.find(entry => String(entry.id) === String(itemId));
-        const button = card.querySelector('.preview-tag-image-select-btn');
-        if (button) {
-          button.addEventListener('click', event => {
-            event.stopPropagation();
-            if (item) {
-              activeComposedPreviewId = item.id;
-              isPromptPreviewSuppressed = false;
-              loadComposedPrompt(item.id);
-            }
-          });
-        }
+      preview.querySelectorAll('.composed-card-summary').forEach(card => {
         card.addEventListener('click', event => {
-          if (event.target.closest('.preview-tag-image-select-btn')) return;
-          if (item) {
-            activeComposedPreviewId = item.id;
-            isPromptPreviewSuppressed = false;
-            render();
-          }
+          event.stopPropagation();
+          focusComposedCardFromTagGrid(card.dataset.composedId);
         });
       });
-
-      bindPromptTagImageCardSwipe(preview);
       return;
     }
 

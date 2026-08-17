@@ -231,9 +231,9 @@
     if (saveButton) saveButton.textContent = '적용';
   }
 
-  function getPromptImageSource(prompt) {
+  function getPromptImageSource(prompt, forceOrientation) {
     if (!prompt) return '';
-    const preferPortrait = previewRenderMode === 'portrait';
+    const preferPortrait = forceOrientation ? forceOrientation === 'portrait' : previewRenderMode === 'portrait';
     const imageDataCandidates = preferPortrait
         ? [prompt.portraitImageData, prompt.imageData]
       : [prompt.imageData, prompt.portraitImageData];
@@ -295,9 +295,9 @@
     }
   }
 
-  function queuePromptImageLoad(prompt) {
+  function queuePromptImageLoad(prompt, forceOrientation) {
     if (!prompt) return;
-    const preferPortrait = previewRenderMode === 'portrait';
+    const preferPortrait = forceOrientation ? forceOrientation === 'portrait' : previewRenderMode === 'portrait';
     const preferredImageId = preferPortrait
         ? (prompt.portraitImageId || prompt.imageId || '')
       : (prompt.imageId || prompt.portraitImageId || '');

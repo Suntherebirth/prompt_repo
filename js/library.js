@@ -2,6 +2,37 @@
     const title = document.getElementById('library-title');
     if (!title) return;
     title.textContent = leftPanelTab === 'combo' ? '커스텀 조합 카드' : '개별 프롬프트';
+
+    const workspaceTitle = document.getElementById('workspace-title-btn');
+    const workspaceModeToggle = document.getElementById('workspace-mode-toggle');
+    const isComboTab = leftPanelTab === 'combo';
+    const isCustomComboMode = isComboTab && isCustomComboTabOpen;
+    if (workspaceTitle) {
+      const nextTitle = isComboTab ? '커스텀 저장소' : '프롬프트 저장소';
+      const titleState = isComboTab ? 'combo' : 'prompt';
+      workspaceTitle.textContent = nextTitle;
+      workspaceTitle.setAttribute('aria-label', isComboTab ? '프롬프트 관리로 이동' : '커스텀 조합으로 이동');
+      if (workspaceTitle.dataset.workspaceState !== titleState) {
+        workspaceTitle.dataset.workspaceState = titleState;
+        workspaceTitle.classList.remove('workspace-title-btn-changing');
+        void workspaceTitle.offsetWidth;
+        workspaceTitle.classList.add('workspace-title-btn-changing');
+      }
+    }
+    if (workspaceModeToggle) {
+      workspaceModeToggle.hidden = !isComboTab;
+      const nextMode = isCustomComboMode ? '콤보' : '조합';
+      const modeState = isCustomComboMode ? 'custom-combo' : 'combo';
+      workspaceModeToggle.textContent = nextMode;
+      workspaceModeToggle.setAttribute('aria-pressed', isCustomComboMode ? 'true' : 'false');
+      workspaceModeToggle.title = isCustomComboMode ? '커스텀 조합으로 전환' : '커스텀 콤보로 전환';
+      if (workspaceModeToggle.dataset.workspaceState !== modeState) {
+        workspaceModeToggle.dataset.workspaceState = modeState;
+        workspaceModeToggle.classList.remove('workspace-mode-toggle-changing');
+        void workspaceModeToggle.offsetWidth;
+        workspaceModeToggle.classList.add('workspace-mode-toggle-changing');
+      }
+    }
   }
 
   function renderLibraryLayout() {
@@ -253,10 +284,14 @@
         clearSelectedPromptGridMode();
         const isCurrentlySelected = activeCategoryComposed === c;
         if (isCurrentlySelected) {
-          activeComposedCategoryGridMode = !activeComposedCategoryGridMode;
-        } else {
-          activeComposedCategoryGridMode = false;
+          if (!activeComposedCategoryGridMode) {
+            activeComposedCategoryGridMode = true;
+            activeComposedPreviewId = null;
+            render();
+          }
+          return;
         }
+        activeComposedCategoryGridMode = true;
         activeCategoryComposed = c;
         activeComposedPreviewId = null;
         render();
@@ -347,6 +382,7 @@
       return;
     }
     clearCoreRandomVisualState();
+    activeComposedCategoryGridMode = false;
     const shouldArmCoreSelection = !getComposedMainCategoryConfig(item.mainCategory).editOnly;
     if (shouldArmCoreSelection) {
       shouldAutoSelectCoreSubCategoryOnPromptTab = true;
@@ -656,6 +692,26 @@
     }
     render();
     showToast('클립보드 복사 버튼으로 전환되었습니다');
+  }
+
+  function focusComposedCardFromTagGrid(composedPromptId) {
+    const item = composedPrompts.find(entry => String(entry.id) === String(composedPromptId));
+    if (!item) return;
+
+    activeComposedCategoryGridMode = false;
+    activeCategoryComposed = item.mainCategory;
+    const isEditOnlyCategory = !!getComposedMainCategoryConfig(item.mainCategory).editOnly;
+    if (isEditOnlyCategory) {
+      armComposedCardCopyShortcut(item.id);
+    } else {
+      armComposedCardCoreRandomShortcut(item.id);
+    }
+
+    window.setTimeout(() => {
+      const card = Array.from(document.querySelectorAll('.combo-card-item'))
+        .find(entry => String(entry.dataset.promptId) === String(item.id));
+      card?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }, 220);
   }
 
   function runComposedCopyAndOpenCoreShortcut(composedPromptId) {
@@ -1264,6 +1320,7 @@
 
   function render() {
     renderTapComposeToggle();
+    renderCoreCategoryWideCardToggle();
     renderCoreQuickAccessRow();
     renderPreviewAnimationLevel();
     renderPreviewTransitionMode();

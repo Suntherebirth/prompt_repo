@@ -396,16 +396,12 @@
   function setLeftPanelTab(tab) {
     const isComboTabRequest = tab === 'combo';
     const isAlreadyOnComboTab = leftPanelTab === 'combo';
-    const comboBtn = document.getElementById('mode-btn-combo');
 
     if (isComboTabRequest && isAlreadyOnComboTab) {
       isCustomComboTabOpen = !isCustomComboTabOpen;
       if (isCustomComboTabOpen) {
         clearCoreRandomVisualState();
       }
-      comboBtn.textContent = isCustomComboTabOpen ? '커스텀 콤보' : '커스텀 조합';
-      comboBtn.classList.toggle('active', !isCustomComboTabOpen);
-      comboBtn.classList.toggle('custom-combo-active', isCustomComboTabOpen);
       render();
       return;
     }
@@ -413,7 +409,6 @@
     const previousTab = leftPanelTab;
     leftPanelTab = isComboTabRequest ? 'combo' : 'prompt';
     isCustomComboTabOpen = false;
-    comboBtn.textContent = '커스텀 조합';
 
     if (previousTab !== leftPanelTab) {
       clearPromptDescriptionPreview({ feedback: true });
@@ -425,11 +420,18 @@
     }
     document.getElementById('panel-view-prompt').classList.toggle('active', isPromptTab);
     document.getElementById('panel-view-combo').classList.toggle('active', !isPromptTab);
-    document.getElementById('mode-btn-prompt').classList.toggle('active', isPromptTab);
-    document.getElementById('mode-btn-combo').classList.toggle('active', !isPromptTab);
-    document.getElementById('mode-btn-combo').classList.toggle('custom-combo-active', false);
     localStorage.setItem(LEFT_PANEL_TAB_KEY, leftPanelTab);
     render();
+  }
+
+  function toggleWorkspaceTab() {
+    setLeftPanelTab(leftPanelTab === 'prompt' ? 'combo' : 'prompt');
+  }
+
+  function toggleCustomComboTab() {
+    if (leftPanelTab === 'combo') {
+      setLeftPanelTab('combo');
+    }
   }
 
   function openAddPromptModal() {

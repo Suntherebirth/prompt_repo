@@ -136,6 +136,7 @@
     clearSelectedPromptGridMode();
     isPromptPreviewSuppressed = false;
     activePromptTagFilter = null;
+    activePromptCategoryGridMode = false;
 
     const idx = selected.findIndex(s => s.id === p.id && s.source === 'prompt');
     if (idx >= 0) {
