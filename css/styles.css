@@ -59,7 +59,7 @@
       justify-content: space-between;
       border-radius: 9px;
       -webkit-tap-highlight-color: transparent;
-      touch-action: pan-y;
+      touch-action: none;
       transition: color .15s, background .15s, border-color .15s, transform .12s ease, box-shadow .15s;
     }
 
@@ -79,6 +79,18 @@
       border-color: rgba(245, 198, 110, 0.62);
       background: rgba(245, 198, 110, 0.08);
       box-shadow: 0 0 0 4px rgba(245, 198, 110, 0.08);
+    }
+
+    .title-manage-btn.workspace-title-swipe-left-ready {
+      border-color: rgba(142, 162, 255, 0.62);
+      background: rgba(142, 162, 255, 0.08);
+      box-shadow: 0 0 0 4px rgba(142, 162, 255, 0.08);
+    }
+
+    .title-manage-btn.workspace-title-swipe-down-ready {
+      border-color: rgba(240, 169, 190, 0.62);
+      background: rgba(240, 169, 190, 0.08);
+      box-shadow: 0 0 0 4px rgba(240, 169, 190, 0.08);
     }
 
     .title-manage-btn.workspace-title-swipe-miss {
@@ -476,6 +488,10 @@
       border-bottom: 1px solid #1e1e2e;
     }
 
+    .main.combo-mode .panel-library {
+      background: #171B22;
+    }
+
     .combo-library-footer {
       display: none;
       padding: 10px 12px 12px;
@@ -488,6 +504,10 @@
       display: flex;
       flex-direction: column;
       min-height: 0;
+    }
+
+    .main.combo-mode .panel-library > .combo-library-footer {
+      background: #13131c;
     }
 
     .panel-library:not(.custom-combo-mode) .custom-combo-preview-chips {
@@ -506,6 +526,14 @@
       align-items: stretch;
       overflow-x: hidden;
       overflow-y: auto;
+    }
+
+    .panel-library.custom-combo-mode > .prompt-list-wrapper > .prompt-list {
+      background: #171B22;
+    }
+
+    .panel-library.custom-combo-mode > .panel-header {
+      background: #171B22;
     }
 
     .custom-combo-flow-card {
@@ -2614,12 +2642,16 @@
       display: flex;
     }
 
+    .core-quick-access-btn {
+      flex: 0 0 240px;
+      width: 240px;
+      min-width: 240px;
+      max-width: 240px;
+      min-height: 48px;
+    }
+
     .core-quick-access-btn:not(.custom-category-view-toggle) {
       position: relative;
-      flex: 0 0 226px;
-      width: 226px;
-      min-width: 226px;
-      max-width: 226px;
       border: 1px solid #3A4479;
       border-radius: 9px;
       background: linear-gradient(180deg, #212A4B 0%, #1A2037 48%, #151722 100%);
@@ -2628,7 +2660,6 @@
       font-size: 0.96rem;
       font-weight: 800;
       line-height: 1.2;
-      min-height: 46px;
       cursor: pointer;
       transition: transform .15s ease, box-shadow .15s ease, border-color .18s ease, background .18s ease, color .18s ease;
       white-space: normal;
@@ -3008,8 +3039,6 @@
     }
 
     .custom-category-view-toggle {
-      min-width: 226px;
-      width: 226px;
       display: inline-flex;
       align-items: center;
       justify-content: center;
@@ -3380,6 +3409,7 @@
       display: flex;
       flex-direction: column;
       overflow: hidden;
+      border-left: 1px solid #2a2a3a;
       border-bottom: 1px solid #2a2a3a;
       pointer-events: auto;
     }
@@ -3409,6 +3439,17 @@
       aspect-ratio: auto;
       padding: var(--portrait-preview-inner-padding);
       pointer-events: auto;
+    }
+
+    .main.preview-render-portrait .panel-library.custom-combo-mode > .combo-library-footer.custom-combo-footer > .prompt-description-preview::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      bottom: 0;
+      left: var(--portrait-center-width);
+      width: 1px;
+      background: #2a2a3a;
+      pointer-events: none;
     }
 
     .main.preview-render-portrait .prompt-description-preview.preview-animation-level-1 .preview-image-shell {
@@ -3471,12 +3512,20 @@
       overflow: hidden;
     }
 
+    .main.custom-combo-theme .panel-composer {
+      border-right: 0;
+    }
+
+    .main.custom-combo-theme .panel-library.custom-combo-mode > .combo-library-footer.custom-combo-footer > .prompt-description-preview::before {
+      display: none;
+    }
+
     .main.preview-render-portrait .selected-chips {
       grid-column: 1;
       grid-row: 1;
       border-bottom: 0;
       border-left: 0;
-      border-right: 0;
+      border-right: 1px solid #2a2a3a;
       border-bottom: 1px solid #1e1e2e;
       overflow-y: auto;
       min-height: 0;
@@ -3489,7 +3538,7 @@
       grid-row: 1;
       min-height: 0;
       border-right: 0;
-      border-left: 1px solid #1e1e2e;
+      border-left: 0;
       padding-top: 12px;
     }
 
@@ -3519,7 +3568,7 @@
       cursor: grab;
       -webkit-user-drag: none;
       user-select: none;
-      touch-action: pan-y;
+      touch-action: manipulation;
     }
     .selected-chip.core {
       min-height: 31px;
@@ -3552,6 +3601,21 @@
     .selected-chip.drag-over {
       border-color: #A2AEF5;
       box-shadow: 0 0 0 1px rgba(162, 174, 245, 0.35);
+    }
+    .selected-chip.is-drag-ready,
+    .prompt-description-preview .preview-tag-layout-item.is-drag-ready {
+      animation: dragReadyFeedback .42s cubic-bezier(0.16, 1, 0.3, 1);
+      border-color: #A2AEF5;
+      box-shadow: 0 0 0 3px rgba(162, 174, 245, 0.22), 0 8px 18px rgba(76, 91, 214, 0.2);
+    }
+    .selected-chip.dragging.is-drag-ready {
+      opacity: 1;
+      background: rgba(76, 91, 214, 0.28);
+    }
+    @keyframes dragReadyFeedback {
+      0% { transform: scale(1); }
+      45% { transform: scale(1.025) translateY(-2px); }
+      100% { transform: scale(1) translateY(0); }
     }
     .selected-chip .chip-cat {
       flex-shrink: 0;
@@ -4147,49 +4211,6 @@
       box-shadow: 0 0 0 2px rgba(169, 87, 115, 0.14), 0 6px 16px rgba(99, 56, 75, 0.18);
     }
 
-    .main.edit-only-combination-mode .panel-add,
-    .main.edit-only-combination-mode .panel-library {
-      border-color: #63384B;
-    }
-
-    .main.edit-only-combination-mode .core-quick-access-row {
-      border-bottom-color: rgba(210, 125, 152, 0.38);
-    }
-
-    .main.edit-only-combination-mode .combo-section {
-      border-top-color: rgba(210, 125, 152, 0.38);
-      border-bottom-color: rgba(210, 125, 152, 0.38);
-    }
-
-    .main.edit-only-combination-mode .panel-library .prompt-list-wrapper {
-      border-bottom-color: rgba(210, 125, 152, 0.38);
-    }
-
-    .main.edit-only-combination-mode .custom-category-view-toggle {
-      border-color: rgba(210, 125, 152, 0.62);
-    }
-
-    .main.edit-only-combination-mode .custom-category-view-toggle.active {
-      border-color: #F0A9BE;
-    }
-
-    .main.edit-only-combination-mode .custom-category-view-toggle.active .custom-category-switch {
-      border-color: #F0A9BE;
-    }
-
-    .main.edit-only-combination-mode .panel-add {
-      background: linear-gradient(180deg, #211820 0%, #17151A 100%);
-    }
-
-    .main.edit-only-combination-mode .panel-library {
-      background: linear-gradient(180deg, #1D171C 0%, #17151A 100%);
-    }
-
-    .main.edit-only-combination-mode .panel-library > .panel-header {
-      background: rgba(99, 56, 75, 0.16);
-      border-bottom-color: rgba(169, 87, 115, 0.38);
-    }
-
     .main.edit-only-combination-mode #count-badge {
       color: #F1D5DE;
     }
@@ -4242,19 +4263,6 @@
       box-shadow: 0 0 0 2px rgba(210, 125, 152, 0.2), 0 8px 18px rgba(99, 56, 75, 0.24);
     }
 
-    .main.edit-only-combination-mode .prompt-item.combo-card-item:not(.core-random-armed) {
-      border-color: rgba(210, 125, 152, 0.48);
-      background: linear-gradient(135deg, rgba(59, 37, 48, 0.96), rgba(29, 23, 28, 0.98));
-      box-shadow: inset 0 1px 0 rgba(255, 240, 244, 0.04);
-    }
-
-    .main.edit-only-combination-mode .prompt-item.combo-card-item:not(.core-random-armed):hover,
-    .main.edit-only-combination-mode .prompt-item.combo-card-item.preview:not(.core-random-armed) {
-      border-color: #F0A9BE;
-      background: linear-gradient(135deg, rgba(99, 56, 75, 0.7), rgba(43, 29, 39, 0.98));
-      box-shadow: 0 0 0 1px rgba(210, 125, 152, 0.24), 0 10px 24px rgba(99, 56, 75, 0.24);
-    }
-
     .main.edit-only-combination-mode .combo-card-name {
       color: #FFF0F4;
     }
@@ -4264,14 +4272,11 @@
     }
 
     .main.edit-only-combination-mode .combo-card-choice-btn {
-      background: rgba(169, 87, 115, 0.18);
-      border-right-color: rgba(240, 169, 190, 0.34);
       color: #FFF0F4;
     }
 
     .main.edit-only-combination-mode .combo-card-choice-btn:hover,
     .main.edit-only-combination-mode .combo-card-choice-btn:active {
-      background: rgba(210, 125, 152, 0.3);
       color: #FFFFFF;
     }
 
@@ -4287,6 +4292,11 @@
       border-color: rgba(169, 87, 115, 0.34);
       background: rgba(43, 29, 39, 0.72);
       color: #D9A2B5;
+    }
+
+    .main.combo-mode #combo-filter .cat-chip {
+      flex: 1 1 100%;
+      width: 100%;
     }
 
     .main.custom-combo-theme #combo-filter .edit-only-category-chip:hover {
@@ -4315,52 +4325,6 @@
       letter-spacing: 0.08em;
       writing-mode: vertical-rl;
       text-orientation: upright;
-    }
-
-    .main.custom-combo-theme .panel-library .prompt-item.combo-card-item:not(.core-random-armed) {
-      min-height: 0;
-      border-radius: 10px;
-      border-color: rgba(169, 87, 115, 0.34);
-      background: rgba(43, 29, 39, 0.72);
-      box-shadow: none;
-    }
-
-    .main.custom-combo-theme .panel-library .prompt-item.combo-card-item:not(.core-random-armed):hover,
-    .main.custom-combo-theme .panel-library .prompt-item.combo-card-item.preview:not(.core-random-armed) {
-      border-color: rgba(210, 125, 152, 0.72);
-      background: rgba(99, 56, 75, 0.42);
-      box-shadow: 0 0 0 2px rgba(169, 87, 115, 0.12), 0 6px 16px rgba(99, 56, 75, 0.16);
-    }
-
-    .main.custom-combo-theme .panel-library .prompt-item.combo-card-item .prompt-item-swipe-content {
-      padding: 10px 12px;
-    }
-
-    .main.custom-combo-theme .panel-library .combo-card-text {
-      gap: 3px;
-    }
-
-    .main.custom-combo-theme .panel-library .combo-card-name {
-      color: #F1D5DE;
-      font-size: 0.9rem;
-      font-weight: 700;
-      line-height: 1.3;
-    }
-
-    .main.custom-combo-theme .panel-library .combo-card-preview {
-      color: #D9A2B5;
-      font-size: 0.76rem;
-      line-height: 1.35;
-    }
-
-    .main.custom-combo-theme .panel-library .prompt-item .edit-btn {
-      background: #3B2530;
-      color: #F1D5DE;
-    }
-
-    .main.custom-combo-theme .panel-library .prompt-item .edit-btn:hover {
-      background: #4B2E3C;
-      color: #FFF0F4;
     }
 
     .main .panel-library.combo-mode .prompt-item.combo-card-item.core-random-armed .combo-card-choice-btn.copy {

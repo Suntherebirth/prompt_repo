@@ -48,6 +48,7 @@
     const hasSelectedPrompts = selected.some(item => item.source === 'prompt');
     if (!hasSelectedPrompts) activeSelectedPromptGridMode = false;
     panel.classList.toggle('combo-mode', leftPanelTab === 'combo');
+    if (main) main.classList.toggle('combo-mode', leftPanelTab === 'combo');
     panel.classList.toggle('custom-combo-mode', isCustomComboMode);
     if (main) main.classList.toggle('edit-only-combination-mode', isEditOnlyCombinationMode);
     if (main) main.classList.toggle('custom-combo-theme', isCustomComboMode);
@@ -1397,6 +1398,18 @@
     if (!container) return;
     const customPreviewContainer = document.getElementById('custom-combo-preview-chips');
 
+    if (!container._chipTouchDragBound) {
+      container._chipTouchDragBound = true;
+      container.addEventListener('pointerdown', event => {
+        const chip = event.target.closest('.selected-chip');
+        if (!chip || !container.contains(chip)) return;
+        chipPointerDown(event, chip);
+      });
+      container.addEventListener('pointermove', chipPointerMove);
+      container.addEventListener('pointerup', chipPointerEnd);
+      container.addEventListener('pointercancel', chipPointerEnd);
+    }
+
     container.ondragover = dragOverSelectedContainer;
     container.ondrop = dropOnSelectedContainer;
 
@@ -1571,10 +1584,6 @@
         chip.addEventListener('dragover', dragOver);
         chip.addEventListener('drop', drop);
         chip.addEventListener('dragleave', dragLeave);
-        chip.addEventListener('pointerdown', chipPointerDown);
-        chip.addEventListener('pointermove', chipPointerMove);
-        chip.addEventListener('pointerup', chipPointerEnd);
-        chip.addEventListener('pointercancel', chipPointerEnd);
         container.appendChild(chip);
       });
     }

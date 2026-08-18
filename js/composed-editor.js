@@ -435,11 +435,14 @@
 
     const SWIPE_COMMIT_X = 56;
     const SWIPE_PREVIEW_MAX_X = 82;
+    const SWIPE_COMMIT_Y = 48;
+    const SWIPE_PREVIEW_MAX_Y = 72;
     let pointerId = null;
     let startX = 0;
     let startY = 0;
     let tracking = false;
     let swiping = false;
+    let swipeDirection = null;
 
     title.addEventListener('pointerdown', event => {
       if (event.pointerType === 'mouse' && event.button !== 0) return;
@@ -448,6 +451,7 @@
       startY = event.clientY;
       tracking = true;
       swiping = false;
+      swipeDirection = null;
       try { title.setPointerCapture(pointerId); } catch {}
     });
 
@@ -456,24 +460,38 @@
 
       const deltaX = event.clientX - startX;
       const deltaY = event.clientY - startY;
+      const canSwipeToPrompt = leftPanelTab === 'combo' && isCustomComboTabOpen && deltaX < 0;
       if (!swiping) {
         if (Math.abs(deltaX) < 8) return;
-        if (Math.abs(deltaX) <= Math.abs(deltaY)) {
+        if (Math.abs(deltaX) > Math.abs(deltaY)) {
+          swipeDirection = 'horizontal';
+        } else if (deltaY > 0) {
+          swipeDirection = 'vertical';
+        } else {
           tracking = false;
           return;
         }
         swiping = true;
       }
 
-      if (leftPanelTab !== 'combo') return;
-      if (deltaX > 0) {
+      if (swipeDirection === 'horizontal' && (deltaX > 0 || canSwipeToPrompt)) {
         event.preventDefault();
-        const previewX = Math.min(deltaX, SWIPE_PREVIEW_MAX_X);
+        const previewX = Math.max(-SWIPE_PREVIEW_MAX_X, Math.min(deltaX, SWIPE_PREVIEW_MAX_X));
         title.style.transform = `translateX(${previewX * 0.34}px)`;
         title.classList.toggle('workspace-title-swipe-ready', deltaX >= SWIPE_COMMIT_X);
+        title.classList.toggle('workspace-title-swipe-left-ready', canSwipeToPrompt && deltaX <= -SWIPE_COMMIT_X);
+        title.classList.remove('workspace-title-swipe-down-ready');
+      } else if (leftPanelTab === 'combo' && swipeDirection === 'vertical' && deltaY > 0) {
+        event.preventDefault();
+        const previewY = Math.min(deltaY, SWIPE_PREVIEW_MAX_Y);
+        title.style.transform = `translateY(${previewY * 0.34}px)`;
+        title.classList.toggle('workspace-title-swipe-down-ready', deltaY >= SWIPE_COMMIT_Y);
+        title.classList.remove('workspace-title-swipe-ready');
       } else {
         title.style.transform = '';
         title.classList.remove('workspace-title-swipe-ready');
+        title.classList.remove('workspace-title-swipe-left-ready');
+        title.classList.remove('workspace-title-swipe-down-ready');
       }
     });
 
@@ -482,23 +500,52 @@
       tracking = false;
 
       const deltaX = event.clientX - startX;
-      if (swiping && leftPanelTab === 'combo' && deltaX >= SWIPE_COMMIT_X) {
+      const deltaY = event.clientY - startY;
+      if (swiping && leftPanelTab === 'combo' && isCustomComboTabOpen && swipeDirection === 'horizontal' && deltaX <= -SWIPE_COMMIT_X) {
         event.preventDefault();
         title.blur();
         title.dataset.suppressClickUntil = String(Date.now() + 500);
         title.style.transform = '';
         title.classList.remove('workspace-title-swipe-ready');
-        toggleCustomComboTab();
-      } else if (swiping && leftPanelTab === 'combo' && deltaX > 0) {
+        title.classList.remove('workspace-title-swipe-left-ready');
+        title.classList.remove('workspace-title-swipe-down-ready');
+        setLeftPanelTab('prompt');
+      } else if (swiping && swipeDirection === 'horizontal' && deltaX >= SWIPE_COMMIT_X) {
+        event.preventDefault();
+        title.blur();
+        title.dataset.suppressClickUntil = String(Date.now() + 500);
         title.style.transform = '';
         title.classList.remove('workspace-title-swipe-ready');
+        title.classList.remove('workspace-title-swipe-left-ready');
+        title.classList.remove('workspace-title-swipe-down-ready');
+        if (leftPanelTab === 'combo') {
+          toggleCustomComboTab();
+        } else {
+          openCustomComboTab();
+        }
+      } else if (swiping && leftPanelTab === 'combo' && swipeDirection === 'vertical' && deltaY >= SWIPE_COMMIT_Y) {
+        event.preventDefault();
+        title.blur();
+        title.dataset.suppressClickUntil = String(Date.now() + 500);
+        title.style.transform = '';
+        title.classList.remove('workspace-title-swipe-ready');
+        title.classList.remove('workspace-title-swipe-left-ready');
+        title.classList.remove('workspace-title-swipe-down-ready');
+        toggleComposedEditOnlyView();
+      } else if (swiping && swipeDirection === 'horizontal' && deltaX > 0) {
+        title.style.transform = '';
+        title.classList.remove('workspace-title-swipe-ready');
+        title.classList.remove('workspace-title-swipe-left-ready');
+        title.classList.remove('workspace-title-swipe-down-ready');
         title.classList.remove('workspace-title-swipe-miss');
         void title.offsetWidth;
         title.classList.add('workspace-title-swipe-miss');
       } else {
         title.style.transform = '';
         title.classList.remove('workspace-title-swipe-ready');
+        title.classList.remove('workspace-title-swipe-down-ready');
       }
+      swipeDirection = null;
       pointerId = null;
     };
 
@@ -516,6 +563,23 @@
     if (leftPanelTab === 'combo') {
       setLeftPanelTab('combo');
     }
+  }
+
+  function openCustomComboTab() {
+    if (leftPanelTab !== 'combo') {
+      setLeftPanelTab('combo');
+    }
+    if (isCustomComboTabOpen) return;
+    isCustomComboTabOpen = true;
+    clearCoreRandomVisualState();
+    render();
+  }
+
+  function toggleComposedEditOnlyView() {
+    isComposedEditOnlyView = !isComposedEditOnlyView;
+    activeCategoryComposed = null;
+    activeComposedPreviewId = null;
+    render();
   }
 
   function openAddPromptModal() {

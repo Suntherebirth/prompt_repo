@@ -21,3 +21,5 @@
   const CORE_CATEGORY_WIDE_CARD_KEY = 'prompt_repo_core_category_wide_card_v1';
   const IMAGE_DB_NAME = 'prompt_repo_images_v1';
   const IMAGE_STORE_NAME = 'images';
+  const LONG_PRESS_DURATION_MS = 600;
+  const LONG_PRESS_MOVE_TOLERANCE_PX = 8;

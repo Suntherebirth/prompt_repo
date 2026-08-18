@@ -858,10 +858,7 @@
       `;
       button.title = isComposedEditOnlyView ? '일반 커스텀 카테고리로 전환' : '편집용 커스텀 카테고리로 전환';
       button.onclick = () => {
-        isComposedEditOnlyView = !isComposedEditOnlyView;
-        activeCategoryComposed = null;
-        activeComposedPreviewId = null;
-        render();
+        toggleComposedEditOnlyView();
       };
       row.appendChild(button);
       return;

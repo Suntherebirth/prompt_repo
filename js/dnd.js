@@ -3,6 +3,15 @@
     chips.forEach(chip => chip.classList.remove('dragging', 'drag-over'));
   }
 
+  function signalDragReady(element) {
+    if (!element) return;
+    element.classList.remove('is-drag-ready');
+    void element.offsetWidth;
+    element.classList.add('is-drag-ready');
+    window.setTimeout(() => element.classList.remove('is-drag-ready'), 420);
+    if (typeof navigator.vibrate === 'function') navigator.vibrate(18);
+  }
+
   function dragStart(e) {
     dragIdx = +e.currentTarget.dataset.idx;
     e.currentTarget.classList.add('dragging');
@@ -15,22 +24,56 @@
     clearSelectedChipDragState();
   }
 
-  function chipPointerDown(e) {
+  function clearTouchChipDragPress() {
+    if (touchDragPressTimer) window.clearTimeout(touchDragPressTimer);
+    touchDragPressTimer = null;
+  }
+
+  function resetTouchChipDrag() {
+    clearTouchChipDragPress();
+    if (touchDragElement) touchDragElement.draggable = true;
+    touchDragIdx = null;
+    touchDropIdx = null;
+    touchPointerId = null;
+    isTouchChipDragActive = false;
+    touchDragStartX = 0;
+    touchDragStartY = 0;
+    touchDragElement = null;
+    clearSelectedChipDragState();
+  }
+
+  function chipPointerDown(e, chip = e.currentTarget) {
     if (e.pointerType !== 'touch') return;
     if (e.target.closest('.chip-remove')) return;
+    if (!chip) return;
 
-    touchDragIdx = +e.currentTarget.dataset.idx;
+    resetTouchChipDrag();
+    touchDragIdx = +chip.dataset.idx;
     touchDropIdx = touchDragIdx;
     touchPointerId = e.pointerId;
-    e.currentTarget.classList.add('dragging');
-    if (typeof e.currentTarget.setPointerCapture === 'function') {
-      e.currentTarget.setPointerCapture(e.pointerId);
-    }
+    touchDragStartX = e.clientX;
+    touchDragStartY = e.clientY;
+    touchDragElement = chip;
+    chip.draggable = false;
+    touchDragPressTimer = window.setTimeout(() => {
+      if (touchDragIdx === null || touchPointerId !== e.pointerId) return;
+      isTouchChipDragActive = true;
+      chip.classList.add('dragging');
+      signalDragReady(chip);
+      if (typeof chip.setPointerCapture === 'function') {
+        try { chip.setPointerCapture(e.pointerId); } catch {}
+      }
+    }, LONG_PRESS_DURATION_MS);
   }
 
   function chipPointerMove(e) {
     if (e.pointerType !== 'touch') return;
     if (touchDragIdx === null || touchPointerId !== e.pointerId) return;
+    if (!isTouchChipDragActive) {
+      const movedDistance = Math.hypot(e.clientX - touchDragStartX, e.clientY - touchDragStartY);
+      if (movedDistance >= LONG_PRESS_MOVE_TOLERANCE_PX) resetTouchChipDrag();
+      return;
+    }
 
     e.preventDefault();
     clearSelectedChipDragState();
@@ -63,28 +106,23 @@
 
     const fromIdx = touchDragIdx;
     const toIdx = touchDropIdx;
+    const wasTouchDragActive = isTouchChipDragActive;
 
-    touchDragIdx = null;
-    touchDropIdx = null;
-    touchPointerId = null;
+    clearTouchChipDragPress();
 
-    if (typeof e.currentTarget.releasePointerCapture === 'function') {
-      try {
-        e.currentTarget.releasePointerCapture(e.pointerId);
-      } catch {
-        // Browsers may auto-release capture on pointerup.
-      }
+    if (wasTouchDragActive && typeof touchDragElement?.releasePointerCapture === 'function') {
+      try { touchDragElement.releasePointerCapture(e.pointerId); } catch {}
     }
 
-    if (fromIdx === null || toIdx === null || fromIdx === toIdx) {
-      clearSelectedChipDragState();
+    resetTouchChipDrag();
+
+    if (!wasTouchDragActive || fromIdx === null || toIdx === null || fromIdx === toIdx) {
       return;
     }
 
     clearOutputOverride();
     const item = selected.splice(fromIdx, 1)[0];
     selected.splice(toIdx, 0, item);
-    clearSelectedChipDragState();
     render();
   }
 

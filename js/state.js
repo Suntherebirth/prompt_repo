@@ -8,6 +8,14 @@
   let activeCategoryComposed = null;
   let activeComposedCategoryGridMode = false;
   let isComposedEditOnlyView = false;
+  let touchDragIdx = null;
+  let touchDropIdx = null;
+  let touchPointerId = null;
+  let touchDragPressTimer = null;
+  let isTouchChipDragActive = false;
+  let touchDragStartX = 0;
+  let touchDragStartY = 0;
+  let touchDragElement = null;
   let leftPanelTab = 'prompt';
   let isCustomComboTabOpen = false;
   let selectedCustomCombo = [];

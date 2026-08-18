@@ -238,7 +238,7 @@
       dividerPressTimer = window.setTimeout(() => {
         if (pressedDivider === divider) divider.classList.add('is-delete-visible');
         clearDividerPress();
-      }, 600);
+      }, LONG_PRESS_DURATION_MS);
     });
 
     browser.addEventListener('pointermove', clearDividerPress);
@@ -248,8 +248,33 @@
     let touchDragIndex = null;
     let touchDropIndex = null;
     let touchPointerId = null;
+    let touchDragPressTimer = null;
+    let touchDragItem = null;
+    let isTouchTagDragActive = false;
+    let touchDragStartX = 0;
+    let touchDragStartY = 0;
     let didTouchDrag = false;
     let suppressTagClickUntil = 0;
+
+    const clearTouchTagDragPress = () => {
+      if (touchDragPressTimer) window.clearTimeout(touchDragPressTimer);
+      touchDragPressTimer = null;
+    };
+
+    const resetTouchTagDrag = () => {
+      clearTouchTagDragPress();
+      touchDragIndex = null;
+      touchDropIndex = null;
+      touchPointerId = null;
+      touchDragItem = null;
+      isTouchTagDragActive = false;
+      touchDragStartX = 0;
+      touchDragStartY = 0;
+      didTouchDrag = false;
+      browser.querySelectorAll('.is-dragging, .is-drag-over').forEach(element => {
+        element.classList.remove('is-dragging', 'is-drag-over');
+      });
+    };
 
     browser.querySelectorAll('.preview-tag-layout-item').forEach(item => {
       item.addEventListener('dragover', event => {
@@ -271,22 +296,31 @@
 
     browser.addEventListener('pointerdown', event => {
       if (event.pointerType !== 'touch') return;
-      const item = event.target.closest('.preview-tag-layout-item');
+      const item = event.target.closest('.preview-tag-swipe-item');
       if (!item) return;
-      if (event.target.closest('.preview-tag-chip')) return;
+      resetTouchTagDrag();
       touchDragIndex = Number(item.dataset.layoutIndex);
       touchDropIndex = touchDragIndex;
       touchPointerId = event.pointerId;
-      didTouchDrag = false;
-      item.classList.add('is-dragging');
-      try { item.setPointerCapture(event.pointerId); } catch {}
+      touchDragItem = item;
+      touchDragStartX = event.clientX;
+      touchDragStartY = event.clientY;
+      touchDragPressTimer = window.setTimeout(() => {
+        if (touchDragIndex === null || touchPointerId !== event.pointerId || touchDragItem !== item) return;
+        isTouchTagDragActive = true;
+        item.classList.add('is-dragging');
+        signalDragReady(item);
+        try { item.setPointerCapture(event.pointerId); } catch {}
+      }, LONG_PRESS_DURATION_MS);
     });
 
     browser.addEventListener('pointermove', event => {
       if (event.pointerType !== 'touch' || touchPointerId !== event.pointerId || touchDragIndex === null) return;
-      const swipeItem = event.target.closest('.preview-tag-swipe-item');
-      const swipeDx = event.clientX - (swipeItem ? swipeItem._swipeStartX || event.clientX : event.clientX);
-      if (swipeItem && swipeDx > 8) return;
+      if (!isTouchTagDragActive) {
+        const movedDistance = Math.hypot(event.clientX - touchDragStartX, event.clientY - touchDragStartY);
+        if (movedDistance >= LONG_PRESS_MOVE_TOLERANCE_PX) resetTouchTagDrag();
+        return;
+      }
       const pointed = document.elementFromPoint(event.clientX, event.clientY);
       const target = pointed?.closest('.preview-tag-layout-item');
       if (!target) return;
@@ -303,15 +337,14 @@
       if (event.pointerType !== 'touch' || touchPointerId !== event.pointerId) return;
       const fromIndex = touchDragIndex;
       const toIndex = touchDropIndex;
+      const wasTouchTagDragActive = isTouchTagDragActive;
       const moved = didTouchDrag;
-      touchDragIndex = null;
-      touchDropIndex = null;
-      touchPointerId = null;
-      didTouchDrag = false;
-      browser.querySelectorAll('.is-dragging, .is-drag-over').forEach(element => {
-        element.classList.remove('is-dragging', 'is-drag-over');
-      });
-      if (!moved || fromIndex === null || toIndex === null) return;
+      clearTouchTagDragPress();
+      if (wasTouchTagDragActive && typeof event.currentTarget.releasePointerCapture === 'function') {
+        try { event.currentTarget.releasePointerCapture(event.pointerId); } catch {}
+      }
+      resetTouchTagDrag();
+      if (!wasTouchTagDragActive || !moved || fromIndex === null || toIndex === null) return;
       suppressTagClickUntil = Date.now() + 350;
       moveLayoutItem(fromIndex, toIndex);
     };
