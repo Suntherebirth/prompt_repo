@@ -5,8 +5,12 @@
 
     const workspaceTitle = document.getElementById('workspace-title-btn');
     const workspaceModeToggle = document.getElementById('workspace-mode-toggle');
+    const selectedChipsTitle = document.getElementById('selected-chips-title');
     const isComboTab = leftPanelTab === 'combo';
     const isCustomComboMode = isComboTab && isCustomComboTabOpen;
+    if (selectedChipsTitle) {
+      selectedChipsTitle.textContent = isCustomComboMode ? '커스텀 콤보 카드' : '선택된 프롬프트';
+    }
     if (workspaceTitle) {
       const nextTitle = isComboTab ? '커스텀 저장소' : '프롬프트 저장소';
       const titleState = isComboTab ? (isCustomComboMode ? 'custom-combo' : 'combo') : 'prompt';

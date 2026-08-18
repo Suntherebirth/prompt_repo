@@ -75,7 +75,7 @@
       <div class="prompt-list" id="prompt-list"></div>
     </div>
     <div class="library-footer-actions">
-      <button class="btn btn-primary" type="button" onclick="openAddPromptModal()">+ 새 프롬프트</button>
+      <button class="btn btn-primary create-action-btn create-action-btn--prompt" type="button" onclick="openAddPromptModal()">+ 새 프롬프트</button>
       <button id="selected-prompt-grid-button" class="btn btn-secondary" type="button" onclick="showSelectedPromptGrid()">현재 조합 보기</button>
     </div>
     <div class="library-footer">
@@ -87,7 +87,7 @@
       <div class="custom-combo-flow-panel">
         <div class="custom-combo-preview-chips selected-chips" id="custom-combo-preview-chips"></div>
         <div class="custom-combo-flow-actions">
-          <button class="btn btn-secondary custom-combo-save-btn" type="button" onclick="openSaveCustomComboModal()">＋ 새 콤보</button>
+          <button class="btn create-action-btn create-action-btn--custom-combo custom-combo-save-btn" type="button" onclick="openSaveCustomComboModal()">+ 새 콤보</button>
           <button class="btn btn-reset-soft custom-combo-reset-btn" type="button" onclick="clearCustomComboSelection()">🧹 초기화</button>
         </div>
       </div>
@@ -99,8 +99,13 @@
 
   <!-- Right: Composer -->
   <div class="panel-composer">
-    <div class="selected-chips" id="selected-chips">
-      <span class="empty-state" id="chips-empty">선택된 프롬프트가 없습니다</span>
+    <div class="selected-chips-panel">
+      <div class="panel-header">
+        <span id="selected-chips-title">선택된 프롬프트</span>
+      </div>
+      <div class="selected-chips" id="selected-chips">
+        <span class="empty-state" id="chips-empty">선택된 프롬프트가 없습니다</span>
+      </div>
     </div>
     <div class="composer-output">
       <div class="output-box is-placeholder" id="output-box" onclick="startOutputEdit()" title="터치해서 편집">프롬프트를 선택하면 여기에 표시됩니다.</div>
@@ -111,7 +116,7 @@
       </div>
       <div class="composer-actions">
         <button class="btn btn-copy" onclick="copyPrompt()">📋 클립보드 복사</button>
-        <button class="btn btn-secondary btn-save-composed" type="button" onclick="openSaveComposedModal()">💾 새 조합</button>
+        <button class="btn create-action-btn create-action-btn--combo btn-save-composed" type="button" onclick="openSaveComposedModal()">+ 새 조합</button>
         <button id="clear-composition-button" class="btn btn-reset-soft" type="button" onclick="clearCurrentComposition()">🧹 초기화</button>
       </div>
     </div>
