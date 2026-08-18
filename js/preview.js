@@ -145,12 +145,12 @@
         const imageSrc = getPromptImageSource(item);
         queuePromptImageLoad(item);
         const label = item.subCategory || '이름없음';
-        return `<div class="preview-tag-image-card composed-card-summary" data-composed-id="${esc(item.id)}" title="${esc(label)}">${imageSrc
+        return `<div class="preview-tag-image-card composed-card-summary is-combo-card is-category-name-only" data-composed-id="${esc(item.id)}" title="${esc(label)}">${imageSrc
           ? `<img src="${imageSrc}" alt="${esc(label)}" />`
           : '<span class="empty-state">이미지 로딩 중</span>'}<span class="tag-image-name">${esc(label)}</span></div>`;
       }).join('');
 
-      preview.innerHTML = `<div class="preview-tag-image-grid"><div class="preview-tag-grid-header"><span class="preview-tag-chip">${esc(activeCategoryComposed || '카테고리')}</span><span class="tag-image-grid-total">${categoryItems.length}개</span></div>${cards}</div>`;
+      preview.innerHTML = `<div class="preview-tag-image-grid is-combo-grid"><div class="preview-tag-grid-header"><span class="preview-tag-grid-category-chip cat-chip active is-combo">${esc(activeCategoryComposed || '카테고리')}</span><span class="tag-image-grid-total">${categoryItems.length}개</span></div>${cards}</div>`;
 
       preview.querySelectorAll('.composed-card-summary').forEach(card => {
         card.addEventListener('click', event => {

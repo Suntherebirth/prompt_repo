@@ -1552,9 +1552,8 @@
         chip.title = '탭하면 중앙 목록의 해당 프롬프트 카드로 이동합니다';
         chip.innerHTML = `
           ${isCore ? '<span class="chip-core-mark">핵심</span>' : ''}
-          <span class="chip-cat">${esc(p.mainCategory || p.category)}</span>
-          <span class="chip-cat">${esc(p.subCategory || '')}</span>
-          <span>${esc(p.content)}</span>
+          <span class="chip-category-stack"><span class="chip-cat">${esc(p.mainCategory || p.category)}</span><span class="chip-cat">${esc(p.subCategory || '')}</span></span>
+          <span class="chip-label">${esc(p.content)}</span>
           <button class="chip-remove" title="제거" onclick="removeSelected(${i})">×</button>
         `;
         const removeBtn = chip.querySelector('.chip-remove');

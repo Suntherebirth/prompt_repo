@@ -1280,15 +1280,62 @@
       align-items: center;
       justify-content: space-between;
       gap: 10px;
-      padding: 10px 14px;
-      border-bottom: 1px solid rgba(224, 173, 92, 0.2);
-      background: #15141a;
+      padding: 12px 14px 11px;
+      border-bottom: 1px solid rgba(212, 166, 47, 0.38);
+      background: linear-gradient(135deg, rgba(43, 34, 14, 0.96), rgba(28, 25, 23, 0.98));
+      box-shadow: inset 0 -2px 0 rgba(244, 201, 93, 0.08);
     }
 
     .prompt-description-preview .preview-tag-browser-title {
-      color: #8f8fa6;
-      font-size: 0.72rem;
-      letter-spacing: 0.04em;
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      min-width: 0;
+      color: #f9e7a7;
+      font-family: 'Avenir Next', 'Noto Sans KR', 'Segoe UI', sans-serif;
+      font-size: 0.82rem;
+      font-weight: 750;
+      letter-spacing: 0.015em;
+      line-height: 1.25;
+    }
+
+    .prompt-description-preview .preview-tag-browser-category-chip,
+    .prompt-description-preview .preview-tag-grid-category-chip {
+      display: inline-flex;
+      align-items: center;
+      max-width: min(42vw, 260px);
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .prompt-description-preview .preview-tag-browser-category-chip.is-prompt,
+    .prompt-description-preview .preview-tag-grid-category-chip.is-prompt {
+      border-color: rgba(116, 132, 232, 0.9);
+      color: #f0f3ff;
+      background: rgba(76, 91, 214, 0.18);
+      box-shadow: 0 0 0 2px rgba(76, 91, 214, 0.12), 0 4px 12px rgba(76, 91, 214, 0.1);
+    }
+
+    .prompt-description-preview .preview-tag-browser-category-chip.is-combo,
+    .prompt-description-preview .preview-tag-grid-category-chip.is-combo {
+      border-color: #d27d98;
+      color: #f1d5de;
+      background: rgba(169, 87, 115, 0.24);
+      box-shadow: 0 0 0 2px rgba(169, 87, 115, 0.14), 0 6px 16px rgba(99, 56, 75, 0.18);
+    }
+
+    .prompt-description-preview .preview-tag-browser-category-chip.is-custom-combo,
+    .prompt-description-preview .preview-tag-grid-category-chip.is-custom-combo {
+      border-color: #f59e0b;
+      color: #fde68a;
+      background: rgba(245, 158, 11, 0.12);
+      box-shadow: inset 3px 0 0 #f59e0b, 0 0 0 2px rgba(245, 158, 11, 0.1);
+    }
+
+    .prompt-description-preview .preview-tag-browser-title-suffix {
+      color: #d9c98e;
+      white-space: nowrap;
     }
 
     .prompt-description-preview .preview-tag-browser .preview-tag-chip {
@@ -1355,10 +1402,10 @@
 
     .prompt-description-preview .preview-tag-mode-toggle {
       padding: 5px 8px;
-      border: 1px solid rgba(138, 180, 255, 0.35);
+      border: 1px solid rgba(212, 166, 47, 0.42);
       border-radius: 5px;
-      background: #1a1f2f;
-      color: #a9bddf;
+      background: rgba(43, 34, 14, 0.72);
+      color: #f4c95d;
       font: inherit;
       font-size: 0.7rem;
       font-weight: 700;
@@ -1368,9 +1415,10 @@
 
     .prompt-description-preview .preview-tag-mode-toggle:hover,
     .prompt-description-preview .preview-tag-browser.is-edit-mode .preview-tag-mode-toggle {
-      border-color: #8ab4ff;
-      color: #eef5ff;
-      background: #202b45;
+      border-color: #f4c95d;
+      color: #fff3c4;
+      background: #2b220e;
+      box-shadow: 0 0 0 3px rgba(212, 166, 47, 0.1);
     }
 
     .prompt-description-preview .preview-tag-browser-layout {
@@ -1480,15 +1528,66 @@
       touch-action: manipulation;
     }
 
+    .prompt-description-preview .preview-tag-image-card.is-prompt-card {
+      border-color: rgba(116, 132, 232, 0.34);
+      background: #181d32;
+      box-shadow: inset 0 1px 0 rgba(225, 232, 255, 0.03);
+    }
+
+    .prompt-description-preview .preview-tag-image-card.is-prompt-card .tag-image-name,
+    .prompt-description-preview .preview-tag-image-card.is-prompt-card .tag-image-description {
+      background: #1c213b;
+    }
+
+    .prompt-description-preview .preview-tag-image-card.is-prompt-card .tag-image-name {
+      color: #e1e8ff;
+    }
+
+    .prompt-description-preview .preview-tag-image-card.is-prompt-card .tag-image-description {
+      color: #9da9dd;
+    }
+
+    .prompt-description-preview .preview-tag-image-card.is-combo-card {
+      border-color: rgba(169, 87, 115, 0.42);
+      background: #2b1d27;
+      box-shadow: inset 0 1px 0 rgba(241, 213, 222, 0.03);
+    }
+
+    .prompt-description-preview .preview-tag-image-card.is-combo-card .tag-image-name,
+    .prompt-description-preview .preview-tag-image-card.is-combo-card .tag-image-description {
+      background: #2b1d27;
+    }
+
+    .prompt-description-preview .preview-tag-image-card.is-combo-card .tag-image-name {
+      color: #f1d5de;
+    }
+
+    .prompt-description-preview .preview-tag-image-card.is-combo-card .tag-image-description {
+      color: #c89aad;
+    }
+
+    .prompt-description-preview .preview-tag-image-card.is-category-name-only .tag-image-name {
+      flex: 1 1 auto;
+      min-height: 2.8em;
+      padding: 5px 5px 6px;
+      font-size: 0.66rem;
+      line-height: 1.3;
+      text-align: center;
+      white-space: normal;
+      overflow: visible;
+      overflow-wrap: anywhere;
+      word-break: keep-all;
+    }
+
     .prompt-description-preview .preview-tag-image-card.composed-card-summary {
       cursor: pointer;
       transition: transform .16s ease, border-color .16s ease, background .16s ease, box-shadow .16s ease;
     }
 
     .prompt-description-preview .preview-tag-image-card.composed-card-summary:hover {
-      border-color: rgba(245, 198, 115, 0.72);
-      background: #24222a;
-      box-shadow: 0 3px 10px rgba(0, 0, 0, 0.18);
+      border-color: #d27d98;
+      background: #3a2632;
+      box-shadow: 0 3px 10px rgba(99, 56, 75, 0.24);
     }
 
     .prompt-description-preview .preview-tag-image-card.composed-card-summary:active {
@@ -1589,6 +1688,18 @@
       transform: scale(0.96);
       transition: opacity .2s ease, transform .24s cubic-bezier(0.16, 1, 0.3, 1);
       z-index: 1;
+    }
+
+    .prompt-description-preview .preview-tag-image-card.is-prompt-card .preview-tag-image-select-btn {
+      color: #e1e8ff;
+      background: rgba(42, 54, 125, 0.48);
+      box-shadow: inset 0 0 0 1px rgba(116, 132, 232, 0.72), inset 0 0 24px rgba(13, 19, 54, 0.3);
+    }
+
+    .prompt-description-preview .preview-tag-image-card.is-combo-card .preview-tag-image-select-btn {
+      color: #f1d5de;
+      background: rgba(99, 56, 75, 0.5);
+      box-shadow: inset 0 0 0 1px rgba(210, 125, 152, 0.72), inset 0 0 24px rgba(43, 29, 39, 0.3);
     }
 
     .prompt-description-preview .preview-tag-image-card.is-swipe-action-visible {
@@ -3394,8 +3505,11 @@
 
     .selected-chip {
       display: flex;
+      flex: 0 0 100%;
       align-items: center;
       gap: 5px;
+      min-width: 0;
+      width: 100%;
       background: rgba(76, 91, 214, 0.12);
       border: 1px solid rgba(116, 132, 232, 0.42);
       border-radius: 8px;
@@ -3408,15 +3522,20 @@
       touch-action: pan-y;
     }
     .selected-chip.core {
+      min-height: 31px;
+      padding-top: 6px;
+      padding-bottom: 6px;
       background: rgba(116, 132, 232, 0.2);
       border-color: rgba(154, 166, 244, 0.7);
       box-shadow: inset 0 0 0 1px rgba(154, 166, 244, 0.16), 0 2px 8px rgba(76, 91, 214, 0.16);
       color: #F0F3FF;
+      font-size: 0.94rem;
       font-weight: 600;
     }
     .selected-chip .chip-core-mark {
       display: inline-flex;
       align-items: center;
+      flex-shrink: 0;
       height: 18px;
       padding: 0 5px;
       border-radius: 4px;
@@ -3425,6 +3544,7 @@
       font-size: 0.65rem;
       font-weight: 800;
       line-height: 1;
+      white-space: nowrap;
     }
     .selected-chip.dragging {
       opacity: 0.48;
@@ -3433,8 +3553,35 @@
       border-color: #A2AEF5;
       box-shadow: 0 0 0 1px rgba(162, 174, 245, 0.35);
     }
-    .selected-chip .chip-cat { font-size: 0.7rem; color: #B7C1F7; font-weight: 600; }
+    .selected-chip .chip-cat {
+      flex-shrink: 0;
+      font-size: 0.7rem;
+      color: #B7C1F7;
+      font-weight: 600;
+      white-space: nowrap;
+    }
+    .selected-chip .chip-category-stack {
+      display: flex;
+      flex: 0 0 auto;
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 2px;
+    }
+    .selected-chip .chip-label {
+      flex: 1 1 auto;
+      min-width: 0;
+      line-height: 1.3;
+      text-align: center;
+      overflow-wrap: anywhere;
+      word-break: break-word;
+      display: -webkit-box;
+      -webkit-box-orient: vertical;
+      -webkit-line-clamp: 2;
+      overflow: hidden;
+    }
     .selected-chip .chip-remove {
+      flex: 0 0 auto;
+      margin-left: auto;
       background: none; border: none; color: rgba(183, 193, 247, 0.62); cursor: pointer;
       font-size: 0.9rem; padding: 0; line-height: 1;
     }
@@ -3892,13 +4039,27 @@
     }
 
     .combo-card-choice-btn.copy {
-      color: #C9D2FF;
-      border-color: rgba(116, 132, 232, 0.26);
+      color: #E5E7EB;
+      background: rgba(107, 114, 128, 0.2);
+      border-color: rgba(156, 163, 175, 0.32);
     }
 
     .combo-card-choice-btn.copy:hover,
     .combo-card-choice-btn.copy:active {
-      background: rgba(116, 132, 232, 0.2);
+      background: rgba(156, 163, 175, 0.28);
+      color: #F9FAFB;
+    }
+
+    .combo-card-choice-btn:not(.copy) {
+      color: #E1E8FF;
+      background: rgba(76, 91, 214, 0.16);
+      border-color: rgba(116, 132, 232, 0.3);
+    }
+
+    .combo-card-choice-btn:not(.copy):hover,
+    .combo-card-choice-btn:not(.copy):active {
+      background: rgba(116, 132, 232, 0.26);
+      color: #F0F3FF;
     }
 
     .prompt-item.combo-card-item.core-random-morph .prompt-item-swipe-content {
@@ -4200,6 +4361,33 @@
     .main.custom-combo-theme .panel-library .prompt-item .edit-btn:hover {
       background: #4B2E3C;
       color: #FFF0F4;
+    }
+
+    .main .panel-library.combo-mode .prompt-item.combo-card-item.core-random-armed .combo-card-choice-btn.copy {
+      border-right-color: rgba(156, 163, 175, 0.32);
+      background: rgba(107, 114, 128, 0.2);
+      color: #E5E7EB;
+    }
+
+    .main .panel-library.combo-mode .prompt-item.combo-card-item.core-random-armed .combo-card-choice-btn.copy:hover,
+    .main .panel-library.combo-mode .prompt-item.combo-card-item.core-random-armed .combo-card-choice-btn.copy:active {
+      background: rgba(156, 163, 175, 0.28);
+      color: #F9FAFB;
+    }
+
+    .main .panel-library.combo-mode .prompt-item.combo-card-item.core-random-armed .combo-card-choice-btn:not(.copy) {
+      border-right-color: rgba(116, 132, 232, 0.3);
+      background: linear-gradient(135deg, rgba(26, 31, 62, 0.96), rgba(17, 21, 35, 0.98));
+      color: #E1E8FF;
+      box-shadow: inset 0 0 0 1px rgba(116, 132, 232, 0.22);
+      font-size: 0.95rem;
+      font-weight: 600;
+    }
+
+    .main .panel-library.combo-mode .prompt-item.combo-card-item.core-random-armed .combo-card-choice-btn:not(.copy):hover,
+    .main .panel-library.combo-mode .prompt-item.combo-card-item.core-random-armed .combo-card-choice-btn:not(.copy):active {
+      background: linear-gradient(135deg, rgba(35, 42, 84, 0.98), rgba(22, 28, 52, 0.98));
+      color: #F0F3FF;
     }
 
 

@@ -87,7 +87,7 @@
       const description = descriptionLines
         .map(line => `<span class="tag-image-description-part">${esc(line)}</span>`)
         .join('');
-      return `<div class="preview-tag-image-card${animateEntry ? ' is-entering' : ''}" data-prompt-id="${esc(prompt.id)}" title="${esc(altText)}">${imageSrc
+      return `<div class="preview-tag-image-card is-prompt-card${animateEntry ? ' is-entering' : ''}" data-prompt-id="${esc(prompt.id)}" title="${esc(altText)}">${imageSrc
         ? `<img src="${imageSrc}" alt="${esc(altText)}" />`
         : '<span class="empty-state">이미지 로딩 중</span>'}<span class="tag-image-name">${esc(prompt.content)}</span>${description ? `<span class="tag-image-description">${description}</span>` : ''}<button class="preview-tag-image-select-btn" type="button" aria-label="${esc(prompt.content)} 프롬프트 선택">프롬프트 선택</button></div>`;
     }).join('');
@@ -107,7 +107,7 @@
       queuePromptImageLoad(prompt, forceOrientation);
       const altText = prompt.imageName || getPromptDisplayName(prompt.mainCategory, prompt.subCategory);
       const description = [prompt.mainCategory, prompt.subCategory].filter(Boolean).join(' · ');
-      return `<div class="preview-tag-image-card is-composition-selected${isCore ? ' is-composition-core' : ''}${isWideCard ? ' is-composition-core-wide' : ''}" data-prompt-id="${esc(prompt.id)}" title="${esc(altText)}">${imageSrc
+      return `<div class="preview-tag-image-card is-prompt-card is-composition-selected${isCore ? ' is-composition-core' : ''}${isWideCard ? ' is-composition-core-wide' : ''}" data-prompt-id="${esc(prompt.id)}" title="${esc(altText)}">${imageSrc
         ? `<img src="${imageSrc}" alt="${esc(altText)}" />`
         : '<span class="empty-state">이미지 로딩 중</span>'}${isCore ? '<span class="preview-composition-core-mark">핵심</span>' : ''}<span class="tag-image-name">${esc(prompt.content)}</span>${(!isWideCard && description) ? `<span class="tag-image-description"><span class="tag-image-description-part">${esc(description)}</span></span>` : ''}<button class="preview-composition-remove-btn" type="button" aria-label="${esc(prompt.content)} 선택 제외">×</button></div>`;
     }).join('');
@@ -115,7 +115,7 @@
     preview.classList.add('has-image');
     preview.classList.remove('image-clear-feedback', 'image-switch-feedback');
     preview.title = '현재 조합에 선택된 프롬프트입니다';
-    preview.innerHTML = `<div class="preview-tag-image-grid"><div class="preview-tag-grid-header"><span class="preview-tag-chip">현재 조합</span><span class="tag-image-grid-total">${sortedPrompts.length}개</span></div>${cards}</div>`;
+    preview.innerHTML = `<div class="preview-tag-image-grid is-prompt-grid"><div class="preview-tag-grid-header"><span class="preview-tag-grid-category-chip cat-chip active is-prompt">현재 조합</span><span class="tag-image-grid-total">${sortedPrompts.length}개</span></div>${cards}</div>`;
     bindPromptTagImageCardSwipe(preview);
     lastRenderedPromptPreviewImageKey = `selected:${sortedPrompts.map(prompt => prompt.id).join(',')}`;
   }
@@ -146,13 +146,12 @@
       const imageSrc = getPromptImageSource(prompt);
       queuePromptImageLoad(prompt);
       const altText = prompt.imageName || getPromptDisplayName(prompt.mainCategory, prompt.subCategory);
-      const description = [prompt.content, prompt.description].filter(Boolean).map(part => String(part).trim()).filter(Boolean).slice(0, 2).join(' · ');
-      return `<div class="preview-tag-image-card" data-prompt-id="${esc(prompt.id)}" title="${esc(altText)}">${imageSrc
+      return `<div class="preview-tag-image-card is-prompt-card is-category-name-only" data-prompt-id="${esc(prompt.id)}" title="${esc(altText)}">${imageSrc
         ? `<img src="${imageSrc}" alt="${esc(altText)}" />`
-        : '<span class="empty-state">이미지 로딩 중</span>'}<span class="tag-image-name">${esc(prompt.content)}</span>${description ? `<span class="tag-image-description"><span class="tag-image-description-part">${esc(description)}</span></span>` : ''}<button class="preview-tag-image-select-btn" type="button" aria-label="${esc(prompt.content)} 프롬프트 선택">프롬프트 선택</button></div>`;
+        : '<span class="empty-state">이미지 로딩 중</span>'}<span class="tag-image-name">${esc(prompt.content)}</span><button class="preview-tag-image-select-btn" type="button" aria-label="${esc(prompt.content)} 프롬프트 선택">프롬프트 선택</button></div>`;
     }).join('');
 
-    preview.innerHTML = `<div class="preview-tag-image-grid"><div class="preview-tag-grid-header"><span class="preview-tag-chip">${esc(activeSubCategoryPrompt || activeCategoryPrompt || '카테고리')}</span><span class="tag-image-grid-total">${categoryPrompts.length}개</span></div>${cards}</div>`;
+    preview.innerHTML = `<div class="preview-tag-image-grid is-prompt-grid"><div class="preview-tag-grid-header"><span class="preview-tag-grid-category-chip cat-chip active is-prompt">${esc(activeSubCategoryPrompt || activeCategoryPrompt || '카테고리')}</span><span class="tag-image-grid-total">${categoryPrompts.length}개</span></div>${cards}</div>`;
 
     // 클릭 처리는 태그 그리드와 동일하게 main.js의 위임 리스너에 맡겨 카드마다 리스너/조회를 반복하지 않는다.
     bindPromptTagImageCardSwipe(preview);
@@ -165,11 +164,14 @@
     ));
     const tags = uniqueInOrder(categoryPrompts.flatMap(prompt => normalizePromptTags(prompt.tags)));
     const layout = getPromptTagLayout(tags);
+    const categoryTheme = leftPanelTab === 'combo'
+      ? (isCustomComboTabOpen ? 'is-custom-combo' : 'is-combo')
+      : 'is-prompt';
     preview.classList.add('has-image');
     preview.classList.remove('image-clear-feedback', 'image-switch-feedback');
     preview.title = '';
     preview.innerHTML = tags.length
-      ? `<div class="preview-tag-browser ${isPromptTagEditMode ? 'is-edit-mode' : ''}"><div class="preview-tag-browser-header"><div class="preview-tag-browser-title">[${esc(activeSubCategoryPrompt)}]의 태그</div><div class="preview-tag-browser-actions"><button class="preview-tag-mode-toggle" type="button" aria-pressed="${isPromptTagEditMode ? 'true' : 'false'}">${isPromptTagEditMode ? '기본 모드로 전환' : '편집 모드로 전환'}</button>${isPromptTagEditMode ? '<button class="preview-tag-divider-add" type="button">구분선 추가</button>' : ''}</div></div><div class="preview-tag-browser-layout">${layout.map((item, index) => item.type === 'divider'
+      ? `<div class="preview-tag-browser ${isPromptTagEditMode ? 'is-edit-mode' : ''}"><div class="preview-tag-browser-header"><div class="preview-tag-browser-title"><span class="preview-tag-browser-category-chip cat-chip active ${categoryTheme}">${esc(activeSubCategoryPrompt)}</span><span class="preview-tag-browser-title-suffix">의 태그</span></div><div class="preview-tag-browser-actions"><button class="preview-tag-mode-toggle" type="button" aria-pressed="${isPromptTagEditMode ? 'true' : 'false'}">${isPromptTagEditMode ? '기본 모드로 전환' : '편집 모드로 전환'}</button>${isPromptTagEditMode ? '<button class="preview-tag-divider-add" type="button">구분선 추가</button>' : ''}</div></div><div class="preview-tag-browser-layout">${layout.map((item, index) => item.type === 'divider'
         ? `<div class="preview-tag-divider preview-tag-layout-item" ${isPromptTagEditMode ? 'draggable="true"' : ''} data-layout-index="${index}"><button class="preview-tag-divider-remove" type="button" data-divider-id="${esc(item.id)}" aria-label="구분선 삭제">×</button></div>`
         : `<span class="preview-tag-swipe-item preview-tag-layout-item" ${isPromptTagEditMode ? 'draggable="true"' : ''} data-layout-index="${index}"><button class="preview-tag-chip" type="button" data-tag="${esc(item.tag)}" title="${isPromptTagEditMode ? '드래그하여 순서 변경' : ''}">${esc(item.tag)}</button></span>`).join('')}</div></div>`
       : '<span class="empty-state">이 중분류에 등록된 태그가 없습니다.</span>';
