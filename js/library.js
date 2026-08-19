@@ -1333,6 +1333,7 @@
   function render() {
     renderTapComposeToggle();
     renderCoreCategoryWideCardToggle();
+    renderExportMetadataSanitizationToggle();
     renderCoreQuickAccessRow();
     renderPreviewAnimationLevel();
     renderPreviewTransitionMode();

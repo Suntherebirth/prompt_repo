@@ -83,6 +83,7 @@
   let previewTransitionMode = 'scale';
   let previewRenderMode = 'landscape';
   let isCoreCategoryWideCardEnabled = false;
+  let isExportMetadataSanitizationEnabled = true;
   let promptImageEditOrientation = 'landscape';
   let composedImageEditOrientation = 'landscape';
   let activeImageViewer = null;

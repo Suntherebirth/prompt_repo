@@ -372,6 +372,8 @@
         <div class="settings-option-title">백업 / 복원</div>
 
         <div class="settings-option-description">프롬프트와 커스텀 조합 데이터를 ZIP 또는 JSON으로 내보내거나 가져옵니다.</div>
+        <div class="settings-option-description">ZIP에 넣는 JPEG, PNG, WebP 사본에서 C2PA/XMP 컨테이너 데이터만 제거합니다. 원본 이미지와 픽셀은 변경하지 않습니다.</div>
+        <button id="export-metadata-sanitization-toggle-btn" class="tap-compose-toggle-btn active" type="button" aria-pressed="true" onclick="toggleExportMetadataSanitization()">C2PA/XMP 제거 켜짐</button>
         <div class="settings-level-row" role="group" aria-label="백업 및 복원">
           <button class="btn btn-secondary btn-sm" type="button" onclick="runBackupExportWithDebug()">📤 ZIP 내보내기</button>
           <label class="btn btn-secondary btn-sm" style="text-align:center;cursor:pointer">
@@ -442,6 +444,7 @@
 <script src="./js/constants.js"></script>
 <script src="./js/state.js"></script>
 <script src="./js/db-images.js"></script>
+<script src="./js/export-metadata-sanitizer.js"></script>
 <script src="./js/category-config.js"></script>
 <script src="./js/storage.js"></script>
 <script src="./js/prompt-model.js"></script>

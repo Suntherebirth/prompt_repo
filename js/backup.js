@@ -170,6 +170,7 @@
       composedPrompts: composedPrompts.length,
       customCombos: customCombos.length,
       jsZipAvailable: typeof window.JSZip !== 'undefined',
+      metadataSanitization: isExportMetadataSanitizationEnabled,
     });
     if (prompts.length === 0 && composedPrompts.length === 0 && customCombos.length === 0) {
       writeBackupDebugLog('ZIP 내보내기 중단: 내보낼 데이터 없음');
@@ -215,7 +216,18 @@
           mimeType: record.mimeType || record.blob.type || 'application/octet-stream',
           fileName: record.fileName || '',
         };
-        imageFolder.file(`${imageId}.${extension}`, record.blob);
+        let exportBlob = record.blob;
+        if (isExportMetadataSanitizationEnabled && typeof window.sanitizeExportImage === 'function') {
+          const sanitized = await window.sanitizeExportImage(record.blob);
+          exportBlob = sanitized.blob;
+          writeBackupDebugLog('이미지 메타데이터 정제', {
+            imageId,
+            format: sanitized.format,
+            removedXmp: sanitized.removedXmp,
+            removedC2pa: sanitized.removedC2pa,
+          });
+        }
+        imageFolder.file(`${imageId}.${extension}`, exportBlob);
       }
 
       zip.file('backup.json', JSON.stringify({ ...payload, imageManifest }, null, 2));

@@ -208,6 +208,25 @@
     btn.textContent = isCoreCategoryWideCardEnabled ? '가로 카드 켜짐' : '가로 카드 꺼짐';
   }
 
+  function renderExportMetadataSanitizationToggle() {
+    const button = document.getElementById('export-metadata-sanitization-toggle-btn');
+    if (!button) return;
+    button.classList.toggle('active', isExportMetadataSanitizationEnabled);
+    button.setAttribute('aria-pressed', isExportMetadataSanitizationEnabled ? 'true' : 'false');
+    button.textContent = isExportMetadataSanitizationEnabled ? 'C2PA/XMP 제거 켜짐' : 'C2PA/XMP 제거 꺼짐';
+  }
+
+  function setExportMetadataSanitizationEnabled(enabled, options = {}) {
+    isExportMetadataSanitizationEnabled = enabled === true || enabled === '1' || enabled === 1;
+    saveSettings();
+    renderExportMetadataSanitizationToggle();
+    if (options.notify) showToast(isExportMetadataSanitizationEnabled ? 'ZIP 내보내기 시 C2PA/XMP를 제거합니다' : 'ZIP 내보내기 시 원본 메타데이터를 유지합니다');
+  }
+
+  function toggleExportMetadataSanitization() {
+    setExportMetadataSanitizationEnabled(!isExportMetadataSanitizationEnabled, { notify: true });
+  }
+
   function setCoreCategoryWideCard(enabled, options = {}) {
     isCoreCategoryWideCardEnabled = normalizeCoreCategoryWideCard(enabled);
     saveSettings();

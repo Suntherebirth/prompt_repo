@@ -1075,16 +1075,27 @@
 
     .prompt-description-preview .preview-tag-list {
       flex-shrink: 0;
+      width: 100%;
+      min-width: 0;
+      max-width: 100%;
+      box-sizing: border-box;
       height: 56px;
-      overflow: hidden;
+      overflow-x: auto;
+      overflow-y: hidden;
       display: flex;
-      flex-wrap: wrap;
+      flex-wrap: nowrap;
       align-items: center;
       justify-content: flex-start;
       gap: 4px;
       padding: 5px 10px 7px;
       background: #0a0a0e;
       border-top: 1px solid rgba(255, 255, 255, 0.04);
+      -webkit-overflow-scrolling: touch;
+      overscroll-behavior-x: contain;
+    }
+
+    .prompt-description-preview .preview-tag-list > * {
+      flex: 0 0 auto;
     }
 
     .prompt-description-preview .preview-tag-list-header {
@@ -1111,6 +1122,10 @@
 
     .preview-render-portrait-mode .prompt-description-preview .preview-tag-list {
       order: 1;
+      flex: 0 0 56px;
+      min-width: 0;
+      max-width: 100%;
+      min-height: 0;
       align-content: center;
       flex-wrap: nowrap;
       overflow-x: auto;
@@ -1121,6 +1136,7 @@
 
     .preview-render-portrait-mode .prompt-description-preview .preview-tag-list > * {
       flex: 0 0 auto;
+      min-width: 0;
     }
 
     .preview-render-portrait-mode .prompt-description-preview .preview-portrait-stack .preview-image-shell {
@@ -1129,7 +1145,9 @@
 
     .preview-render-portrait-mode .prompt-description-preview .preview-details-panel {
       display: flex;
-      flex: 0 0 auto;
+      flex: 0 0 100px;
+      width: 100%;
+      min-width: 0;
       flex-direction: column;
       overflow: hidden;
       border-radius: 12px;
@@ -1945,11 +1963,15 @@
       overflow: hidden;
       border-radius: 0;
       background: #101018;
+      container-type: size;
     }
 
     .preview-render-portrait-mode .prompt-description-preview .preview-portrait-stack {
-      width: 100%;
+      width: min(100%, calc((100dvh - 186px - (var(--portrait-preview-inner-padding, 0px) * 2)) * 3 / 4));
+      width: min(100%, calc((100cqh - 100px - (var(--portrait-preview-inner-padding, 0px) * 2)) * 3 / 4));
+      max-width: 100%;
       height: 100%;
+      margin: 0 auto;
       overflow: hidden;
       border-radius: 0;
       background: transparent;
