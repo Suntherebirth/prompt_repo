@@ -144,7 +144,7 @@
           ? 'height'
           : 'birth';
       shouldAnimatePromptTagSort = true;
-      if (activePromptTagFilter) renderPromptDescriptionPreview();
+      renderPromptDescriptionPreview();
       return;
     }
 

@@ -258,7 +258,8 @@
               activePromptCategoryGridMode = !activePromptCategoryGridMode;
               activePromptTagFilter = null;
             } else {
-              activePromptCategoryGridMode = false;
+              // 새 카테고리 선택 시에는 태그 브라우저보다 전체 아이템 그리드를 먼저 연다.
+              activePromptCategoryGridMode = true;
               activePromptTagFilter = null;
             }
             clearPromptDescriptionPreview({ feedback: true });

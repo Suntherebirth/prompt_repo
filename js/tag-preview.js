@@ -121,8 +121,50 @@
     lastRenderedPromptPreviewImageKey = `selected:${sortedPrompts.map(prompt => prompt.id).join(',')}`;
   }
 
+  function sortPromptsForTagGrid(promptItems) {
+    const getDescriptionParts = prompt => String(prompt.description || '')
+      .split('|')
+      .map(part => part.trim())
+      .filter(Boolean);
+    const getBirthDateValue = prompt => {
+      const birthText = getDescriptionParts(prompt)[1] || '';
+      const parsed = parseBirthDatePart(birthText);
+      return parsed ? Date.UTC(parsed.year, parsed.month - 1, parsed.day) : null;
+    };
+    const getHeightValue = prompt => {
+      const heightText = getDescriptionParts(prompt)[2] || '';
+      const match = heightText.match(/(\d+(?:\.\d+)?)\s*cm/i);
+      return match ? Number(match[1]) : null;
+    };
+
+    return [...promptItems].sort((a, b) => {
+      if (activePromptTagSort === 'birth') {
+        const birthA = getBirthDateValue(a);
+        const birthB = getBirthDateValue(b);
+        if (birthA !== null && birthB !== null && birthA !== birthB) return birthB - birthA;
+        if (birthA !== null && birthB === null) return -1;
+        if (birthA === null && birthB !== null) return 1;
+      }
+      if (activePromptTagSort === 'height') {
+        const heightA = getHeightValue(a);
+        const heightB = getHeightValue(b);
+        if (heightA !== null && heightB !== null && heightA !== heightB) return heightB - heightA;
+        if (heightA !== null && heightB === null) return -1;
+        if (heightA === null && heightB !== null) return 1;
+      }
+
+      const descriptionA = getDescriptionParts(a)[0] || '';
+      const descriptionB = getDescriptionParts(b)[0] || '';
+      const firstCharacterOrder = (descriptionA[0] || '힣').localeCompare(descriptionB[0] || '힣', 'ko');
+      if (firstCharacterOrder !== 0) return firstCharacterOrder;
+      const descriptionOrder = descriptionA.localeCompare(descriptionB, 'ko');
+      if (descriptionOrder !== 0) return descriptionOrder;
+      return String(a.content || '').localeCompare(String(b.content || ''), 'ko');
+    });
+  }
+
   function renderPromptCategoryGrid(preview) {
-    const categoryPrompts = prompts.filter(prompt => (
+    let categoryPrompts = prompts.filter(prompt => (
       prompt.mainCategory === activeCategoryPrompt && prompt.subCategory === activeSubCategoryPrompt
     )).sort((a, b) => {
       const aText = String(a.content || '').localeCompare(String(b.content || ''), 'ko');
@@ -141,6 +183,7 @@
     }
 
     const usesTagGridCards = isSubCategoryCoreEnabled(activeCategoryPrompt, activeSubCategoryPrompt);
+    if (usesTagGridCards) categoryPrompts = sortPromptsForTagGrid(categoryPrompts);
     const cards = usesTagGridCards
       ? renderPromptTagImageCards(categoryPrompts)
       : categoryPrompts.map(prompt => {
@@ -163,7 +206,13 @@
       ? `<span class="preview-tag-category-emoji" aria-hidden="true">${esc(mainCategoryEmoji)}</span>`
       : '';
     const categoryChipLabel = esc(activeSubCategoryPrompt || activeCategoryPrompt || '카테고리');
-    preview.innerHTML = `<div class="preview-tag-image-grid is-prompt-grid"><div class="preview-tag-grid-header">${categoryEmojiMarkup}<span class="preview-tag-grid-category-chip cat-chip active is-prompt">${categoryChipLabel}</span><span class="tag-image-grid-total">${categoryPrompts.length}개</span>${descriptionMarkup}</div>${cards}</div>`;
+    const sortLabel = activePromptTagSort === 'birth' ? '출생순' : activePromptTagSort === 'height' ? '신장순' : '이름순';
+    const nextSortLabel = activePromptTagSort === 'birth' ? '이름순' : activePromptTagSort === 'name' ? '신장순' : '출생순';
+    const sortToggleMarkup = usesTagGridCards
+      ? `<button class="preview-tag-grid-sort-toggle${shouldAnimatePromptTagSort ? ' is-changing' : ''}" type="button" data-tag-sort="${activePromptTagSort}" aria-label="현재 ${sortLabel}. ${nextSortLabel}(으)로 정렬">${sortLabel}</button>`
+      : '';
+    shouldAnimatePromptTagSort = false;
+    preview.innerHTML = `<div class="preview-tag-image-grid is-prompt-grid${usesTagGridCards ? ' is-core-category-grid' : ''}"><div class="preview-tag-grid-header">${categoryEmojiMarkup}<span class="preview-tag-grid-category-chip cat-chip active is-prompt">${categoryChipLabel}</span><span class="tag-image-grid-total">${categoryPrompts.length}개</span>${sortToggleMarkup}${descriptionMarkup}</div>${cards}</div>`;
 
     // 클릭 처리는 태그 그리드와 동일하게 main.js의 위임 리스너에 맡겨 카드마다 리스너/조회를 반복하지 않는다.
     bindPromptTagImageCardSwipe(preview);
@@ -618,49 +667,9 @@
   function renderPromptTagImageGrid(preview, tag) {
     const taggedPrompts = prompts
       .filter(prompt => normalizePromptTags(prompt.tags).includes(tag));
+    const sortedPrompts = sortPromptsForTagGrid(taggedPrompts);
 
-    const getDescriptionParts = prompt => String(prompt.description || '')
-      .split('|')
-      .map(part => part.trim())
-      .filter(Boolean);
-    const getBirthDateValue = prompt => {
-      const birthText = getDescriptionParts(prompt)[1] || '';
-      const parsed = parseBirthDatePart(birthText);
-      if (!parsed) return null;
-      return Date.UTC(parsed.year, parsed.month - 1, parsed.day);
-    };
-    const getHeightValue = prompt => {
-      const heightText = getDescriptionParts(prompt)[2] || '';
-      const match = heightText.match(/(\d+(?:\.\d+)?)\s*cm/i);
-      return match ? Number(match[1]) : null;
-    };
-
-    taggedPrompts.sort((a, b) => {
-      if (activePromptTagSort === 'birth') {
-        const birthA = getBirthDateValue(a);
-        const birthB = getBirthDateValue(b);
-        if (birthA !== null && birthB !== null && birthA !== birthB) return birthB - birthA;
-        if (birthA !== null && birthB === null) return -1;
-        if (birthA === null && birthB !== null) return 1;
-      }
-      if (activePromptTagSort === 'height') {
-        const heightA = getHeightValue(a);
-        const heightB = getHeightValue(b);
-        if (heightA !== null && heightB !== null && heightA !== heightB) return heightB - heightA;
-        if (heightA !== null && heightB === null) return -1;
-        if (heightA === null && heightB !== null) return 1;
-      }
-
-      const descriptionA = getDescriptionParts(a)[0] || '';
-      const descriptionB = getDescriptionParts(b)[0] || '';
-      const firstCharacterOrder = (descriptionA[0] || '힣').localeCompare(descriptionB[0] || '힣', 'ko');
-      if (firstCharacterOrder !== 0) return firstCharacterOrder;
-      const descriptionOrder = descriptionA.localeCompare(descriptionB, 'ko');
-      if (descriptionOrder !== 0) return descriptionOrder;
-      return String(a.content || '').localeCompare(String(b.content || ''), 'ko');
-    });
-
-    const cards = renderPromptTagImageCards(taggedPrompts, shouldAnimatePromptTagGridEntry);
+    const cards = renderPromptTagImageCards(sortedPrompts, shouldAnimatePromptTagGridEntry);
 
     preview.classList.add('has-image');
     preview.classList.remove('image-clear-feedback', 'image-switch-feedback');
@@ -670,9 +679,9 @@
     const randomToggleLabel = '무작위로 선택';
     const randomToggle = `<button class="preview-tag-grid-random-toggle" type="button" data-random-tag="${esc(tag)}" aria-label="${esc(tag)} 안에서 무작위로 선택">${randomToggleLabel}</button>`;
     if (cards) {
-      preview.innerHTML = `<div class="preview-tag-image-grid${shouldAnimatePromptTagGridEntry ? ' is-entering' : ''}"><div class="preview-tag-grid-header${shouldAnimatePromptTagGridEntry ? ' is-entering' : ''}"><span class="preview-tag-chip">${esc(tag)}</span>${randomToggle}<button class="preview-tag-grid-sort-toggle" type="button" data-tag-sort="${activePromptTagSort}" aria-label="현재 ${sortLabel}. ${nextSortLabel}(으)로 정렬">${sortLabel}</button></div>${cards}</div>`;
+      preview.innerHTML = `<div class="preview-tag-image-grid is-tag-filter-grid${shouldAnimatePromptTagGridEntry ? ' is-entering' : ''}"><div class="preview-tag-grid-header${shouldAnimatePromptTagGridEntry ? ' is-entering' : ''}"><span class="preview-tag-chip">${esc(tag)}</span>${randomToggle}<button class="preview-tag-grid-sort-toggle" type="button" data-tag-sort="${activePromptTagSort}" aria-label="현재 ${sortLabel}. ${nextSortLabel}(으)로 정렬">${sortLabel}</button></div>${cards}</div>`;
     } else {
-      preview.innerHTML = `<div class="preview-tag-image-grid${shouldAnimatePromptTagGridEntry ? ' is-entering' : ''}"><div class="preview-tag-grid-header${shouldAnimatePromptTagGridEntry ? ' is-entering' : ''}"><span class="preview-tag-chip">${esc(tag)}</span>${randomToggle}<button class="preview-tag-grid-sort-toggle" type="button" data-tag-sort="${activePromptTagSort}" aria-label="현재 ${sortLabel}. ${nextSortLabel}(으)로 정렬">${sortLabel}</button></div><span class="empty-state">이 태그가 연결된 이미지가 없습니다.</span></div>`;
+      preview.innerHTML = `<div class="preview-tag-image-grid is-tag-filter-grid${shouldAnimatePromptTagGridEntry ? ' is-entering' : ''}"><div class="preview-tag-grid-header${shouldAnimatePromptTagGridEntry ? ' is-entering' : ''}"><span class="preview-tag-chip">${esc(tag)}</span>${randomToggle}<button class="preview-tag-grid-sort-toggle" type="button" data-tag-sort="${activePromptTagSort}" aria-label="현재 ${sortLabel}. ${nextSortLabel}(으)로 정렬">${sortLabel}</button></div><span class="empty-state">이 태그가 연결된 이미지가 없습니다.</span></div>`;
     }
     shouldAnimatePromptTagGridEntry = false;
     const sortToggleButton = preview.querySelector('.preview-tag-grid-sort-toggle');
