@@ -348,6 +348,7 @@
       gap: 0;
       overflow: hidden;
       min-height: 0;
+      border-bottom: 1px solid #2A3140;
     }
 
     /* ── Left Panel: Prompt Library ── */
