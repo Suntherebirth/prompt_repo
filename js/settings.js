@@ -1,8 +1,8 @@
   function normalizePreviewAnimationLevel(value) {
-    if (value === true || value === 'true' || value === '1') return 2;
-    if (value === false || value === '0') return 1;
+    if (value === true || value === 'true') return 2;
+    if (value === false) return 1;
     const level = Number(value);
-    if (Number.isInteger(level) && level >= 1 && level <= 3) return level;
+    if (Number.isInteger(level) && level >= 0 && level <= 3) return level;
     return 2;
   }
 
@@ -51,12 +51,14 @@
   }
 
   function getPreviewAnimationLevelLabel(level) {
+    if (level === 0) return '미리보기 애니메이션 끄기';
     if (level === 1) return '미리보기 애니메이션: 더 약하게';
     if (level === 3) return '미리보기 애니메이션: 더 강하게';
     return '미리보기 애니메이션: 기본';
   }
 
   function getPreviewAnimationLevelText(level) {
+    if (level === 0) return '끔';
     if (level === 1) return '더 약하게';
     if (level === 3) return '더 강하게';
     return '기본';

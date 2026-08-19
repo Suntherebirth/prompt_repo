@@ -185,6 +185,58 @@
     showToast('중분류 이름이 변경되었습니다');
   }
 
+  function moveSubCategoryToMain(mainCategory, subCategory, nextMainCategory) {
+    if (!mainCategory || !subCategory) return;
+
+    if (!nextMainCategory || nextMainCategory === mainCategory) return;
+    if (!getMainCategories().includes(nextMainCategory)) {
+      showToast('존재하는 대분류를 입력해 주세요');
+      return;
+    }
+    if (getSubCategories(nextMainCategory).includes(subCategory)) {
+      showToast(`"${nextMainCategory}"에 이미 같은 이름의 중분류가 있습니다`);
+      return;
+    }
+
+    const sourceConfig = ensureMainCategoryConfig(mainCategory);
+    const targetConfig = ensureMainCategoryConfig(nextMainCategory);
+    const subSettings = sourceConfig.subSettings?.[subCategory];
+
+    prompts = prompts.map(promptItem => {
+      if (promptItem.mainCategory !== mainCategory || promptItem.subCategory !== subCategory) return promptItem;
+      return { ...promptItem, mainCategory: nextMainCategory };
+    });
+
+    selected = selected.map(item => {
+      if (item.mainCategory !== mainCategory || item.subCategory !== subCategory) return item;
+      return { ...item, mainCategory: nextMainCategory };
+    });
+
+    sourceConfig.subOrder = (sourceConfig.subOrder || []).filter(value => value !== subCategory);
+    targetConfig.subOrder = uniqueInOrder([...(targetConfig.subOrder || []), subCategory]);
+    if (subSettings) {
+      targetConfig.subSettings[subCategory] = { ...subSettings };
+      delete sourceConfig.subSettings[subCategory];
+    }
+
+    const sourceTagLayoutKey = getPromptTagLayoutKey(mainCategory, subCategory);
+    const targetTagLayoutKey = getPromptTagLayoutKey(nextMainCategory, subCategory);
+    if (promptTagLayouts[sourceTagLayoutKey]) {
+      promptTagLayouts[targetTagLayoutKey] = promptTagLayouts[sourceTagLayoutKey];
+      delete promptTagLayouts[sourceTagLayoutKey];
+    }
+
+    if (activeCategoryPrompt === mainCategory && activeSubCategoryPrompt === subCategory) {
+      activeCategoryPrompt = nextMainCategory;
+    }
+
+    ensureCategoryConfigConsistency();
+    save();
+    render();
+    renderCategoryManageList();
+    showToast(`중분류 "${subCategory}"를 "${nextMainCategory}"로 이동했습니다`);
+  }
+
   function deleteSubCategory(mainCategory, subCategory) {
     if (!mainCategory || !subCategory) return;
     const count = prompts.filter(promptItem => promptItem.mainCategory === mainCategory && promptItem.subCategory === subCategory).length;
@@ -659,6 +711,60 @@
           subRenameBtn.textContent = '이름변경';
           subRenameBtn.onclick = () => renameSubCategory(mainCategory, subCategory);
 
+          const subMoveBtn = document.createElement('button');
+          subMoveBtn.type = 'button';
+          subMoveBtn.className = 'btn btn-secondary btn-sm';
+          subMoveBtn.textContent = '대분류 이동';
+
+          const subMoveSelect = document.createElement('select');
+          subMoveSelect.className = 'category-manage-move-select';
+          subMoveSelect.setAttribute('aria-label', `${subCategory}를 이동할 대분류`);
+          subMoveSelect.hidden = true;
+          const movePlaceholder = document.createElement('option');
+          movePlaceholder.value = '';
+          movePlaceholder.textContent = '이동할 대분류 선택';
+          subMoveSelect.appendChild(movePlaceholder);
+          mainCategories
+            .filter(targetMainCategory => targetMainCategory !== mainCategory)
+            .forEach(targetMainCategory => {
+              const option = document.createElement('option');
+              option.value = targetMainCategory;
+              option.textContent = targetMainCategory;
+              subMoveSelect.appendChild(option);
+            });
+
+          const subMoveConfirmBtn = document.createElement('button');
+          subMoveConfirmBtn.type = 'button';
+          subMoveConfirmBtn.className = 'btn btn-primary btn-sm';
+          subMoveConfirmBtn.textContent = '이동';
+          subMoveConfirmBtn.hidden = true;
+          subMoveConfirmBtn.disabled = true;
+
+          const subMoveCancelBtn = document.createElement('button');
+          subMoveCancelBtn.type = 'button';
+          subMoveCancelBtn.className = 'btn btn-secondary btn-sm';
+          subMoveCancelBtn.textContent = '취소';
+          subMoveCancelBtn.hidden = true;
+
+          subMoveBtn.onclick = () => {
+            subMoveBtn.hidden = true;
+            subMoveSelect.hidden = false;
+            subMoveConfirmBtn.hidden = false;
+            subMoveCancelBtn.hidden = false;
+            subMoveSelect.focus();
+          };
+          subMoveSelect.onchange = () => {
+            subMoveConfirmBtn.disabled = !subMoveSelect.value;
+          };
+          subMoveConfirmBtn.onclick = () => moveSubCategoryToMain(mainCategory, subCategory, subMoveSelect.value);
+          subMoveCancelBtn.onclick = () => {
+            subMoveSelect.value = '';
+            subMoveSelect.hidden = true;
+            subMoveConfirmBtn.hidden = true;
+            subMoveCancelBtn.hidden = true;
+            subMoveBtn.hidden = false;
+          };
+
           const subDeleteBtn = document.createElement('button');
           subDeleteBtn.type = 'button';
           subDeleteBtn.className = 'btn btn-danger btn-sm';
@@ -671,6 +777,10 @@
           subActions.appendChild(subDownBtn);
           subActions.appendChild(subDescriptionBtn);
           subActions.appendChild(subRenameBtn);
+          subActions.appendChild(subMoveBtn);
+          subActions.appendChild(subMoveSelect);
+          subActions.appendChild(subMoveConfirmBtn);
+          subActions.appendChild(subMoveCancelBtn);
           subActions.appendChild(subDeleteBtn);
           subItem.appendChild(subTitle);
           subItem.appendChild(subDescription);

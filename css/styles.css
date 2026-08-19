@@ -1028,7 +1028,7 @@
 
     .preview-render-portrait-mode .prompt-description-preview .preview-portrait-stack {
       height: 100%;
-      gap: 8px;
+      gap: 0;
     }
 
     .prompt-description-preview .preview-portrait-stack .preview-image-shell {
@@ -1112,8 +1112,15 @@
     .preview-render-portrait-mode .prompt-description-preview .preview-tag-list {
       order: 1;
       align-content: center;
+      flex-wrap: nowrap;
+      overflow-x: auto;
+      overflow-y: hidden;
       gap: 7px;
       padding: 6px 14px 4px;
+    }
+
+    .preview-render-portrait-mode .prompt-description-preview .preview-tag-list > * {
+      flex: 0 0 auto;
     }
 
     .preview-render-portrait-mode .prompt-description-preview .preview-portrait-stack .preview-image-shell {
@@ -1962,15 +1969,15 @@
     }
 
     .prompt-description-preview.preview-animation-level-1 .preview-image-shell {
-      animation: previewBreathingWeak 5.8s ease-in-out infinite;
+      animation: previewBreathingWeak 5.2s ease-in-out infinite;
     }
 
     .prompt-description-preview.preview-animation-level-2 .preview-image-shell {
-      animation: previewBreathing 3.4s ease-in-out infinite;
+      animation: previewBreathing 3.8s ease-in-out infinite;
     }
 
     .prompt-description-preview.preview-animation-level-3 .preview-image-shell {
-      animation: previewBreathingStrong 2.4s ease-in-out infinite;
+      animation: previewBreathingStrong 2.8s ease-in-out infinite;
     }
 
     .prompt-description-preview.preview-transition-mode-scale img.preview-image-enter {
@@ -2104,7 +2111,7 @@
         transform: scale(1) translateY(0);
       }
       50% {
-        transform: scale(1.004) translateY(-1px);
+        transform: scale(1.007) translateY(-1.5px);
       }
     }
 
@@ -2113,7 +2120,7 @@
         transform: scale(1) translateY(0);
       }
       50% {
-        transform: scale(1.012) translateY(-3px);
+        transform: scale(1.016) translateY(-3.5px);
       }
     }
 
@@ -2122,7 +2129,7 @@
         transform: scale(1) translateY(0);
       }
       50% {
-        transform: scale(1.024) translateY(-5px);
+        transform: scale(1.03) translateY(-6px);
       }
     }
 
