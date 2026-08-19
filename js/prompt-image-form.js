@@ -429,7 +429,7 @@
         imageName: prompt.portraitImageName || buildPromptImageName(prompt.mainCategory, prompt.subCategory, prompt.content),
       } : null,
     };
-    setPromptImageEditOrientation('landscape');
+    setPromptImageEditOrientation('portrait');
     renderPendingPromptImagePreview();
     document.getElementById('input-content').focus();
   }

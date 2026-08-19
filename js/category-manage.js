@@ -1003,12 +1003,16 @@
     const isCurrentlyFocused = leftPanelTab === 'prompt'
       && activeCategoryPrompt === mainCategory
       && activeSubCategoryPrompt === subCategory;
+    if (isSubCategoryUsed(mainCategory, subCategory) && !isCurrentlyFocused
+      && jumpToSelectedPromptCardInCategory(mainCategory, subCategory)) {
+      return;
+    }
 
     if (isCurrentlyFocused) {
       activePromptCategoryGridMode = !activePromptCategoryGridMode;
       activePromptTagFilter = null;
     } else {
-      activePromptCategoryGridMode = false;
+      activePromptCategoryGridMode = true;
       activePromptTagFilter = null;
     }
 
