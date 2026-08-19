@@ -192,7 +192,14 @@
 
       const header = document.createElement('div');
       header.className = 'main-category-filter-header';
-      header.innerHTML = `<span>${esc(mainCategory)}</span><span class="group-count">${subCategories.length}개</span>`;
+      const mainConfig = getMainCategoryConfig(mainCategory);
+      const label = document.createElement('span');
+      label.textContent = `${mainConfig.emoji ? `${mainConfig.emoji} ` : ''}${mainCategory}`;
+      const count = document.createElement('span');
+      count.className = 'group-count';
+      count.textContent = `${subCategories.length}개`;
+      header.appendChild(label);
+      header.appendChild(count);
       header.style.cursor = 'pointer';
       header.onclick = () => {
         // 기본숨김 카테고리는 헤더 탭으로 펼침/접힘만 토글한다.
@@ -284,13 +291,14 @@
 
     cats.forEach(c => {
       const chip = document.createElement('span');
+      const mainConfig = getComposedMainCategoryConfig(c);
       const isEditOnlyCategory = isComposedEditOnlyView;
       chip.className = 'cat-chip'
         + (activeCategoryComposed === c ? ' active' : '')
         + (isEditOnlyCategory ? ' edit-only-category-chip' : '');
       chip.innerHTML = isEditOnlyCategory
-        ? `<span class="cat-chip-edit-label" aria-hidden="true">편집</span><span class="cat-chip-text">${esc(c)}</span>`
-        : esc(c);
+        ? `<span class="cat-chip-edit-label" aria-hidden="true">편집</span><span class="cat-chip-text">${mainConfig.emoji ? `${esc(mainConfig.emoji)} ` : ''}${esc(c)}</span>`
+        : `${mainConfig.emoji ? `${esc(mainConfig.emoji)} ` : ''}${esc(c)}`;
       bindPressAction(chip, () => {
         clearSelectedPromptGridMode();
         const isCurrentlySelected = activeCategoryComposed === c;
@@ -1512,9 +1520,12 @@
             const card = document.createElement('div');
             card.className = 'custom-combo-flow-card';
             card.title = '이 커스텀 조합 카드를 제거합니다';
+            const composedCategoryConfig = getComposedMainCategoryConfig(item.mainCategory);
+            const composedCategoryEmoji = String(composedCategoryConfig.emoji || '').trim();
             card.innerHTML = `
               <span class="custom-combo-flow-order">${index + 1}</span>
               <span class="custom-combo-flow-label">${esc(item.subCategory || item.content || '커스텀 조합')}</span>
+              <span class="custom-combo-flow-category">${composedCategoryEmoji ? `<span class="custom-combo-flow-category-emoji" aria-hidden="true">${esc(composedCategoryEmoji)}</span>` : ''}<span>${esc(item.mainCategory || '대분류 없음')}</span></span>
               <button class="chip-remove" title="제거" data-custom-combo-index="${index}">×</button>
             `;
             const removeBtn = card.querySelector('.chip-remove');

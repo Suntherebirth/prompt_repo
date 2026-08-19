@@ -23,6 +23,14 @@
     );
   }
 
+  function setMainCategoryEmoji(mainCategory, emoji) {
+    if (!mainCategory) return;
+    const mainConfig = ensureMainCategoryConfig(mainCategory);
+    mainConfig.emoji = String(emoji || '').trim();
+    save();
+    render();
+  }
+
   function moveArrayItem(items, fromIndex, toIndex) {
     if (!Array.isArray(items)) return;
     if (fromIndex < 0 || toIndex < 0 || fromIndex >= items.length || toIndex >= items.length || fromIndex === toIndex) return;
@@ -83,6 +91,7 @@
     delete categoryConfig.mains[mainCategory];
     categoryConfig.mains[nextMainCategory] = {
       hiddenByDefault: !!prevConfig.hiddenByDefault,
+      emoji: prevConfig.emoji || '',
       subOrder: uniqueInOrder(Array.isArray(prevConfig.subOrder) ? prevConfig.subOrder : []),
       subSettings: Object.fromEntries(
         Object.entries(prevConfig.subSettings || {}).map(([subKey, subValue]) => [subKey, { ...(subValue || {}) }])
@@ -305,6 +314,14 @@
     ensureComposedCategoryConfigConsistency();
   }
 
+  function setComposedMainCategoryEmoji(mainCategory, emoji) {
+    if (!mainCategory) return;
+    const mainConfig = ensureComposedMainCategoryConfig(mainCategory);
+    mainConfig.emoji = String(emoji || '').trim();
+    save();
+    render();
+  }
+
   function moveComposedMainCategory(mainCategory, direction) {
     const order = getComposedMainCategoryOrder();
     const index = order.indexOf(mainCategory);
@@ -393,6 +410,7 @@
     delete composedCategoryConfig.mains[mainCategory];
     composedCategoryConfig.mains[nextMainCategory] = {
       editOnly: !!prevConfig.editOnly,
+      emoji: prevConfig.emoji || '',
     };
 
     save();
@@ -582,15 +600,27 @@
       const top = document.createElement('div');
       top.className = 'category-manage-main-top';
 
+      const mainMeta = document.createElement('div');
+      mainMeta.className = 'category-manage-main-meta';
+
       const title = document.createElement('span');
       title.className = 'category-manage-main-title';
       title.textContent = mainCategory;
 
+      const emojiInput = document.createElement('input');
+      emojiInput.type = 'text';
+      emojiInput.className = 'category-manage-emoji-input';
+      emojiInput.value = mainConfig.emoji || '';
+      emojiInput.maxLength = 8;
+      emojiInput.placeholder = '이모지';
+      emojiInput.setAttribute('aria-label', `${mainCategory} 이모지`);
+      emojiInput.onchange = () => setMainCategoryEmoji(mainCategory, emojiInput.value);
+
       const actions = document.createElement('div');
-      actions.className = 'category-manage-actions';
+      actions.className = 'category-manage-actions category-manage-actions-main';
 
       const hiddenLabel = document.createElement('label');
-      hiddenLabel.className = 'hidden-option-row';
+      hiddenLabel.className = 'hidden-option-row category-manage-option';
       hiddenLabel.style.marginTop = '0';
       hiddenLabel.innerHTML = '<input type="checkbox" /><span>기본 숨김</span>';
       const hiddenInput = hiddenLabel.querySelector('input');
@@ -599,36 +629,38 @@
 
       const upBtn = document.createElement('button');
       upBtn.type = 'button';
-      upBtn.className = 'btn btn-secondary btn-sm';
+      upBtn.className = 'btn btn-secondary btn-sm category-manage-btn-move';
       upBtn.textContent = '↑ 위로';
       upBtn.disabled = mainIndex === 0;
       upBtn.onclick = () => moveMainCategory(mainCategory, 'up');
 
       const downBtn = document.createElement('button');
       downBtn.type = 'button';
-      downBtn.className = 'btn btn-secondary btn-sm';
+      downBtn.className = 'btn btn-secondary btn-sm category-manage-btn-move';
       downBtn.textContent = '↓ 아래로';
       downBtn.disabled = mainIndex === mainCategories.length - 1;
       downBtn.onclick = () => moveMainCategory(mainCategory, 'down');
 
       const renameBtn = document.createElement('button');
       renameBtn.type = 'button';
-      renameBtn.className = 'btn btn-secondary btn-sm';
+      renameBtn.className = 'btn btn-secondary btn-sm category-manage-btn-edit';
       renameBtn.textContent = '이름변경';
       renameBtn.onclick = () => renameMainCategory(mainCategory);
 
       const deleteBtn = document.createElement('button');
       deleteBtn.type = 'button';
-      deleteBtn.className = 'btn btn-danger btn-sm';
+      deleteBtn.className = 'btn btn-danger btn-sm category-manage-btn-delete';
       deleteBtn.textContent = '삭제';
       deleteBtn.onclick = () => deleteMainCategory(mainCategory);
 
-      actions.appendChild(hiddenLabel);
+      mainMeta.appendChild(emojiInput);
+      mainMeta.appendChild(title);
+      mainMeta.appendChild(hiddenLabel);
       actions.appendChild(upBtn);
       actions.appendChild(downBtn);
       actions.appendChild(renameBtn);
       actions.appendChild(deleteBtn);
-      top.appendChild(title);
+      top.appendChild(mainMeta);
       top.appendChild(actions);
 
       const subList = document.createElement('div');
@@ -646,6 +678,7 @@
           subItem.className = 'category-manage-sub-item';
 
           const subTitle = document.createElement('span');
+          subTitle.className = 'category-manage-sub-title';
           subTitle.textContent = subCategory;
 
           const subDescription = document.createElement('textarea');
@@ -662,11 +695,14 @@
             render();
           };
 
-          const subActions = document.createElement('div');
-          subActions.className = 'category-manage-actions';
+          const subHeaderRight = document.createElement('div');
+          subHeaderRight.className = 'category-manage-sub-head-right';
+
+          const subButtonRow = document.createElement('div');
+          subButtonRow.className = 'category-manage-actions category-manage-actions-sub category-manage-sub-button-row';
 
           const randomLabel = document.createElement('label');
-          randomLabel.className = 'hidden-option-row';
+          randomLabel.className = 'hidden-option-row category-manage-option';
           randomLabel.style.marginTop = '0';
           randomLabel.innerHTML = '<input type="checkbox" /><span>무작위 선택</span>';
           const randomInput = randomLabel.querySelector('input');
@@ -674,7 +710,7 @@
           randomInput.onchange = () => toggleSubCategoryRandomSelection(mainCategory, subCategory, randomInput.checked);
 
           const coreLabel = document.createElement('label');
-          coreLabel.className = 'hidden-option-row';
+          coreLabel.className = 'hidden-option-row category-manage-option';
           coreLabel.style.marginTop = '0';
           coreLabel.innerHTML = '<input type="checkbox" /><span>핵심 분류</span>';
           const coreInput = coreLabel.querySelector('input');
@@ -683,21 +719,21 @@
 
           const subUpBtn = document.createElement('button');
           subUpBtn.type = 'button';
-          subUpBtn.className = 'btn btn-secondary btn-sm';
+          subUpBtn.className = 'btn btn-secondary btn-sm category-manage-btn-move';
           subUpBtn.textContent = '↑';
           subUpBtn.disabled = subIndex === 0;
           subUpBtn.onclick = () => moveSubCategory(mainCategory, subCategory, 'up');
 
           const subDownBtn = document.createElement('button');
           subDownBtn.type = 'button';
-          subDownBtn.className = 'btn btn-secondary btn-sm';
+          subDownBtn.className = 'btn btn-secondary btn-sm category-manage-btn-move';
           subDownBtn.textContent = '↓';
           subDownBtn.disabled = subIndex === subCategories.length - 1;
           subDownBtn.onclick = () => moveSubCategory(mainCategory, subCategory, 'down');
 
           const subDescriptionBtn = document.createElement('button');
           subDescriptionBtn.type = 'button';
-          subDescriptionBtn.className = 'btn btn-secondary btn-sm';
+          subDescriptionBtn.className = 'btn btn-secondary btn-sm category-manage-btn-edit';
           subDescriptionBtn.textContent = '설명 수정';
           subDescriptionBtn.onclick = () => {
             subDescription.hidden = false;
@@ -707,17 +743,18 @@
 
           const subRenameBtn = document.createElement('button');
           subRenameBtn.type = 'button';
-          subRenameBtn.className = 'btn btn-secondary btn-sm';
+          subRenameBtn.className = 'btn btn-secondary btn-sm category-manage-btn-edit';
           subRenameBtn.textContent = '이름변경';
           subRenameBtn.onclick = () => renameSubCategory(mainCategory, subCategory);
 
           const subMoveBtn = document.createElement('button');
           subMoveBtn.type = 'button';
-          subMoveBtn.className = 'btn btn-secondary btn-sm';
+          subMoveBtn.className = 'btn btn-secondary btn-sm category-manage-btn-edit';
           subMoveBtn.textContent = '대분류 이동';
 
           const subMoveSelect = document.createElement('select');
           subMoveSelect.className = 'category-manage-move-select';
+          subMoveSelect.classList.add('category-manage-move-target');
           subMoveSelect.setAttribute('aria-label', `${subCategory}를 이동할 대분류`);
           subMoveSelect.hidden = true;
           const movePlaceholder = document.createElement('option');
@@ -735,14 +772,14 @@
 
           const subMoveConfirmBtn = document.createElement('button');
           subMoveConfirmBtn.type = 'button';
-          subMoveConfirmBtn.className = 'btn btn-primary btn-sm';
+          subMoveConfirmBtn.className = 'btn btn-primary btn-sm category-manage-btn-primary';
           subMoveConfirmBtn.textContent = '이동';
           subMoveConfirmBtn.hidden = true;
           subMoveConfirmBtn.disabled = true;
 
           const subMoveCancelBtn = document.createElement('button');
           subMoveCancelBtn.type = 'button';
-          subMoveCancelBtn.className = 'btn btn-secondary btn-sm';
+          subMoveCancelBtn.className = 'btn btn-secondary btn-sm category-manage-btn-edit';
           subMoveCancelBtn.textContent = '취소';
           subMoveCancelBtn.hidden = true;
 
@@ -767,24 +804,25 @@
 
           const subDeleteBtn = document.createElement('button');
           subDeleteBtn.type = 'button';
-          subDeleteBtn.className = 'btn btn-danger btn-sm';
+          subDeleteBtn.className = 'btn btn-danger btn-sm category-manage-btn-delete';
           subDeleteBtn.textContent = '삭제';
           subDeleteBtn.onclick = () => deleteSubCategory(mainCategory, subCategory);
 
-          subActions.appendChild(randomLabel);
-          subActions.appendChild(coreLabel);
-          subActions.appendChild(subUpBtn);
-          subActions.appendChild(subDownBtn);
-          subActions.appendChild(subDescriptionBtn);
-          subActions.appendChild(subRenameBtn);
-          subActions.appendChild(subMoveBtn);
-          subActions.appendChild(subMoveSelect);
-          subActions.appendChild(subMoveConfirmBtn);
-          subActions.appendChild(subMoveCancelBtn);
-          subActions.appendChild(subDeleteBtn);
+          subHeaderRight.appendChild(randomLabel);
+          subHeaderRight.appendChild(coreLabel);
+          subButtonRow.appendChild(subUpBtn);
+          subButtonRow.appendChild(subDownBtn);
+          subButtonRow.appendChild(subDescriptionBtn);
+          subButtonRow.appendChild(subRenameBtn);
+          subButtonRow.appendChild(subMoveBtn);
+          subButtonRow.appendChild(subMoveSelect);
+          subButtonRow.appendChild(subMoveConfirmBtn);
+          subButtonRow.appendChild(subMoveCancelBtn);
+          subButtonRow.appendChild(subDeleteBtn);
           subItem.appendChild(subTitle);
+          subItem.appendChild(subHeaderRight);
+          subItem.appendChild(subButtonRow);
           subItem.appendChild(subDescription);
-          subItem.appendChild(subActions);
           subList.appendChild(subItem);
         });
       }
@@ -812,15 +850,27 @@
       const top = document.createElement('div');
       top.className = 'category-manage-main-top';
 
+      const mainMeta = document.createElement('div');
+      mainMeta.className = 'category-manage-main-meta';
+
       const title = document.createElement('span');
       title.className = 'category-manage-main-title';
       title.textContent = mainCategory;
 
+      const emojiInput = document.createElement('input');
+      emojiInput.type = 'text';
+      emojiInput.className = 'category-manage-emoji-input';
+      emojiInput.value = mainConfig.emoji || '';
+      emojiInput.maxLength = 8;
+      emojiInput.placeholder = '이모지';
+      emojiInput.setAttribute('aria-label', `${mainCategory} 이모지`);
+      emojiInput.onchange = () => setComposedMainCategoryEmoji(mainCategory, emojiInput.value);
+
       const actions = document.createElement('div');
-      actions.className = 'category-manage-actions';
+      actions.className = 'category-manage-actions category-manage-actions-main';
 
       const editOnlyLabel = document.createElement('label');
-      editOnlyLabel.className = 'hidden-option-row';
+      editOnlyLabel.className = 'hidden-option-row category-manage-option';
       editOnlyLabel.style.marginTop = '0';
       editOnlyLabel.innerHTML = '<input type="checkbox" /><span>편집용</span>';
       const editOnlyInput = editOnlyLabel.querySelector('input');
@@ -829,36 +879,38 @@
 
       const upBtn = document.createElement('button');
       upBtn.type = 'button';
-      upBtn.className = 'btn btn-secondary btn-sm';
+      upBtn.className = 'btn btn-secondary btn-sm category-manage-btn-move';
       upBtn.textContent = '↑ 위로';
       upBtn.disabled = mainIndex === 0;
       upBtn.onclick = () => moveComposedMainCategory(mainCategory, 'up');
 
       const downBtn = document.createElement('button');
       downBtn.type = 'button';
-      downBtn.className = 'btn btn-secondary btn-sm';
+      downBtn.className = 'btn btn-secondary btn-sm category-manage-btn-move';
       downBtn.textContent = '↓ 아래로';
       downBtn.disabled = mainIndex === mainCategories.length - 1;
       downBtn.onclick = () => moveComposedMainCategory(mainCategory, 'down');
 
       const renameBtn = document.createElement('button');
       renameBtn.type = 'button';
-      renameBtn.className = 'btn btn-secondary btn-sm';
+      renameBtn.className = 'btn btn-secondary btn-sm category-manage-btn-edit';
       renameBtn.textContent = '이름변경';
       renameBtn.onclick = () => renameComposedMainCategory(mainCategory);
 
       const deleteBtn = document.createElement('button');
       deleteBtn.type = 'button';
-      deleteBtn.className = 'btn btn-danger btn-sm';
+      deleteBtn.className = 'btn btn-danger btn-sm category-manage-btn-delete';
       deleteBtn.textContent = '삭제';
       deleteBtn.onclick = () => deleteComposedMainCategory(mainCategory);
 
-      actions.appendChild(editOnlyLabel);
+      mainMeta.appendChild(emojiInput);
+      mainMeta.appendChild(title);
+      mainMeta.appendChild(editOnlyLabel);
       actions.appendChild(upBtn);
       actions.appendChild(downBtn);
       actions.appendChild(renameBtn);
       actions.appendChild(deleteBtn);
-      top.appendChild(title);
+      top.appendChild(mainMeta);
       top.appendChild(actions);
 
       const subList = document.createElement('div');
@@ -876,43 +928,44 @@
           subItem.className = 'category-manage-sub-item';
 
           const subTitle = document.createElement('span');
+          subTitle.className = 'category-manage-sub-title';
           subTitle.textContent = subCategory;
 
-          const subActions = document.createElement('div');
-          subActions.className = 'category-manage-actions';
+          const subButtonRow = document.createElement('div');
+          subButtonRow.className = 'category-manage-actions category-manage-actions-sub category-manage-sub-button-row';
 
           const subUpBtn = document.createElement('button');
           subUpBtn.type = 'button';
-          subUpBtn.className = 'btn btn-secondary btn-sm';
+          subUpBtn.className = 'btn btn-secondary btn-sm category-manage-btn-move';
           subUpBtn.textContent = '↑';
           subUpBtn.disabled = subIndex === 0;
           subUpBtn.onclick = () => moveComposedSubCategory(mainCategory, subCategory, 'up');
 
           const subDownBtn = document.createElement('button');
           subDownBtn.type = 'button';
-          subDownBtn.className = 'btn btn-secondary btn-sm';
+          subDownBtn.className = 'btn btn-secondary btn-sm category-manage-btn-move';
           subDownBtn.textContent = '↓';
           subDownBtn.disabled = subIndex === subCategories.length - 1;
           subDownBtn.onclick = () => moveComposedSubCategory(mainCategory, subCategory, 'down');
 
           const subRenameBtn = document.createElement('button');
           subRenameBtn.type = 'button';
-          subRenameBtn.className = 'btn btn-secondary btn-sm';
+          subRenameBtn.className = 'btn btn-secondary btn-sm category-manage-btn-edit';
           subRenameBtn.textContent = '이름변경';
           subRenameBtn.onclick = () => renameComposedSubCategory(mainCategory, subCategory);
 
           const subDeleteBtn = document.createElement('button');
           subDeleteBtn.type = 'button';
-          subDeleteBtn.className = 'btn btn-danger btn-sm';
+          subDeleteBtn.className = 'btn btn-danger btn-sm category-manage-btn-delete';
           subDeleteBtn.textContent = '삭제';
           subDeleteBtn.onclick = () => deleteComposedSubCategory(mainCategory, subCategory);
 
-          subActions.appendChild(subUpBtn);
-          subActions.appendChild(subDownBtn);
-          subActions.appendChild(subRenameBtn);
-          subActions.appendChild(subDeleteBtn);
+          subButtonRow.appendChild(subUpBtn);
+          subButtonRow.appendChild(subDownBtn);
+          subButtonRow.appendChild(subRenameBtn);
+          subButtonRow.appendChild(subDeleteBtn);
           subItem.appendChild(subTitle);
-          subItem.appendChild(subActions);
+          subItem.appendChild(subButtonRow);
           subList.appendChild(subItem);
         });
       }

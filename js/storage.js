@@ -35,6 +35,7 @@
           if (!key || !value || typeof value !== 'object') return;
           categoryConfig.mains[key] = {
             hiddenByDefault: !!value.hiddenByDefault,
+            emoji: typeof value.emoji === 'string' ? value.emoji.trim() : '',
             subOrder: uniqueInOrder(Array.isArray(value.subOrder) ? value.subOrder.filter(Boolean) : []),
             subSettings: Object.fromEntries(
               Object.entries((value.subSettings && typeof value.subSettings === 'object') ? value.subSettings : {}).map(([subKey, subValue]) => [subKey, { ...(subValue || {}) }])
@@ -58,6 +59,7 @@
           if (!key || !value || typeof value !== 'object') return;
           composedCategoryConfig.mains[key] = {
             editOnly: !!value.editOnly,
+            emoji: typeof value.emoji === 'string' ? value.emoji.trim() : '',
           };
         });
       } else {

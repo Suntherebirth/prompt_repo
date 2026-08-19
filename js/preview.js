@@ -155,7 +155,11 @@
           : '<span class="empty-state">이미지 로딩 중</span>'}<span class="tag-image-name">${esc(label)}</span></div>`;
       }).join('');
 
-      preview.innerHTML = `<div class="preview-tag-image-grid is-combo-grid"><div class="preview-tag-grid-header"><span class="preview-tag-grid-category-chip cat-chip active is-combo">${esc(activeCategoryComposed || '카테고리')}</span><span class="tag-image-grid-total">${categoryItems.length}개</span></div>${cards}</div>`;
+      const composedCategoryEmoji = String(getComposedMainCategoryConfig(activeCategoryComposed).emoji || '').trim();
+      const composedCategoryEmojiMarkup = composedCategoryEmoji
+        ? `<span class="preview-tag-category-emoji" aria-hidden="true">${esc(composedCategoryEmoji)}</span>`
+        : '';
+      preview.innerHTML = `<div class="preview-tag-image-grid is-combo-grid"><div class="preview-tag-grid-header">${composedCategoryEmojiMarkup}<span class="preview-tag-grid-category-chip cat-chip active is-combo">${esc(activeCategoryComposed || '카테고리')}</span><span class="tag-image-grid-total">${categoryItems.length}개</span></div>${cards}</div>`;
 
       preview.querySelectorAll('.composed-card-summary').forEach(card => {
         card.addEventListener('click', event => {

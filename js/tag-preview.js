@@ -156,7 +156,14 @@
     const descriptionMarkup = categoryDescription
       ? `<div class="preview-tag-grid-description">${esc(categoryDescription)}</div>`
       : '';
-    preview.innerHTML = `<div class="preview-tag-image-grid is-prompt-grid"><div class="preview-tag-grid-header"><span class="preview-tag-grid-category-chip cat-chip active is-prompt">${esc(activeSubCategoryPrompt || activeCategoryPrompt || '카테고리')}</span><span class="tag-image-grid-total">${categoryPrompts.length}개</span>${descriptionMarkup}</div>${cards}</div>`;
+    const mainCategoryEmoji = leftPanelTab === 'prompt'
+      ? String(getMainCategoryConfig(activeCategoryPrompt).emoji || '').trim()
+      : '';
+    const categoryEmojiMarkup = mainCategoryEmoji
+      ? `<span class="preview-tag-category-emoji" aria-hidden="true">${esc(mainCategoryEmoji)}</span>`
+      : '';
+    const categoryChipLabel = esc(activeSubCategoryPrompt || activeCategoryPrompt || '카테고리');
+    preview.innerHTML = `<div class="preview-tag-image-grid is-prompt-grid"><div class="preview-tag-grid-header">${categoryEmojiMarkup}<span class="preview-tag-grid-category-chip cat-chip active is-prompt">${categoryChipLabel}</span><span class="tag-image-grid-total">${categoryPrompts.length}개</span>${descriptionMarkup}</div>${cards}</div>`;
 
     // 클릭 처리는 태그 그리드와 동일하게 main.js의 위임 리스너에 맡겨 카드마다 리스너/조회를 반복하지 않는다.
     bindPromptTagImageCardSwipe(preview);
@@ -168,15 +175,28 @@
       prompt.mainCategory === activeCategoryPrompt && prompt.subCategory === activeSubCategoryPrompt
     ));
     const tags = uniqueInOrder(categoryPrompts.flatMap(prompt => normalizePromptTags(prompt.tags)));
+    if (!tags.length) {
+      // 태그가 없는 중분류는 빈 태그 그리드를 보여주지 않고 바로 전체 아이템 그리드로 넘어간다.
+      activePromptCategoryGridMode = true;
+      renderPromptCategoryGrid(preview);
+      return;
+    }
     const layout = getPromptTagLayout(tags);
     const categoryTheme = leftPanelTab === 'combo'
       ? (isCustomComboTabOpen ? 'is-custom-combo' : 'is-combo')
       : 'is-prompt';
+    const mainCategoryEmoji = leftPanelTab === 'prompt'
+      ? String(getMainCategoryConfig(activeCategoryPrompt).emoji || '').trim()
+      : '';
+    const tagBrowserEmojiMarkup = mainCategoryEmoji
+      ? `<span class="preview-tag-category-emoji" aria-hidden="true">${esc(mainCategoryEmoji)}</span>`
+      : '';
+    const tagBrowserCategoryLabel = esc(activeSubCategoryPrompt);
     preview.classList.add('has-image');
     preview.classList.remove('image-clear-feedback', 'image-switch-feedback');
     preview.title = '';
     preview.innerHTML = tags.length
-      ? `<div class="preview-tag-browser ${isPromptTagEditMode ? 'is-edit-mode' : ''}"><div class="preview-tag-browser-header"><div class="preview-tag-browser-title"><span class="preview-tag-browser-category-chip cat-chip active ${categoryTheme}">${esc(activeSubCategoryPrompt)}</span><span class="preview-tag-browser-title-suffix">의 태그</span></div><div class="preview-tag-browser-actions">${isPromptTagEditMode ? '<button class="preview-tag-divider-add" type="button">구분선 추가</button>' : ''}<button class="preview-tag-mode-toggle" type="button" aria-pressed="${isPromptTagEditMode ? 'true' : 'false'}">${isPromptTagEditMode ? '기본 모드로 전환' : '편집 모드로 전환'}</button></div></div><div class="preview-tag-browser-layout">${layout.map((item, index) => item.type === 'divider'
+      ? `<div class="preview-tag-browser ${isPromptTagEditMode ? 'is-edit-mode' : ''}"><div class="preview-tag-browser-header"><div class="preview-tag-browser-title">${tagBrowserEmojiMarkup}<span class="preview-tag-browser-category-chip cat-chip active ${categoryTheme}">${tagBrowserCategoryLabel}</span><span class="preview-tag-browser-title-suffix">의 태그</span></div><div class="preview-tag-browser-actions">${isPromptTagEditMode ? '<button class="preview-tag-divider-add" type="button">구분선 추가</button>' : ''}<button class="preview-tag-mode-toggle" type="button" aria-pressed="${isPromptTagEditMode ? 'true' : 'false'}">${isPromptTagEditMode ? '기본 모드로 전환' : '편집 모드로 전환'}</button></div></div><div class="preview-tag-browser-layout">${layout.map((item, index) => item.type === 'divider'
         ? `<div class="preview-tag-divider preview-tag-layout-item" ${isPromptTagEditMode ? 'draggable="true"' : ''} data-layout-index="${index}"><button class="preview-tag-divider-remove" type="button" data-divider-id="${esc(item.id)}" aria-label="구분선 삭제">×</button></div>`
         : `<span class="preview-tag-swipe-item preview-tag-layout-item" ${isPromptTagEditMode ? 'draggable="true"' : ''} data-layout-index="${index}"><button class="preview-tag-chip" type="button" data-tag="${esc(item.tag)}" title="${isPromptTagEditMode ? '드래그하여 순서 변경' : ''}">${esc(item.tag)}</button></span>`).join('')}</div></div>`
       : '<span class="empty-state">이 중분류에 등록된 태그가 없습니다.</span>';

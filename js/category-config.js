@@ -56,6 +56,7 @@
     if (!categoryConfig.mains[mainCategory]) {
       categoryConfig.mains[mainCategory] = {
         hiddenByDefault: false,
+        emoji: '',
         subOrder: [],
         subSettings: {},
       };
@@ -67,7 +68,7 @@
   }
 
   function getMainCategoryConfig(mainCategory) {
-    if (!mainCategory) return { hiddenByDefault: false, subOrder: [], subSettings: {} };
+    if (!mainCategory) return { hiddenByDefault: false, emoji: '', subOrder: [], subSettings: {} };
     const found = categoryConfig.mains[mainCategory];
     if (found) {
       if (!found.subSettings || typeof found.subSettings !== 'object') {
@@ -75,7 +76,7 @@
       }
       return found;
     }
-    return { hiddenByDefault: false, subOrder: [], subSettings: {} };
+    return { hiddenByDefault: false, emoji: '', subOrder: [], subSettings: {} };
   }
 
   function getSubCategoryConfig(mainCategory, subCategory) {
@@ -187,6 +188,9 @@
       if (typeof mainConfig.hiddenByDefault !== 'boolean') {
         mainConfig.hiddenByDefault = false;
       }
+      if (typeof mainConfig.emoji !== 'string') {
+        mainConfig.emoji = '';
+      }
       mainConfig.subOrder.forEach((subCategory) => {
         const prev = mainConfig.subSettings[subCategory];
         const next = prev && typeof prev === 'object' ? prev : {};
@@ -243,14 +247,15 @@
     if (!composedCategoryConfig.mains[mainCategory]) {
       composedCategoryConfig.mains[mainCategory] = {
         editOnly: false,
+        emoji: '',
       };
     }
     return composedCategoryConfig.mains[mainCategory];
   }
 
   function getComposedMainCategoryConfig(mainCategory) {
-    if (!mainCategory) return { editOnly: false };
-    return composedCategoryConfig.mains[mainCategory] || { editOnly: false };
+    if (!mainCategory) return { editOnly: false, emoji: '' };
+    return composedCategoryConfig.mains[mainCategory] || { editOnly: false, emoji: '' };
   }
 
   function ensureComposedCategoryConfigConsistency() {
@@ -260,6 +265,7 @@
       const prev = composedCategoryConfig.mains?.[mainCategory];
       nextMains[mainCategory] = {
         editOnly: !!prev?.editOnly,
+        emoji: typeof prev?.emoji === 'string' ? prev.emoji : '',
       };
     });
     composedCategoryConfig.mains = nextMains;
