@@ -136,6 +136,7 @@
     clearSelectedPromptGridMode();
     isPromptPreviewSuppressed = false;
     activePromptTagFilter = null;
+    activePromptTagBrowser = false;
     activePromptCategoryGridMode = false;
 
     const idx = selected.findIndex(s => s.id === p.id && s.source === 'prompt');
@@ -168,6 +169,7 @@
   function addPromptToComposition(p, options = {}) {
     isPromptPreviewSuppressed = false;
     activePromptTagFilter = null;
+    activePromptTagBrowser = false;
     activePromptCategoryGridMode = false;
     activeSelectedPromptGridMode = false;
     const suppressToast = !!options.suppressToast;

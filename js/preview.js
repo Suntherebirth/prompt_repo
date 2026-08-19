@@ -32,6 +32,11 @@
       return;
     }
 
+    if (activePromptTagBrowser && leftPanelTab === 'prompt' && activeCategoryPrompt && activeSubCategoryPrompt) {
+      renderPromptTagBrowser(preview);
+      return;
+    }
+
     if (leftPanelTab === 'prompt' && !prompt && activeCategoryPrompt && activeSubCategoryPrompt) {
       if (activePromptCategoryGridMode) {
         renderPromptCategoryGrid(preview);
@@ -58,7 +63,7 @@
         ? `<div class="preview-description-text">${prompt?.description && isSubCategoryCoreEnabled(prompt.mainCategory, prompt.subCategory) ? esc(formatPromptDescriptionForDisplay(prompt.description)) : ''}</div>`
         : '';
       const portraitTags = previewRenderMode === 'portrait'
-        ? normalizePromptTags(prompt?.tags).map(tag => `<span class="preview-tag-swipe-item"><button class="preview-tag-chip" type="button" data-tag="${esc(tag)}">${esc(tag)}</button></span>`).join('')
+        ? `<button class="preview-tag-list-header" type="button">태그</button>${normalizePromptTags(prompt?.tags).map(tag => `<span class="preview-tag-swipe-item"><button class="preview-tag-chip" type="button" data-tag="${esc(tag)}">${esc(tag)}</button></span>`).join('')}`
         : '';
       const portraitCaption = previewRenderMode === 'portrait'
         ? `${portraitDescription}<div class="preview-tag-list">${portraitTags}</div>`

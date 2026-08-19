@@ -108,6 +108,21 @@
       return;
     }
 
+    const tagListHeader = e.target.closest('.preview-tag-list-header');
+    if (tagListHeader) {
+      e.stopPropagation();
+      const prompt = prompts.find(item => item.id === activePromptPreviewId)
+        || selected.find(item => item.source === 'prompt' && item.id === activePromptPreviewId);
+      activeCategoryPrompt = prompt?.mainCategory || activeCategoryPrompt;
+      activeSubCategoryPrompt = prompt?.subCategory || activeSubCategoryPrompt;
+      activePromptTagBrowser = true;
+      activePromptTagFilter = null;
+      activePromptPreviewId = null;
+      isPromptPreviewSuppressed = true;
+      renderPromptDescriptionPreview();
+      return;
+    }
+
     const tagRandomButton = e.target.closest('.preview-tag-grid-random-toggle');
     if (tagRandomButton) {
       e.stopPropagation();
@@ -146,6 +161,7 @@
     const tagChip = e.target.closest('.preview-tag-chip');
     if (tagChip) {
       e.stopPropagation();
+      activePromptTagBrowser = false;
       const tag = tagChip.dataset.tag || '';
       activePromptTagSort = 'birth';
       shouldAnimatePromptTagGridEntry = true;

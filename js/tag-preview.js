@@ -1,6 +1,7 @@
   function clearPromptDescriptionPreview(options = {}) {
     activePromptPreviewId = null;
     activePromptTagFilter = null;
+    activePromptTagBrowser = false;
     selectingFromPreviewId = null;
     isPromptPreviewSuppressed = true;
     if (options.feedback) {
@@ -564,6 +565,7 @@
     if (!prompt) return;
     activePromptCategoryGridMode = false;
     activePromptTagFilter = null;
+    activePromptTagBrowser = false;
     activePromptPreviewId = prompt.id;
     isPromptPreviewSuppressed = false;
     if (isSubCategoryCoreEnabled(prompt.mainCategory, prompt.subCategory)) {
@@ -665,6 +667,7 @@
   function jumpToPromptCardFromTagImage(prompt) {
     if (!prompt) return;
     activePromptTagFilter = null;
+    activePromptTagBrowser = false;
     activePromptCategoryGridMode = false;
     lastRenderedPromptPreviewImageKey = '';
     activePromptPreviewId = prompt.id;

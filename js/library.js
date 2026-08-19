@@ -1015,6 +1015,7 @@
           + (isPreview ? ' preview' : '')
           + (isArmedRandomCard ? ' core-random-armed' : '')
           + (isArmedCopyCard ? ' core-random-armed' : '')
+          + (isArmedCopyCard ? ' copy-armed' : '')
           + (isMorphingRandomCard ? ' core-random-morph' : '');
         const actionTransitionUntil = composedCardActionTransitionUntil.get(item.id) || 0;
         if (actionTransitionUntil > performance.now()) {

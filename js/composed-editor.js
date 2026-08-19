@@ -460,7 +460,7 @@
 
       const deltaX = event.clientX - startX;
       const deltaY = event.clientY - startY;
-      const canSwipeToPrompt = leftPanelTab === 'combo' && isCustomComboTabOpen && deltaX < 0;
+      const canSwipeToPrompt = leftPanelTab === 'combo' && deltaX < 0;
       if (!swiping) {
         if (Math.abs(deltaX) < 8) return;
         if (Math.abs(deltaX) > Math.abs(deltaY)) {
@@ -481,7 +481,7 @@
         title.classList.toggle('workspace-title-swipe-ready', deltaX >= SWIPE_COMMIT_X);
         title.classList.toggle('workspace-title-swipe-left-ready', canSwipeToPrompt && deltaX <= -SWIPE_COMMIT_X);
         title.classList.remove('workspace-title-swipe-down-ready');
-      } else if (leftPanelTab === 'combo' && swipeDirection === 'vertical' && deltaY > 0) {
+      } else if ((leftPanelTab === 'combo' || leftPanelTab === 'prompt') && swipeDirection === 'vertical' && deltaY > 0) {
         event.preventDefault();
         const previewY = Math.min(deltaY, SWIPE_PREVIEW_MAX_Y);
         title.style.transform = `translateY(${previewY * 0.34}px)`;
@@ -501,7 +501,7 @@
 
       const deltaX = event.clientX - startX;
       const deltaY = event.clientY - startY;
-      if (swiping && leftPanelTab === 'combo' && isCustomComboTabOpen && swipeDirection === 'horizontal' && deltaX <= -SWIPE_COMMIT_X) {
+      if (swiping && leftPanelTab === 'combo' && swipeDirection === 'horizontal' && deltaX <= -SWIPE_COMMIT_X) {
         event.preventDefault();
         title.blur();
         title.dataset.suppressClickUntil = String(Date.now() + 500);
@@ -523,7 +523,7 @@
         } else {
           openCustomComboTab();
         }
-      } else if (swiping && leftPanelTab === 'combo' && swipeDirection === 'vertical' && deltaY >= SWIPE_COMMIT_Y) {
+      } else if (swiping && (leftPanelTab === 'combo' || leftPanelTab === 'prompt') && swipeDirection === 'vertical' && deltaY >= SWIPE_COMMIT_Y) {
         event.preventDefault();
         title.blur();
         title.dataset.suppressClickUntil = String(Date.now() + 500);
@@ -531,7 +531,11 @@
         title.classList.remove('workspace-title-swipe-ready');
         title.classList.remove('workspace-title-swipe-left-ready');
         title.classList.remove('workspace-title-swipe-down-ready');
-        toggleComposedEditOnlyView();
+        if (leftPanelTab === 'combo') {
+          toggleComposedEditOnlyView();
+        } else {
+          triggerPromptCoreSubCategorySwipe();
+        }
       } else if (swiping && swipeDirection === 'horizontal' && deltaX > 0) {
         title.style.transform = '';
         title.classList.remove('workspace-title-swipe-ready');
@@ -580,6 +584,12 @@
     activeCategoryComposed = null;
     activeComposedPreviewId = null;
     render();
+  }
+
+  function triggerPromptCoreSubCategorySwipe() {
+    const coreSelection = findCoreSubCategorySelection();
+    if (!coreSelection) return;
+    openCoreSubCategory(coreSelection.mainCategory, coreSelection.subCategory);
   }
 
   function openAddPromptModal() {

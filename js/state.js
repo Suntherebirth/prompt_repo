@@ -48,6 +48,7 @@
   let editingComposedPortraitImageData = '';
   let activePromptPreviewId = null;
   let activePromptTagFilter = null;
+  let activePromptTagBrowser = false;
   let activePromptCategoryGridMode = false;
   let activeSelectedPromptGridMode = false;
   let activeCustomComboFocusId = null;
