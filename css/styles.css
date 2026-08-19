@@ -18,6 +18,36 @@
       --matched-action-width: clamp(134px, calc(17.5vw - 16px), 194px);
     }
 
+    .backup-debug-toolbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      margin-top: 12px;
+    }
+
+    .backup-debug-label {
+      color: #B9C3D4;
+      font-size: 0.82rem;
+      font-weight: 700;
+    }
+
+    .backup-debug-log {
+      max-height: 180px;
+      margin-top: 8px;
+      padding: 10px;
+      overflow: auto;
+      border: 1px solid #354052;
+      border-radius: 6px;
+      background: #0B0E14;
+      color: #B7E4C7;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      font-size: 0.75rem;
+      line-height: 1.45;
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+
     header {
       background: #171B22;
       padding: 14px 24px;
@@ -1197,6 +1227,14 @@
       gap: 8px;
       padding: 0 2px 2px;
       pointer-events: auto;
+    }
+
+    .prompt-description-preview .preview-tag-grid-description {
+      grid-column: 1 / -1;
+      color: #b9b7c9;
+      font-size: 0.78rem;
+      line-height: 1.5;
+      white-space: pre-wrap;
     }
 
     .prompt-description-preview .preview-tag-grid-random-toggle {
@@ -4995,10 +5033,35 @@
       align-items: center;
       justify-content: space-between;
       gap: 8px;
+      flex-wrap: wrap;
       background: #141420;
       border: 1px solid #222235;
       border-radius: 8px;
       padding: 8px 10px;
+    }
+
+    .category-manage-sub-description {
+      flex: 1 1 220px;
+      min-width: 160px;
+      border: 1px solid #303047;
+      border-radius: 6px;
+      padding: 6px 8px;
+      background: #10101b;
+      color: #d9d7e8;
+      font: inherit;
+      font-size: 0.78rem;
+      line-height: 1.4;
+      resize: vertical;
+    }
+
+    .category-manage-sub-description[hidden] {
+      display: none;
+    }
+
+    .category-manage-sub-description:focus {
+      outline: 2px solid rgba(138, 180, 255, 0.35);
+      outline-offset: 1px;
+      border-color: #8ab4ff;
     }
 
     .category-manage-empty {

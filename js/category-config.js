@@ -86,6 +86,19 @@
     return { randomSelection: false, isCore: false };
   }
 
+  function getSubCategoryDescription(mainCategory, subCategory) {
+    return String(getSubCategoryConfig(mainCategory, subCategory).description || '').trim();
+  }
+
+  function setSubCategoryDescription(mainCategory, subCategory, description) {
+    if (!mainCategory || !subCategory) return;
+    const mainConfig = ensureMainCategoryConfig(mainCategory);
+    mainConfig.subSettings[subCategory] = {
+      ...(mainConfig.subSettings[subCategory] || {}),
+      description: String(description || '').trim(),
+    };
+  }
+
   function isSubCategoryRandomSelectionEnabled(mainCategory, subCategory) {
     return !!getSubCategoryConfig(mainCategory, subCategory).randomSelection;
   }
@@ -182,6 +195,9 @@
         }
         if (typeof next.isCore !== 'boolean') {
           next.isCore = false;
+        }
+        if (typeof next.description !== 'string') {
+          next.description = '';
         }
         if (next.isCore) {
           if (hasCoreSubCategory) {

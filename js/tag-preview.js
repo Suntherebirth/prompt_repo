@@ -151,7 +151,11 @@
         : '<span class="empty-state">이미지 로딩 중</span>'}<span class="tag-image-name">${esc(prompt.content)}</span><button class="preview-tag-image-select-btn" type="button" aria-label="${esc(prompt.content)} 프롬프트 선택">프롬프트 선택</button></div>`;
     }).join('');
 
-    preview.innerHTML = `<div class="preview-tag-image-grid is-prompt-grid"><div class="preview-tag-grid-header"><span class="preview-tag-grid-category-chip cat-chip active is-prompt">${esc(activeSubCategoryPrompt || activeCategoryPrompt || '카테고리')}</span><span class="tag-image-grid-total">${categoryPrompts.length}개</span></div>${cards}</div>`;
+    const categoryDescription = getSubCategoryDescription(activeCategoryPrompt, activeSubCategoryPrompt);
+    const descriptionMarkup = categoryDescription
+      ? `<div class="preview-tag-grid-description">${esc(categoryDescription)}</div>`
+      : '';
+    preview.innerHTML = `<div class="preview-tag-image-grid is-prompt-grid"><div class="preview-tag-grid-header"><span class="preview-tag-grid-category-chip cat-chip active is-prompt">${esc(activeSubCategoryPrompt || activeCategoryPrompt || '카테고리')}</span><span class="tag-image-grid-total">${categoryPrompts.length}개</span>${descriptionMarkup}</div>${cards}</div>`;
 
     // 클릭 처리는 태그 그리드와 동일하게 main.js의 위임 리스너에 맡겨 카드마다 리스너/조회를 반복하지 않는다.
     bindPromptTagImageCardSwipe(preview);

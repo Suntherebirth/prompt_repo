@@ -596,6 +596,20 @@
           const subTitle = document.createElement('span');
           subTitle.textContent = subCategory;
 
+          const subDescription = document.createElement('textarea');
+          subDescription.className = 'category-manage-sub-description';
+          subDescription.rows = 2;
+          subDescription.maxLength = 300;
+          subDescription.placeholder = '중분류 설명을 입력하세요';
+          subDescription.value = getSubCategoryDescription(mainCategory, subCategory);
+          subDescription.setAttribute('aria-label', `${subCategory} 설명`);
+          subDescription.hidden = true;
+          subDescription.onchange = () => {
+            setSubCategoryDescription(mainCategory, subCategory, subDescription.value);
+            save();
+            render();
+          };
+
           const subActions = document.createElement('div');
           subActions.className = 'category-manage-actions';
 
@@ -629,6 +643,16 @@
           subDownBtn.disabled = subIndex === subCategories.length - 1;
           subDownBtn.onclick = () => moveSubCategory(mainCategory, subCategory, 'down');
 
+          const subDescriptionBtn = document.createElement('button');
+          subDescriptionBtn.type = 'button';
+          subDescriptionBtn.className = 'btn btn-secondary btn-sm';
+          subDescriptionBtn.textContent = '설명 수정';
+          subDescriptionBtn.onclick = () => {
+            subDescription.hidden = false;
+            subDescriptionBtn.hidden = true;
+            subDescription.focus();
+          };
+
           const subRenameBtn = document.createElement('button');
           subRenameBtn.type = 'button';
           subRenameBtn.className = 'btn btn-secondary btn-sm';
@@ -645,9 +669,11 @@
           subActions.appendChild(coreLabel);
           subActions.appendChild(subUpBtn);
           subActions.appendChild(subDownBtn);
+          subActions.appendChild(subDescriptionBtn);
           subActions.appendChild(subRenameBtn);
           subActions.appendChild(subDeleteBtn);
           subItem.appendChild(subTitle);
+          subItem.appendChild(subDescription);
           subItem.appendChild(subActions);
           subList.appendChild(subItem);
         });

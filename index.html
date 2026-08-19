@@ -3,6 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <base href="/" />
   <link rel="icon" type="image/png" sizes="32x32" href="./assets/icons/favicon-32x32.png" />
   <link rel="icon" type="image/png" sizes="16x16" href="./assets/icons/favicon-16x16.png" />
   <link rel="shortcut icon" href="./assets/icons/favicon.png" />
@@ -371,16 +372,56 @@
 
         <div class="settings-option-description">프롬프트와 커스텀 조합 데이터를 ZIP 또는 JSON으로 내보내거나 가져옵니다.</div>
         <div class="settings-level-row" role="group" aria-label="백업 및 복원">
-          <button class="btn btn-secondary btn-sm" type="button" onclick="exportJSONBackup()">📤 ZIP 내보내기</button>
+          <button class="btn btn-secondary btn-sm" type="button" onclick="runBackupExportWithDebug()">📤 ZIP 내보내기</button>
           <label class="btn btn-secondary btn-sm" style="text-align:center;cursor:pointer">
             📥 ZIP/JSON 가져오기
-            <input type="file" accept="application/zip,.zip,application/json,.json" id="json-import" style="display:none" onchange="importJSONBackup(event)" />
+            <input type="file" accept="application/zip,.zip,application/json,.json" id="json-import" style="display:none" onchange="runBackupImportWithDebug(event)" />
           </label>
         </div>
+        <div class="backup-debug-toolbar">
+          <span class="backup-debug-label">백업 디버그 로그</span>
+          <div class="settings-level-row">
+            <button class="btn btn-secondary btn-sm" type="button" onclick="copyBackupDebugLog()">복사</button>
+            <button class="btn btn-secondary btn-sm" type="button" onclick="clearBackupDebugLog()">초기화</button>
+          </div>
+        </div>
+        <pre id="backup-debug-log" class="backup-debug-log" aria-live="polite">백업 동작을 실행하면 여기에 로그가 표시됩니다.</pre>
       </div>
     </div>
   </div>
 </div>
+
+<script>
+  window.writeBackupDebugLog = window.writeBackupDebugLog || function(message, details) {
+    const output = document.getElementById('backup-debug-log');
+    if (!output) return;
+    const time = new Date().toLocaleTimeString('ko-KR', { hour12: false });
+    const detailText = details === undefined ? '' : ` ${typeof details === 'string' ? details : JSON.stringify(details)}`;
+    const previous = output.dataset.hasBackupLogs === 'true' ? `${output.textContent}\n` : '';
+    output.dataset.hasBackupLogs = 'true';
+    output.textContent = `${previous}[${time}] ${message}${detailText}`;
+    output.scrollTop = output.scrollHeight;
+  };
+
+  window.runBackupExportWithDebug = function() {
+    window.writeBackupDebugLog('ZIP 내보내기 버튼 클릭');
+    if (typeof window.exportJSONBackup !== 'function') {
+      window.writeBackupDebugLog('내보내기 함수 없음: backup.js 로드 실패');
+      return;
+    }
+    window.exportJSONBackup();
+  };
+
+  window.runBackupImportWithDebug = function(event) {
+    const file = event.target.files[0];
+    window.writeBackupDebugLog(file ? 'ZIP/JSON 파일 선택' : '가져오기 취소', file ? { name: file.name, bytes: file.size } : undefined);
+    if (typeof window.importJSONBackup !== 'function') {
+      window.writeBackupDebugLog('가져오기 함수 없음: backup.js 로드 실패');
+      return;
+    }
+    window.importJSONBackup(event);
+  };
+</script>
 
 <div id="toast">복사되었습니다!</div>
 
@@ -412,7 +453,7 @@
 <script src="./js/library.js"></script>
 <script src="./js/composed-editor.js"></script>
 <script src="./js/composition.js"></script>
-<script src="./js/backup.js"></script>
+<script src="./js/backup.js?v=20260819-debug-log-2" onerror="window.writeBackupDebugLog('backup.js 요청 실패', this.src)"></script>
 <script src="./js/dnd.js"></script>
 <script src="./js/utils.js"></script>
 <script src="./js/main.js"></script>

@@ -8,6 +8,7 @@
   let activeCategoryComposed = null;
   let activeComposedCategoryGridMode = false;
   let isComposedEditOnlyView = false;
+  let dragIdx = null;
   let touchDragIdx = null;
   let touchDropIdx = null;
   let touchPointerId = null;
