@@ -66,7 +66,7 @@
         ? `<button class="preview-tag-list-header" type="button">태그</button>${normalizePromptTags(prompt?.tags).map(tag => `<span class="preview-tag-swipe-item"><button class="preview-tag-chip" type="button" data-tag="${esc(tag)}">${esc(tag)}</button></span>`).join('')}`
         : '';
       const portraitCaption = previewRenderMode === 'portrait'
-        ? `${portraitDescription}<div class="preview-tag-list">${portraitTags}</div>`
+        ? `<div class="preview-details-panel">${portraitDescription}<div class="preview-tag-list">${portraitTags}</div></div>`
         : '';
       shouldAnimatePromptPreviewClear = false;
       preview.classList.add('has-image');
