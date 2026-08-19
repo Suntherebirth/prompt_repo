@@ -383,13 +383,13 @@
 
     .library-footer-actions {
       display: flex;
-      width: 100%;
+      width: calc(100% - 32px);
       min-height: 0;
       gap: 8px;
-      padding: 8px 0 0;
-      margin: 0;
+      padding: 8px 0;
+      margin: 0 16px;
       justify-content: space-between;
-      align-items: stretch;
+      align-items: center;
       border-top: 0;
       background: transparent;
       flex: 0 0 auto;
@@ -2244,6 +2244,7 @@
     .prompt-image-preview {
       width: 100%;
       aspect-ratio: var(--preview-aspect-ratio, 4 / 3);
+      position: relative;
       border: 1px dashed #3a3a52;
       border-radius: 10px;
       background: linear-gradient(180deg, #171723, #14141d);
@@ -2260,6 +2261,30 @@
       object-fit: cover;
       border-radius: 8px;
       display: block;
+    }
+
+    .prompt-image-remove-btn {
+      position: absolute;
+      right: 8px;
+      bottom: 8px;
+      z-index: 1;
+      padding: 5px 9px;
+      border: 1px solid rgba(248, 113, 113, 0.68);
+      border-radius: 5px;
+      background: rgba(80, 20, 32, 0.9);
+      color: #ffe4e6;
+      cursor: pointer;
+      font-size: 0.72rem;
+      font-weight: 700;
+    }
+
+    .prompt-image-remove-btn:hover {
+      background: #9f1239;
+    }
+
+    .custom-combo-item-image-remove-btn {
+      position: static;
+      align-self: flex-start;
     }
 
     .preview-render-portrait-mode .prompt-image-preview img {
@@ -3507,7 +3532,7 @@
     .main.preview-render-portrait .panel-library > .library-footer-actions {
       grid-column: 1;
       grid-row: 3;
-      margin: 0;
+      margin: 0 16px;
       gap: 8px;
     }
 
@@ -3817,6 +3842,7 @@
       word-break: break-word;
       display: -webkit-box;
       -webkit-box-orient: vertical;
+      line-clamp: 2;
       -webkit-line-clamp: 2;
       overflow: hidden;
     }
@@ -3901,10 +3927,10 @@
 
     .composer-output {
       flex: 1;
-      padding: 16px;
+      padding: 16px 16px 8px;
       display: flex;
       flex-direction: column;
-      gap: 12px;
+      gap: 8px;
       overflow: hidden;
       min-height: 0;
     }
@@ -3956,11 +3982,11 @@
     .composer-actions {
       display: flex;
       width: 100%;
-      min-height: 52px;
+      min-height: 42px;
       gap: 8px;
       margin-top: 0;
       justify-content: space-between;
-      align-items: stretch;
+      align-items: center;
     }
 
     .composer-actions .btn {

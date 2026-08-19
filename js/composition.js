@@ -23,6 +23,8 @@
 
     const pendingLandscapeImage = getPendingPromptImage('landscape');
     const pendingPortraitImage = getPendingPromptImage('portrait');
+    if (isEditMode && removedPromptImages.landscape) nextImageId = '';
+    if (isEditMode && removedPromptImages.portrait) nextPortraitImageId = '';
 
     try {
       if (pendingLandscapeImage?.file instanceof File) {
@@ -331,6 +333,13 @@
     let portraitImageId = existingCombo?.portraitImageId || '';
     const landscapeImage = pendingCustomComboImages.landscape;
     const portraitImage = pendingCustomComboImages.portrait;
+    const previousCustomComboImageIds = [
+      existingCombo?.imageId || '',
+      existingCombo?.portraitImageId || '',
+      ...Object.values(existingCombo?.itemImages || {}).map(image => image?.imageId || ''),
+    ].filter(Boolean);
+    if (editingCustomComboId && removedCustomComboImages.landscape) imageId = '';
+    if (editingCustomComboId && removedCustomComboImages.portrait) portraitImageId = '';
     try {
       if (landscapeImage?.file instanceof File) {
         imageId = await saveImageBlobRecord({
@@ -413,6 +422,9 @@
       });
     }
     save();
+    for (const oldImageId of uniqueInOrder(previousCustomComboImageIds)) {
+      await deleteImageIfOrphaned(oldImageId);
+    }
     closeSaveCustomComboModal();
     render();
     showToast('커스텀 콤보가 저장되었습니다');
@@ -433,6 +445,8 @@
 
     const pendingLandscapeImage = getPendingComposedImage('landscape');
     const pendingPortraitImage = getPendingComposedImage('portrait');
+    if (isEditMode && removedComposedImages.landscape) nextImageId = '';
+    if (isEditMode && removedComposedImages.portrait) nextPortraitImageId = '';
 
     if (!mainCategory) {
       showToast('커스텀 조합 대분류를 입력하세요');

@@ -92,7 +92,7 @@
     renderPromptImageOrientationTabs();
 
     if (pendingPromptImage?.dataUrl) {
-      preview.innerHTML = `<img src="${pendingPromptImage.dataUrl}" alt="${esc(imageName)}" />`;
+      preview.innerHTML = `<img src="${pendingPromptImage.dataUrl}" alt="${esc(imageName)}" /><button class="prompt-image-remove-btn" type="button" onclick="removePendingPromptImage()" title="이 방향 이미지 삭제" aria-label="이 방향 이미지 삭제">삭제</button>`;
       const fileText = pendingPromptImage.fileName
         ? `${imageName} · ${pendingPromptImage.fileName}`
         : imageName;
@@ -123,6 +123,16 @@
         document.getElementById('input-content')?.value?.trim(),
       ),
     };
+    removedPromptImages[orientation] = false;
+    renderPendingPromptImagePreview();
+  }
+
+  function removePendingPromptImage() {
+    const orientation = normalizeImageOrientation(promptImageEditOrientation);
+    pendingPromptImages[orientation] = null;
+    removedPromptImages[orientation] = true;
+    const fileInput = document.getElementById('input-image-file');
+    if (fileInput) fileInput.value = '';
     renderPendingPromptImagePreview();
   }
 
@@ -147,7 +157,7 @@
     renderComposedImageOrientationTabs();
 
     if (pendingComposedImage?.dataUrl) {
-      preview.innerHTML = `<img src="${pendingComposedImage.dataUrl}" alt="${esc(imageName)}" />`;
+      preview.innerHTML = `<img src="${pendingComposedImage.dataUrl}" alt="${esc(imageName)}" /><button class="prompt-image-remove-btn" type="button" onclick="removePendingComposedImage()" title="이 방향 이미지 삭제" aria-label="이 방향 이미지 삭제">삭제</button>`;
       const fileText = pendingComposedImage.fileName
         ? `${imageName} · ${pendingComposedImage.fileName}`
         : imageName;
@@ -178,12 +188,23 @@
         getComposedOutputText(),
       ),
     };
+    removedComposedImages[orientation] = false;
+    renderPendingComposedImagePreview();
+  }
+
+  function removePendingComposedImage() {
+    const orientation = normalizeImageOrientation(composedImageEditOrientation);
+    pendingComposedImages[orientation] = null;
+    removedComposedImages[orientation] = true;
+    const fileInput = document.getElementById('combo-image-file');
+    if (fileInput) fileInput.value = '';
     renderPendingComposedImagePreview();
   }
 
   function clearPendingPromptImage(options = {}) {
     if (options.all) {
       pendingPromptImages = { landscape: null, portrait: null };
+      removedPromptImages = { landscape: false, portrait: false };
     } else {
       pendingPromptImages[normalizeImageOrientation(promptImageEditOrientation)] = null;
     }
@@ -195,6 +216,7 @@
   function clearPendingComposedImage(options = {}) {
     if (options.all) {
       pendingComposedImages = { landscape: null, portrait: null };
+      removedComposedImages = { landscape: false, portrait: false };
     } else {
       pendingComposedImages[normalizeImageOrientation(composedImageEditOrientation)] = null;
     }
@@ -210,6 +232,7 @@
     editingPromptImageData = '';
     editingPromptPortraitImageId = '';
     editingPromptPortraitImageData = '';
+    removedPromptImages = { landscape: false, portrait: false };
     const modalTitle = document.getElementById('add-prompt-title');
     const saveButton = document.querySelector('#add-prompt-modal .modal-actions .btn-primary');
     const tagsInput = document.getElementById('input-tags');
@@ -225,6 +248,7 @@
     editingPromptImageData = '';
     editingPromptPortraitImageId = prompt.portraitImageId || '';
     editingPromptPortraitImageData = '';
+    removedPromptImages = { landscape: false, portrait: false };
     const modalTitle = document.getElementById('add-prompt-title');
     const saveButton = document.querySelector('#add-prompt-modal .modal-actions .btn-primary');
     if (modalTitle) modalTitle.textContent = '프롬프트 편집';

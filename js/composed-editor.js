@@ -624,6 +624,7 @@
     editingComposedImageData = '';
     editingComposedPortraitImageId = '';
     editingComposedPortraitImageData = '';
+    removedComposedImages = { landscape: false, portrait: false };
     renderSaveComposedModalMode();
     renderComposedCategorySelectors();
     setComposedImageEditOrientation('landscape');
@@ -648,6 +649,7 @@
     if (submitButton) submitButton.textContent = '저장';
     setCustomComboImagePosition('start');
     pendingCustomComboImages = { landscape: null, portrait: null };
+    removedCustomComboImages = { landscape: false, portrait: false };
     pendingCustomComboItemImages = {};
     const imageFileInput = document.getElementById('custom-combo-image-file');
     if (imageFileInput) imageFileInput.value = '';
@@ -667,6 +669,7 @@
     if (title) title.textContent = '커스텀 콤보 편집';
     if (submitButton) submitButton.textContent = '수정 저장';
     setCustomComboImagePosition(customCombo.comboImagePosition || 'start');
+    removedCustomComboImages = { landscape: false, portrait: false };
     pendingCustomComboItemImages = Object.fromEntries(
       Object.entries(customCombo.itemImages || {}).map(([itemId, image]) => [itemId, { ...image, file: null }])
     );
@@ -739,7 +742,7 @@
     landscapeButton?.classList.toggle('active', orientation === 'landscape');
     portraitButton?.classList.toggle('active', orientation === 'portrait');
     if (pendingImage?.dataUrl) {
-      preview.innerHTML = `<img src="${pendingImage.dataUrl}" alt="${esc(imageName)}" />`;
+      preview.innerHTML = `<img src="${pendingImage.dataUrl}" alt="${esc(imageName)}" /><button class="prompt-image-remove-btn" type="button" onclick="removePendingCustomComboImage()" title="이 방향 이미지 삭제" aria-label="이 방향 이미지 삭제">삭제</button>`;
       meta.textContent = `${getImageOrientationLabel(orientation)} 이미지 편집 중 · ${imageName}`;
     } else {
       preview.innerHTML = '<span class="empty-state" style="padding:0">선택한 커스텀 콤보 이미지가 여기에 표시됩니다.</span>';
@@ -755,6 +758,16 @@
       mimeType: file.type || '',
       file,
     } : null;
+    removedCustomComboImages[orientation] = false;
+    renderPendingCustomComboImagePreview();
+  }
+
+  function removePendingCustomComboImage() {
+    const orientation = normalizeImageOrientation(customComboImageEditOrientation);
+    pendingCustomComboImages[orientation] = null;
+    removedCustomComboImages[orientation] = true;
+    const fileInput = document.getElementById('custom-combo-image-file');
+    if (fileInput) fileInput.value = '';
     renderPendingCustomComboImagePreview();
   }
 
@@ -795,6 +808,17 @@
         </div>
       `;
       const input = row.querySelector('[data-custom-combo-item-image]');
+      if (override) {
+        const removeButton = document.createElement('button');
+        removeButton.type = 'button';
+        removeButton.className = 'prompt-image-remove-btn custom-combo-item-image-remove-btn';
+        removeButton.textContent = '저장 이미지 삭제';
+        removeButton.addEventListener('click', () => {
+          delete pendingCustomComboItemImages[itemId];
+          renderCustomComboCompositionImageList(uniqueIds);
+        });
+        input?.insertAdjacentElement('afterend', removeButton);
+      }
       input?.addEventListener('change', async (event) => {
         const file = event.target.files?.[0];
         if (!file) return;

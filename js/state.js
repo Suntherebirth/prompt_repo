@@ -30,8 +30,11 @@
   let customOutputText = null;
   let tapComposeMode = PROMPT_ADD_MODE.SWIPE;
   let pendingPromptImages = { landscape: null, portrait: null };
+  let removedPromptImages = { landscape: false, portrait: false };
   let pendingComposedImages = { landscape: null, portrait: null };
+  let removedComposedImages = { landscape: false, portrait: false };
   let pendingCustomComboImages = { landscape: null, portrait: null };
+  let removedCustomComboImages = { landscape: false, portrait: false };
   let pendingCustomComboItemImages = {};
   let promptFormMode = 'add';
   let editingPromptId = null;
