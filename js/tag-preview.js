@@ -74,17 +74,22 @@
       if (descriptionParts[0]) descriptionParts[0] = formatDescriptionNamePart(descriptionParts[0]);
       if (descriptionParts[1]) descriptionParts[1] = formatDescriptionBirthPart(descriptionParts[1]);
       const descriptionLines = [];
-      let currentDescriptionLine = '';
-      descriptionParts.forEach(part => {
-        const candidate = currentDescriptionLine ? `${currentDescriptionLine} | ${part}` : part;
-        if (currentDescriptionLine && candidate.length > 14) {
-          descriptionLines.push(currentDescriptionLine);
-          currentDescriptionLine = part;
-        } else {
-          currentDescriptionLine = candidate;
-        }
-      });
-      if (currentDescriptionLine) descriptionLines.push(currentDescriptionLine);
+      if (isLargeItemGridEnabled && descriptionParts.length >= 2) {
+        descriptionLines.push(`${descriptionParts[0]} | ${descriptionParts[1]}`);
+        if (descriptionParts.length > 2) descriptionLines.push(descriptionParts.slice(2).join(' | '));
+      } else {
+        let currentDescriptionLine = '';
+        descriptionParts.forEach(part => {
+          const candidate = currentDescriptionLine ? `${currentDescriptionLine} | ${part}` : part;
+          if (currentDescriptionLine && candidate.length > 14) {
+            descriptionLines.push(currentDescriptionLine);
+            currentDescriptionLine = part;
+          } else {
+            currentDescriptionLine = candidate;
+          }
+        });
+        if (currentDescriptionLine) descriptionLines.push(currentDescriptionLine);
+      }
       const description = descriptionLines
         .map(line => `<span class="tag-image-description-part">${esc(line)}</span>`)
         .join('');
