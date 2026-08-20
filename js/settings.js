@@ -140,18 +140,6 @@
     }
   }
 
-  function setPromptPreviewSizeLevel(level, options = {}) {
-    promptPreviewSizeLevel = normalizePromptPreviewSizeLevel(level);
-    saveSettings();
-    renderPromptPreviewSizeLevel();
-    renderPreviewRenderMode();
-    renderPromptDescriptionPreview();
-    renderComposedDescriptionPreview();
-    if (options.notify) {
-      showToast(`이미지 영역 크기를 ${getPromptPreviewSizeLabel(promptPreviewSizeLevel)}로 변경했습니다`);
-    }
-  }
-
   function normalizeCoreCategoryWideCard(value) {
     if (value === true || value === '1' || value === 1) return true;
     return false;

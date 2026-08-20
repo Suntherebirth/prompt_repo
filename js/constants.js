@@ -16,7 +16,6 @@
     TAP: 'tap',
     DOUBLE_TAP_PREVIEW: 'double_tap_preview',
   };
-  const PROMPT_PREVIEW_SIZE_LEVEL_KEY = 'prompt_repo_prompt_preview_size_level_v1';
   const CORE_CATEGORY_WIDE_CARD_KEY = 'prompt_repo_core_category_wide_card_v1';
   const LARGE_ITEM_GRID_KEY = 'prompt_repo_large_item_grid_v1';
   const EXPORT_METADATA_SANITIZATION_KEY = 'prompt_repo_export_metadata_sanitization_v1';

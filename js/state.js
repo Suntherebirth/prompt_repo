@@ -71,7 +71,6 @@
   let isPromptPreviewSuppressed = false;
   let shouldAnimatePromptPreviewClear = false;
   let isSettingsDrawerOpen = false;
-  let promptPreviewSizeLevel = 2;
   let previewTransitionMode = 'scale';
   let previewRenderMode = 'landscape';
   let isCoreCategoryWideCardEnabled = false;
@@ -95,11 +94,6 @@
   let doubleTapTouchLockUntil = 0;
   const PROMPT_SWIPE_ACTION_WIDTH = 124;
   const DOUBLE_TAP_ADD_TOUCH_COOLDOWN_MS = 240;
-  const PROMPT_PREVIEW_MAX_WIDTH_BY_LEVEL = {
-    1: '340px',
-    2: '380px',
-    3: '620px',
-  };
 
   const OUTPUT_PLACEHOLDER = '프롬프트를 선택하면 여기에 표시됩니다.';
   const promptImageUrlCache = new Map();

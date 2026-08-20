@@ -348,11 +348,6 @@
     ];
   }
 
-  function normalizePromptPreviewSizeLevel(level) {
-    const value = Number(level);
-    return value === 1 || value === 2 || value === 3 ? value : 2;
-  }
-
   function normalizePreviewRenderMode(value) {
     if (value === 'portrait' || value === 'vertical') return 'portrait';
     return 'landscape';
@@ -360,35 +355,6 @@
 
   function getPreviewRenderModeLabel(mode) {
     return mode === 'portrait' ? '세로 렌더링' : '기본(가로)';
-  }
-
-  function getPromptPreviewSizeLabel(level) {
-    if (level === 1) return '1단계';
-    if (level === 3) return '3단계';
-    return '2단계';
-  }
-
-  function renderPromptPreviewSizeLevel() {
-    const panel = document.querySelector('.panel-library');
-    const main = document.querySelector('.main');
-    document.querySelectorAll('.prompt-description-preview').forEach((preview) => {
-      preview.style.setProperty('--prompt-preview-max-width', PROMPT_PREVIEW_MAX_WIDTH_BY_LEVEL[promptPreviewSizeLevel]);
-    });
-    if (main) {
-      const portraitInset = promptPreviewSizeLevel === 1 ? '12px' : promptPreviewSizeLevel === 3 ? '2px' : '6px';
-      main.style.setProperty('--portrait-preview-inner-padding', portraitInset);
-    }
-    if (panel) {
-      panel.classList.toggle('preview-level-3-full', promptPreviewSizeLevel === 3);
-    }
-
-    document.querySelectorAll('[data-preview-size-level]').forEach(button => {
-      const level = normalizePromptPreviewSizeLevel(button.dataset.previewSizeLevel);
-      const isActive = level === promptPreviewSizeLevel;
-      button.classList.toggle('active', isActive);
-      button.setAttribute('aria-pressed', isActive ? 'true' : 'false');
-      button.title = isActive ? `현재 이미지 영역 크기 ${getPromptPreviewSizeLabel(level)}` : `이미지 영역 크기를 ${getPromptPreviewSizeLabel(level)}로 변경`;
-    });
   }
 
   function renderPreviewRenderMode() {
