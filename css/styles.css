@@ -1473,7 +1473,20 @@
       box-shadow: inset 0 0 0 1px rgba(116, 132, 232, 0.28), 0 0 0 3px rgba(212, 166, 47, 0.1);
     }
 
-    .prompt-description-preview .preview-tag-grid-random-toggle:active,
+    .prompt-description-preview .preview-tag-grid-random-toggle:active {
+      transform: scale(0.97);
+    }
+
+    .prompt-description-preview .is-tag-filter-grid .preview-tag-grid-random-toggle:active {
+      transform: translateX(-50%) scale(0.97);
+    }
+
+    .prompt-description-preview .preview-tag-grid-random-toggle:focus-visible {
+      outline: none;
+      border-color: #F4C95D;
+      box-shadow: inset 0 0 0 1px rgba(116, 132, 232, 0.28), 0 0 0 3px rgba(212, 166, 47, 0.2);
+    }
+
     .prompt-item.random-card:active {
       animation: randomSelectionPress .3s cubic-bezier(0.16, 1, 0.3, 1);
     }
@@ -1899,9 +1912,10 @@
     }
 
     .prompt-description-preview .preview-tag-image-card.is-composition-core {
-      border-color: #34d399aa;
-      background: #183f35;
-      box-shadow: inset 0 0 0 1px rgba(52, 211, 153, 0.14), 0 2px 8px rgba(52, 211, 153, 0.1);
+      border-width: 1.5px;
+      border-color: rgba(116, 132, 232, 0.78);
+      background: #1c213b;
+      box-shadow: inset 0 0 0 1px rgba(76, 91, 214, 0.22), 0 2px 8px rgba(76, 91, 214, 0.16);
     }
 
     .prompt-description-preview .preview-composition-core-mark {
@@ -1914,8 +1928,8 @@
       min-height: 20px;
       padding: 0 5px;
       border-radius: 4px;
-      color: #10251f;
-      background: #34d399;
+      color: #eef2ff;
+      background: #4c5bd6;
       font-size: 0.65rem;
       font-weight: 800;
       line-height: 1;
@@ -1946,10 +1960,10 @@
       width: 22px;
       height: 22px;
       padding: 0;
-      border: 1px solid rgba(224, 173, 92, 0.35);
+      border: none;
       border-radius: 5px;
-      color: #d8c9aa;
-      background: rgba(33, 31, 28, 0.92);
+      color: #e1e8ff;
+      background: rgba(28, 33, 59, 0.94);
       font: inherit;
       font-size: 0.9rem;
       font-weight: 700;
@@ -1959,17 +1973,15 @@
     }
 
     .prompt-description-preview .preview-composition-remove-btn:hover {
-      border-color: rgba(224, 173, 92, 0.75);
-      color: #fff2cf;
-      background: #2a2620;
+      color: #eef2ff;
+      background: #232b4d;
       box-shadow: 0 2px 8px rgba(0, 0, 0, 0.22);
     }
 
     .prompt-description-preview .preview-composition-remove-btn:active {
       transform: translateY(1px) scale(0.9);
-      border-color: rgba(224, 173, 92, 0.9);
-      color: #fff2cf;
-      background: #211f1c;
+      color: #eef2ff;
+      background: #1c213b;
       box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.28);
     }
 
