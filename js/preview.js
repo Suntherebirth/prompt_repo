@@ -8,11 +8,6 @@
         || selected.find(item => item.source === 'prompt' && item.imageData)
         || selected.find(item => item.source === 'prompt'));
 
-    preview.classList.toggle('preview-animation-level-1', previewAnimationLevel === 1);
-    preview.classList.toggle('preview-animation-level-2', previewAnimationLevel === 2);
-    preview.classList.toggle('preview-animation-level-3', previewAnimationLevel === 3);
-    preview.classList.toggle('preview-animation-enabled', previewAnimationLevel > 0);
-
     if (activeSelectedPromptGridMode) {
       const selectedPrompts = selected.filter(item => item.source === 'prompt');
       if (selectedPrompts.length) {
@@ -124,11 +119,6 @@
   function renderComposedDescriptionPreview() {
     const preview = document.getElementById('composed-description-preview');
     if (!preview) return;
-
-    preview.classList.toggle('preview-animation-level-1', previewAnimationLevel === 1);
-    preview.classList.toggle('preview-animation-level-2', previewAnimationLevel === 2);
-    preview.classList.toggle('preview-animation-level-3', previewAnimationLevel === 3);
-    preview.classList.toggle('preview-animation-enabled', previewAnimationLevel > 0);
 
     if (leftPanelTab === 'combo' && !isCustomComboTabOpen && activeCategoryComposed && activeComposedCategoryGridMode) {
       const categoryItems = composedPrompts.filter(item => item.mainCategory === activeCategoryComposed).sort((a, b) => {

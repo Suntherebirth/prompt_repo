@@ -1367,7 +1367,6 @@
     renderLargeItemGridToggle();
     renderExportMetadataSanitizationToggle();
     renderCoreQuickAccessRow();
-    renderPreviewAnimationLevel();
     renderPreviewTransitionMode();
     renderPromptPreviewSizeLevel();
     renderPreviewRenderMode();

@@ -7,7 +7,6 @@
   const HIDDEN_MAIN_CATEGORIES_KEY = 'prompt_repo_hidden_main_categories_v1';
   const SETTINGS_STORAGE_KEY = 'prompt_repo_settings_v1';
   const TAP_COMPOSE_MODE_KEY = 'prompt_repo_tap_compose_mode_v1';
-  const PREVIEW_ANIMATION_KEY = 'prompt_repo_preview_animation_v1';
   const PREVIEW_TRANSITION_MODE_KEY = 'prompt_repo_preview_transition_mode_v1';
   const PREVIEW_RENDER_MODE_KEY = 'prompt_repo_preview_render_mode_v1';
   const TAG_LAYOUT_STORAGE_KEY = 'prompt_repo_tag_layout_v1';

@@ -120,7 +120,7 @@ vendor/
 | `composition.js` | `handlePromptTap`, `addPromptToComposition`, `removeSelected`, `jumpToPromptCardFromSelected`, `clearSelected`, `clearCurrentComposition`, `copyPrompt`, `copyPromptSilently`, `saveComposedPrompt` |
 | `backup.js` | `buildBackupPayload`, `applyImportedBackupData`, `exportJSONBackup`, `importJSONBackup` |
 | `dnd.js` | `clearSelectedChipDragState`, `dragStart/dragEnd`, `chipPointerDown/Move/End`, `dragOver/dragLeave/drop`, `dragOverSelectedContainer`, `dropOnSelectedContainer` |
-| `settings.js` | `renderSettingsDrawer`, `open/close/toggleSettingsDrawer`, `handleSettingsDrawerBackdrop`, `normalizePreviewAnimationLevel`, `renderPreviewAnimationLevel`, `normalizePreviewTransitionMode`, `renderPreviewTransitionMode`, `renderTapComposeToggle`, `normalizeTapComposeMode`, `isSwipeComposeMode`, `is/activateDoubleTapTouchCooldown`, `setTapComposeMode`, `toggleTapComposeMode`, `set*Level/Mode` 함수들, `togglePreviewAnimation`, `setLeftPanelTab` |
+| `settings.js` | `renderSettingsDrawer`, `open/close/toggleSettingsDrawer`, `handleSettingsDrawerBackdrop`, `normalizePreviewTransitionMode`, `renderPreviewTransitionMode`, `renderTapComposeToggle`, `normalizeTapComposeMode`, `isSwipeComposeMode`, `is/activateDoubleTapTouchCooldown`, `setTapComposeMode`, `toggleTapComposeMode`, `set*Level/Mode` 함수들, `setLeftPanelTab` |
 | `utils.js` | `uniqueInOrder`, `esc`, `showToast`, `bindPressAction`, `preventSafariDoubleTapZoom`, `moveArrayItem`, `getComposedItemText` |
 | `main.js` | 4943행 `document.addEventListener('pointerdown', ...)`, 9209~9372행 구간 전체 (`DOM 요소 const` 선언 + 모든 `addEventListener` 등록 + `preventSafariDoubleTapZoom(); loadSettings(); ...; load(); render();`) |
 

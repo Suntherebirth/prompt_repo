@@ -78,13 +78,6 @@
     }
 
     try {
-      const storedPreviewAnimation = localStorage.getItem(PREVIEW_ANIMATION_KEY);
-      previewAnimationLevel = normalizePreviewAnimationLevel(storedPreviewAnimation);
-    } catch {
-      previewAnimationLevel = 2;
-    }
-
-    try {
       const storedPreviewRenderMode = localStorage.getItem(PREVIEW_RENDER_MODE_KEY) ?? localStorage.getItem(LEGACY_VIEW_ORIENTATION_KEY);
       previewRenderMode = normalizePreviewRenderMode(storedPreviewRenderMode);
     } catch {
@@ -127,7 +120,6 @@
     return {
       tapComposeMode,
       promptPreviewSizeLevel,
-      previewAnimationLevel,
       previewTransitionMode,
       previewRenderMode,
       isCoreCategoryWideCardEnabled,
@@ -141,7 +133,7 @@
     localStorage.setItem(SETTINGS_STORAGE_KEY, JSON.stringify(payload));
     localStorage.setItem(TAP_COMPOSE_MODE_KEY, payload.tapComposeMode);
     localStorage.setItem(PROMPT_PREVIEW_SIZE_LEVEL_KEY, String(payload.promptPreviewSizeLevel));
-    localStorage.setItem(PREVIEW_ANIMATION_KEY, String(payload.previewAnimationLevel));
+    localStorage.removeItem('prompt_repo_preview_animation_v1');
     localStorage.setItem(PREVIEW_TRANSITION_MODE_KEY, payload.previewTransitionMode);
     localStorage.setItem(PREVIEW_RENDER_MODE_KEY, payload.previewRenderMode);
     localStorage.setItem(CORE_CATEGORY_WIDE_CARD_KEY, payload.isCoreCategoryWideCardEnabled ? '1' : '0');
@@ -160,7 +152,6 @@
 
     setTapComposeMode(storedSettings?.tapComposeMode ?? localStorage.getItem(TAP_COMPOSE_MODE_KEY));
     setPromptPreviewSizeLevel(storedSettings?.promptPreviewSizeLevel ?? localStorage.getItem(PROMPT_PREVIEW_SIZE_LEVEL_KEY) ?? 2);
-    setPreviewAnimationLevel(storedSettings?.previewAnimationLevel ?? localStorage.getItem(PREVIEW_ANIMATION_KEY));
     setPreviewTransitionMode(storedSettings?.previewTransitionMode ?? localStorage.getItem(PREVIEW_TRANSITION_MODE_KEY) ?? 'scale');
     setPreviewRenderMode(storedSettings?.previewRenderMode ?? localStorage.getItem(PREVIEW_RENDER_MODE_KEY) ?? localStorage.getItem(LEGACY_VIEW_ORIENTATION_KEY) ?? 'landscape');
     setCoreCategoryWideCard(storedSettings?.isCoreCategoryWideCardEnabled ?? localStorage.getItem(CORE_CATEGORY_WIDE_CARD_KEY));

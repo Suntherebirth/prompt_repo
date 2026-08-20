@@ -72,7 +72,6 @@
   let shouldAnimatePromptPreviewClear = false;
   let isSettingsDrawerOpen = false;
   let promptPreviewSizeLevel = 2;
-  let previewAnimationLevel = 2;
   let previewTransitionMode = 'scale';
   let previewRenderMode = 'landscape';
   let isCoreCategoryWideCardEnabled = false;

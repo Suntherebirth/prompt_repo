@@ -2132,18 +2132,6 @@
       border-radius: 12px;
     }
 
-    .prompt-description-preview.preview-animation-level-1 .preview-image-shell {
-      animation: previewBreathingWeak 5.2s ease-in-out infinite;
-    }
-
-    .prompt-description-preview.preview-animation-level-2 .preview-image-shell {
-      animation: previewBreathing 3.8s ease-in-out infinite;
-    }
-
-    .prompt-description-preview.preview-animation-level-3 .preview-image-shell {
-      animation: previewBreathingStrong 2.8s ease-in-out infinite;
-    }
-
     .prompt-description-preview.preview-transition-mode-scale img.preview-image-enter {
       animation: previewImageScaleFadeIn .36s cubic-bezier(0.16, 1, 0.3, 1);
       transform-origin: center;
@@ -2270,33 +2258,6 @@
       }
     }
 
-    @keyframes previewBreathingWeak {
-      0%, 100% {
-        transform: scale(1) translateY(0);
-      }
-      50% {
-        transform: scale(1.007) translateY(-1.5px);
-      }
-    }
-
-    @keyframes previewBreathing {
-      0%, 100% {
-        transform: scale(1) translateY(0);
-      }
-      50% {
-        transform: scale(1.016) translateY(-3.5px);
-      }
-    }
-
-    @keyframes previewBreathingStrong {
-      0%, 100% {
-        transform: scale(1) translateY(0);
-      }
-      50% {
-        transform: scale(1.03) translateY(-6px);
-      }
-    }
-
     @keyframes previewSwitchFeedback {
       0% {
         box-shadow: 0 0 0 0 rgba(138, 180, 255, 0);
@@ -2339,11 +2300,6 @@
         animation: none;
       }
 
-      .prompt-description-preview.preview-animation-level-1 .preview-image-shell,
-      .prompt-description-preview.preview-animation-level-2 .preview-image-shell,
-      .prompt-description-preview.preview-animation-level-3 .preview-image-shell {
-        animation: none;
-      }
     }
 
     .prompt-description-preview .empty-state {
@@ -3819,45 +3775,6 @@
       width: 1px;
       background: #2a2a3a;
       pointer-events: none;
-    }
-
-    .main.preview-render-portrait .prompt-description-preview.preview-animation-level-1 .preview-image-shell {
-      animation: previewBreathingPortraitWeak 6.8s ease-in-out infinite;
-    }
-
-    .main.preview-render-portrait .prompt-description-preview.preview-animation-level-2 .preview-image-shell {
-      animation: previewBreathingPortrait 4.4s ease-in-out infinite;
-    }
-
-    .main.preview-render-portrait .prompt-description-preview.preview-animation-level-3 .preview-image-shell {
-      animation: previewBreathingPortraitStrong 3s ease-in-out infinite;
-    }
-
-    @keyframes previewBreathingPortraitWeak {
-      0%, 100% {
-        transform: translateY(0);
-      }
-      50% {
-        transform: translateY(-0.8px);
-      }
-    }
-
-    @keyframes previewBreathingPortrait {
-      0%, 100% {
-        transform: translateY(0);
-      }
-      50% {
-        transform: translateY(-1.4px);
-      }
-    }
-
-    @keyframes previewBreathingPortraitStrong {
-      0%, 100% {
-        transform: translateY(0);
-      }
-      50% {
-        transform: translateY(-2.1px);
-      }
     }
 
     .main.preview-render-portrait .panel-library:not(.combo-mode) > .combo-library-footer {

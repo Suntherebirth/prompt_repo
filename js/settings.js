@@ -1,21 +1,3 @@
-  function normalizePreviewAnimationLevel(value) {
-    if (value === true || value === 'true') return 2;
-    if (value === false) return 1;
-    const level = Number(value);
-    if (Number.isInteger(level) && level >= 0 && level <= 3) return level;
-    return 2;
-  }
-
-  function renderPreviewAnimationLevel() {
-    const buttons = document.querySelectorAll('[data-preview-animation-level]');
-    buttons.forEach(button => {
-      const level = Number(button.getAttribute('data-preview-animation-level'));
-      const isActive = previewAnimationLevel === level;
-      button.classList.toggle('active', isActive);
-      button.title = getPreviewAnimationLevelLabel(level);
-    });
-  }
-
   function normalizePreviewTransitionMode(value) {
     if (value === 'fade') return 'fade';
     if (value === 'cut') return 'cut';
@@ -48,20 +30,6 @@
       preview.classList.toggle('preview-transition-mode-fade', previewTransitionMode === 'fade');
       preview.classList.toggle('preview-transition-mode-cut', previewTransitionMode === 'cut');
     });
-  }
-
-  function getPreviewAnimationLevelLabel(level) {
-    if (level === 0) return '미리보기 애니메이션 끄기';
-    if (level === 1) return '미리보기 애니메이션: 더 약하게';
-    if (level === 3) return '미리보기 애니메이션: 더 강하게';
-    return '미리보기 애니메이션: 기본';
-  }
-
-  function getPreviewAnimationLevelText(level) {
-    if (level === 0) return '끔';
-    if (level === 1) return '더 약하게';
-    if (level === 3) return '더 강하게';
-    return '기본';
   }
 
   function renderTapComposeToggle() {
@@ -184,17 +152,6 @@
     }
   }
 
-  function setPreviewAnimationLevel(level, options = {}) {
-    previewAnimationLevel = normalizePreviewAnimationLevel(level);
-    saveSettings();
-    renderPreviewAnimationLevel();
-    renderPromptDescriptionPreview();
-    renderComposedDescriptionPreview();
-    if (options.notify) {
-      showToast(`미리보기 애니메이션을 ${getPreviewAnimationLevelText(previewAnimationLevel)}로 변경했습니다`);
-    }
-  }
-
   function normalizeCoreCategoryWideCard(value) {
     if (value === true || value === '1' || value === 1) return true;
     return false;
@@ -302,11 +259,6 @@
     if (options.notify) {
       showToast(`미리보기 렌더링 모드를 ${getPreviewRenderModeLabel(previewRenderMode)}로 변경했습니다`);
     }
-  }
-
-  function togglePreviewAnimation() {
-    const nextLevel = previewAnimationLevel >= 3 ? 1 : previewAnimationLevel + 1;
-    setPreviewAnimationLevel(nextLevel, { notify: true });
   }
 
   function openSettingsDrawer() {
