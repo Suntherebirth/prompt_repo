@@ -20,7 +20,7 @@
       content,
       tags: normalizePromptTags(prompt.tags),
       description: String(prompt.description ?? '').trim(),
-      // 기존 image* 필드는 가로 이미지(기본)로 간주한다.
+      // 기존 image* 필드는 기본 이미지 슬롯으로 보존한다.
       imageId: (prompt.imageId ?? '').trim(),
       // 레거시 데이터 호환용. 새 저장에서는 사용하지 않는다.
       imageData: (prompt.imageData ?? '').trim(),

@@ -54,24 +54,16 @@
       const altText = prompt.imageName || getPromptDisplayName(prompt.mainCategory, prompt.subCategory);
       const nextImageKey = `${prompt.id || ''}:${imageSrc}`;
       const shouldAnimateTransition = nextImageKey !== lastRenderedPromptPreviewImageKey;
-      const portraitDescription = previewRenderMode === 'portrait'
-        ? `<div class="preview-description-text">${prompt?.description && isSubCategoryCoreEnabled(prompt.mainCategory, prompt.subCategory) ? esc(formatPromptDescriptionForDisplay(prompt.description)) : ''}</div>`
-        : '';
-      const portraitTags = previewRenderMode === 'portrait'
-        ? `<button class="preview-tag-list-header" type="button">태그</button>${normalizePromptTags(prompt?.tags).map(tag => `<span class="preview-tag-swipe-item"><button class="preview-tag-chip" type="button" data-tag="${esc(tag)}">${esc(tag)}</button></span>`).join('')}`
-        : '';
-      const portraitCaption = previewRenderMode === 'portrait'
-        ? `<div class="preview-details-panel">${portraitDescription}<div class="preview-tag-list">${portraitTags}</div></div>`
-        : '';
+      const portraitDescription = `<div class="preview-description-text">${prompt?.description && isSubCategoryCoreEnabled(prompt.mainCategory, prompt.subCategory) ? esc(formatPromptDescriptionForDisplay(prompt.description)) : ''}</div>`;
+      const portraitTags = `<button class="preview-tag-list-header" type="button">태그</button>${normalizePromptTags(prompt?.tags).map(tag => `<span class="preview-tag-swipe-item"><button class="preview-tag-chip" type="button" data-tag="${esc(tag)}">${esc(tag)}</button></span>`).join('')}`;
+      const portraitCaption = `<div class="preview-details-panel">${portraitDescription}<div class="preview-tag-list">${portraitTags}</div></div>`;
       shouldAnimatePromptPreviewClear = false;
       preview.classList.add('has-image');
       preview.classList.remove('image-clear-feedback');
       preview.classList.remove('image-switch-feedback');
       preview.title = '터치하면 이미지를 크게 봅니다';
-      preview.innerHTML = portraitCaption
-        ? `<div class="preview-portrait-stack has-caption"><div class="preview-image-shell"><img class="${shouldAnimateTransition ? 'preview-image-enter' : ''}" src="${imageSrc}" alt="${esc(altText)}" /></div>${portraitCaption}</div>`
-        : `<div class="preview-image-shell"><img class="${shouldAnimateTransition ? 'preview-image-enter' : ''}" src="${imageSrc}" alt="${esc(altText)}" /></div>`;
-      if (portraitTags) bindPreviewTagSwipe(preview.querySelector('.preview-tag-list'), '.preview-tag-swipe-item');
+      preview.innerHTML = `<div class="preview-portrait-stack has-caption"><div class="preview-image-shell"><img class="${shouldAnimateTransition ? 'preview-image-enter' : ''}" src="${imageSrc}" alt="${esc(altText)}" /></div>${portraitCaption}</div>`;
+      bindPreviewTagSwipe(preview.querySelector('.preview-tag-list'), '.preview-tag-swipe-item');
       if (shouldAnimateTransition) {
         // 클래스를 다시 붙여 연속 전환에서도 피드백 애니메이션이 반복 실행되도록 한다.
         void preview.offsetWidth;
@@ -346,37 +338,5 @@
       ...entries,
       ...(transitionEntry ? [transitionEntry] : []),
     ];
-  }
-
-  function normalizePreviewRenderMode(value) {
-    if (value === 'portrait' || value === 'vertical') return 'portrait';
-    return 'landscape';
-  }
-
-  function getPreviewRenderModeLabel(mode) {
-    return mode === 'portrait' ? '세로 렌더링' : '기본(가로)';
-  }
-
-  function renderPreviewRenderMode() {
-    const nextMode = normalizePreviewRenderMode(previewRenderMode);
-    const aspectRatio = nextMode === 'portrait' ? '3 / 4' : '4 / 3';
-    const main = document.querySelector('.main');
-    if (main) {
-      main.classList.toggle('preview-render-portrait', nextMode === 'portrait');
-    }
-    document.body.classList.toggle('preview-render-portrait-mode', nextMode === 'portrait');
-
-    document.querySelectorAll('.prompt-description-preview, .prompt-image-preview').forEach((element) => {
-      element.style.setProperty('--preview-aspect-ratio', aspectRatio);
-    });
-
-    document.querySelectorAll('[data-preview-render-mode]').forEach(button => {
-      const mode = button.getAttribute('data-preview-render-mode');
-      const normalizedMode = normalizePreviewRenderMode(mode);
-      const isActive = normalizedMode === nextMode;
-      button.classList.toggle('active', isActive);
-      button.setAttribute('aria-pressed', isActive ? 'true' : 'false');
-      button.title = isActive ? `현재 모드: ${getPreviewRenderModeLabel(nextMode)}` : `모드를 ${getPreviewRenderModeLabel(normalizedMode)}로 변경`;
-    });
   }
 

@@ -229,26 +229,6 @@
     }
   }
 
-  function setPreviewRenderMode(mode, options = {}) {
-    const nextMode = normalizePreviewRenderMode(mode);
-    const didModeChange = previewRenderMode !== nextMode;
-    previewRenderMode = nextMode;
-    saveSettings();
-    renderPreviewRenderMode();
-    renderPromptList();
-    if (didModeChange) {
-      lastRenderedPromptPreviewImageKey = '';
-      lastRenderedComposedPreviewImageKey = '';
-    }
-    renderPromptDescriptionPreview();
-    renderComposedDescriptionPreview();
-    renderPendingPromptImagePreview();
-    renderPendingComposedImagePreview();
-    if (options.notify) {
-      showToast(`미리보기 렌더링 모드를 ${getPreviewRenderModeLabel(previewRenderMode)}로 변경했습니다`);
-    }
-  }
-
   function openSettingsDrawer() {
     isSettingsDrawerOpen = true;
     renderSettingsDrawer();

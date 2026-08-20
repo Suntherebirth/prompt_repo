@@ -115,9 +115,8 @@
     const cards = sortedPrompts.map(prompt => {
       const isCore = isSubCategoryCoreEnabled(prompt.mainCategory, prompt.subCategory);
       const isWideCard = isCore && isCoreCategoryWideCardEnabled;
-      const forceOrientation = isWideCard ? 'landscape' : undefined;
-      const imageSrc = getPromptImageSource(prompt, forceOrientation);
-      queuePromptImageLoad(prompt, forceOrientation);
+      const imageSrc = getPromptImageSource(prompt);
+      queuePromptImageLoad(prompt);
       const altText = prompt.imageName || getPromptDisplayName(prompt.mainCategory, prompt.subCategory);
       const description = [prompt.mainCategory, prompt.subCategory].filter(Boolean).join(' · ');
       return `<div class="preview-tag-image-card is-prompt-card is-composition-selected${isCore ? ' is-composition-core' : ''}${isWideCard ? ' is-composition-core-wide' : ''}" data-prompt-id="${esc(prompt.id)}" title="${esc(altText)}">${imageSrc

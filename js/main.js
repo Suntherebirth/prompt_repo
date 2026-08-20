@@ -223,18 +223,11 @@
   comboMainCategoryInput.addEventListener('change', handleComposedMainCategoryChange);
   comboSubCategoryInput.addEventListener('change', handleComposedSubCategoryChange);
 
-  window.addEventListener('resize', () => {
-    if (normalizePreviewRenderMode(previewRenderMode) === 'portrait') {
-      renderPreviewRenderMode();
-    }
-  });
-
   // ── Init ──
   preventSafariDoubleTapZoom();
   bindWorkspaceTitleSwipe();
   loadSettings();
   renderSettingsDrawer();
-  renderPreviewRenderMode();
   renderImageViewer();
   setLeftPanelTab(localStorage.getItem(LEFT_PANEL_TAB_KEY) || 'prompt');
   load();

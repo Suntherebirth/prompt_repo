@@ -77,13 +77,6 @@
       promptTagLayouts = {};
     }
 
-    try {
-      const storedPreviewRenderMode = localStorage.getItem(PREVIEW_RENDER_MODE_KEY) ?? localStorage.getItem(LEGACY_VIEW_ORIENTATION_KEY);
-      previewRenderMode = normalizePreviewRenderMode(storedPreviewRenderMode);
-    } catch {
-      previewRenderMode = 'landscape';
-    }
-
     applyPromptDescriptionRules();
     ensureCategoryConfigConsistency();
     ensureComposedCategoryConfigConsistency();
@@ -120,7 +113,6 @@
     return {
       tapComposeMode,
       previewTransitionMode,
-      previewRenderMode,
       isCoreCategoryWideCardEnabled,
       isLargeItemGridEnabled,
       isExportMetadataSanitizationEnabled,
@@ -131,10 +123,11 @@
     const payload = getSettingsPayload();
     localStorage.setItem(SETTINGS_STORAGE_KEY, JSON.stringify(payload));
     localStorage.setItem(TAP_COMPOSE_MODE_KEY, payload.tapComposeMode);
+    localStorage.removeItem('prompt_repo_preview_render_mode_v1');
+    localStorage.removeItem('prompt_repo_view_orientation_v1');
     localStorage.removeItem('prompt_repo_prompt_preview_size_level_v1');
     localStorage.removeItem('prompt_repo_preview_animation_v1');
     localStorage.setItem(PREVIEW_TRANSITION_MODE_KEY, payload.previewTransitionMode);
-    localStorage.setItem(PREVIEW_RENDER_MODE_KEY, payload.previewRenderMode);
     localStorage.setItem(CORE_CATEGORY_WIDE_CARD_KEY, payload.isCoreCategoryWideCardEnabled ? '1' : '0');
     localStorage.setItem(LARGE_ITEM_GRID_KEY, payload.isLargeItemGridEnabled ? '1' : '0');
     localStorage.setItem(EXPORT_METADATA_SANITIZATION_KEY, payload.isExportMetadataSanitizationEnabled ? '1' : '0');
@@ -151,7 +144,6 @@
 
     setTapComposeMode(storedSettings?.tapComposeMode ?? localStorage.getItem(TAP_COMPOSE_MODE_KEY));
     setPreviewTransitionMode(storedSettings?.previewTransitionMode ?? localStorage.getItem(PREVIEW_TRANSITION_MODE_KEY) ?? 'scale');
-    setPreviewRenderMode(storedSettings?.previewRenderMode ?? localStorage.getItem(PREVIEW_RENDER_MODE_KEY) ?? localStorage.getItem(LEGACY_VIEW_ORIENTATION_KEY) ?? 'landscape');
     setCoreCategoryWideCard(storedSettings?.isCoreCategoryWideCardEnabled ?? localStorage.getItem(CORE_CATEGORY_WIDE_CARD_KEY));
     setLargeItemGrid(storedSettings?.isLargeItemGridEnabled ?? localStorage.getItem(LARGE_ITEM_GRID_KEY));
     isExportMetadataSanitizationEnabled = storedSettings?.isExportMetadataSanitizationEnabled

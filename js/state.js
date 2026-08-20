@@ -35,7 +35,7 @@
   let editingPromptPortraitImageData = '';
   let editingComposedPromptId = null;
   let editingCustomComboId = null;
-  let customComboImageEditOrientation = 'landscape';
+  let customComboImageEditOrientation = 'portrait';
   let editingComposedImageId = '';
   let editingComposedImageData = '';
   let editingComposedPortraitImageId = '';
@@ -72,12 +72,11 @@
   let shouldAnimatePromptPreviewClear = false;
   let isSettingsDrawerOpen = false;
   let previewTransitionMode = 'scale';
-  let previewRenderMode = 'landscape';
   let isCoreCategoryWideCardEnabled = false;
   let isLargeItemGridEnabled = false;
   let isExportMetadataSanitizationEnabled = true;
-  let promptImageEditOrientation = 'landscape';
-  let composedImageEditOrientation = 'landscape';
+  let promptImageEditOrientation = 'portrait';
+  let composedImageEditOrientation = 'portrait';
   let activeImageViewer = null;
   let imageViewerScale = 1;
   let imageViewerTranslateX = 0;

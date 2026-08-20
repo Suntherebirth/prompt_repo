@@ -1368,7 +1368,6 @@
     renderExportMetadataSanitizationToggle();
     renderCoreQuickAccessRow();
     renderPreviewTransitionMode();
-    renderPreviewRenderMode();
     ensureActiveCategoryState();
     renderMainCategoryFilter();
     renderAddFilterTabs();

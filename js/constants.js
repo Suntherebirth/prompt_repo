@@ -8,9 +8,7 @@
   const SETTINGS_STORAGE_KEY = 'prompt_repo_settings_v1';
   const TAP_COMPOSE_MODE_KEY = 'prompt_repo_tap_compose_mode_v1';
   const PREVIEW_TRANSITION_MODE_KEY = 'prompt_repo_preview_transition_mode_v1';
-  const PREVIEW_RENDER_MODE_KEY = 'prompt_repo_preview_render_mode_v1';
   const TAG_LAYOUT_STORAGE_KEY = 'prompt_repo_tag_layout_v1';
-  const LEGACY_VIEW_ORIENTATION_KEY = 'prompt_repo_view_orientation_v1';
   const PROMPT_ADD_MODE = {
     SWIPE: 'swipe',
     TAP: 'tap',

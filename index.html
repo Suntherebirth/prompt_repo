@@ -40,7 +40,7 @@
   </div>
 </header>
 
-<div class="main">
+<div class="main preview-render-portrait preview-render-portrait-mode">
 
   <!-- Left: Prompt Select + Custom Combo -->
   <div class="panel-add" id="panel-add">
@@ -168,8 +168,7 @@
         <div class="prompt-image-block">
           <label>설명 이미지</label>
           <div class="image-orientation-tabs" role="tablist" aria-label="프롬프트 이미지 방향 선택">
-            <button id="input-image-tab-landscape" class="image-orientation-tab active" type="button" onclick="setPromptImageEditOrientation('landscape')">가로 이미지</button>
-            <button id="input-image-tab-portrait" class="image-orientation-tab" type="button" onclick="setPromptImageEditOrientation('portrait')">세로 이미지</button>
+            <button id="input-image-tab-portrait" class="image-orientation-tab active" type="button" aria-pressed="true">세로 이미지</button>
           </div>
           <div class="prompt-image-row">
             <input id="input-image-file" type="file" accept="image/*" />
@@ -222,8 +221,7 @@
         <div class="prompt-image-block">
           <label>설명 이미지</label>
           <div class="image-orientation-tabs" role="tablist" aria-label="커스텀 조합 이미지 방향 선택">
-            <button id="combo-image-tab-landscape" class="image-orientation-tab active" type="button" onclick="setComposedImageEditOrientation('landscape')">가로 이미지</button>
-            <button id="combo-image-tab-portrait" class="image-orientation-tab" type="button" onclick="setComposedImageEditOrientation('portrait')">세로 이미지</button>
+            <button id="combo-image-tab-portrait" class="image-orientation-tab active" type="button" aria-pressed="true">세로 이미지</button>
           </div>
           <div class="prompt-image-row">
             <input id="combo-image-file" type="file" accept="image/*" />
@@ -271,8 +269,7 @@
         <div class="prompt-image-block">
           <label>커스텀 콤보 이미지</label>
           <div class="image-orientation-tabs" role="tablist" aria-label="커스텀 콤보 이미지 방향 선택">
-            <button id="custom-combo-image-tab-landscape" class="image-orientation-tab active" type="button" onclick="setCustomComboImageEditOrientation('landscape')">가로 이미지</button>
-            <button id="custom-combo-image-tab-portrait" class="image-orientation-tab" type="button" onclick="setCustomComboImageEditOrientation('portrait')">세로 이미지</button>
+            <button id="custom-combo-image-tab-portrait" class="image-orientation-tab active" type="button" aria-pressed="true">세로 이미지</button>
           </div>
           <div class="prompt-image-row">
             <input id="custom-combo-image-file" type="file" accept="image/*" />
@@ -327,14 +324,6 @@
         <div class="settings-option-title">프롬프트 추가 방식</div>
         <div class="settings-option-description">밀어서 추가, 터치로 추가, 두번 터치로 추가를 순환합니다. 두번 터치로 추가는 첫 탭으로 미리보기, 같은 항목을 한 번 더 탭하면 조합에 추가됩니다.</div>
         <button id="tap-compose-toggle-btn" class="tap-compose-toggle-btn" type="button" onclick="toggleTapComposeMode()">밀어서 추가</button>
-      </div>
-      <div class="settings-option-card">
-        <div class="settings-option-title">미리보기 렌더링 모드</div>
-        <div class="settings-option-description">앱은 가로 레이아웃을 유지합니다. 세로 렌더링을 켜면 설명 이미지 비율이 3:4로 바뀌고, 좌측 패널은 그대로 둔 채 중앙/우측 패널을 2열로 균등 분할합니다.</div>
-        <div class="settings-level-row" role="group" aria-label="미리보기 렌더링 모드 선택">
-          <button class="settings-level-btn" type="button" data-preview-render-mode="landscape" onclick="setPreviewRenderMode('landscape', { notify: true })">기본(가로)</button>
-          <button class="settings-level-btn" type="button" data-preview-render-mode="portrait" onclick="setPreviewRenderMode('portrait', { notify: true })">세로 렌더링</button>
-        </div>
       </div>
       <div class="settings-option-card">
         <div class="settings-option-title">이미지 전환 효과</div>

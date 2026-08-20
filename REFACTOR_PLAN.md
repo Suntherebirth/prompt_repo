@@ -111,7 +111,7 @@ vendor/
 | `prompt-model.js` | `uid`, `normalizePromptTags`, `normalizePrompt`, `cleanPrompt`, `normalizeSelected`, `normalizeComposedPrompt`, `syncPromptUpdateToComposedPrompts`, `getPromptDisplayName`, `sanitizePromptImageNamePart`, `buildPromptImageName`, `buildComposedImageName` |
 | `prompt-image-form.js` | `normalizeImageOrientation`, `get/setPending*Image`, `renderPending*ImagePreview`, `clearPending*Image`, `readFileAsDataUrl`, `render*ImageOrientationTabs`, `getPromptImageSource`, `getPromptActiveImageMeta`, `queuePromptImageLoad` |
 | `tag-layout.js` | `getPromptTagLayout*`, `savePromptTagLayout`, `renderPromptTagBrowser`, `bindPromptTagLayoutInteractions`, `bindPreviewTagSwipe`, `commitPreviewTagRandomSelection`, `renderPromptTagImageGrid`, `jumpToPromptCardFromTagImage`, 관련 top-level `pointerdown` 리스너(→ `main.js`로 이동 대상 표시) |
-| `preview.js` | `renderPromptDescriptionPreview`, `renderComposedDescriptionPreview`, `formatDescriptionNamePart`, `parseBirthDatePart`, `calculateAgeFromBirthDate`, `formatDescriptionBirthPart`, `formatPromptDescriptionForDisplay`, `getActive*PreviewItem/Image`, `normalizePreviewRenderMode`, `renderPreviewRenderMode` |
+| `preview.js` | `renderPromptDescriptionPreview`, `renderComposedDescriptionPreview`, `formatDescriptionNamePart`, `parseBirthDatePart`, `calculateAgeFromBirthDate`, `formatDescriptionBirthPart`, `formatPromptDescriptionForDisplay`, `getActive*PreviewItem/Image` |
 | `image-viewer.js` | `renderImageViewer`, `clampImageViewerScale`, `applyImageViewerTransform`, `resetImageViewerTransform`, `getPointerDistance`, `markImageViewerGesture`, `onImageViewerPointer*`, `handleImageViewerImageTap`, `open/closeImageViewer`, `handleImageViewerBackdrop` |
 | `category-manage.js` | `setCategoryManageTab`, `renderCategoryManageTabs`, `open/closeCategoryManageModal`, `renderCategoryManage*List`, `getComposed*Categories`, `getCoreSubCategorySelections`, `openCoreSubCategory`, `renderCoreQuickAccessRow`, `toggle*Hidden/Core/RandomSelection`, `rename/delete/move*MainCategory/SubCategory`(prompt/composed 둘 다) |
 | `render-list.js` | `render`, `renderLibraryHeader`, `renderLibraryLayout`, `ensureActiveCategoryState`, `renderAddFilterTabs`, `renderCategorySelectors`, `renderMainCategoryFilter`, `renderComposedFilter`, `renderComposedLoadList`, `buildComposedLoadItem`, `renderPromptList`, `renderSelected`, `getSortedPromptsForSubCategory`, `applyRandomSelectionFor*`, `isSubCategoryUsed`, 관련 swipe/shortcut 함수(`bindPromptItemSwipe`, `arm*Shortcut`, `runComposed*Shortcut`, `closeAllPromptSwipeActions`, `setFrozenComboCardHeight` 등) |
@@ -137,7 +137,7 @@ vendor/
 - [ ] 프롬프트 탭하여 조합에 추가 (스와이프 모드/탭 모드/더블탭 모드 각각)
 - [ ] 클립보드 복사 동작
 - [ ] 이미지 뷰어 확대/축소/드래그, 배경 클릭 닫기
-- [ ] 설정 드로어: 미리보기 크기/애니메이션/전환모드/렌더모드 토글
+- [ ] 설정 드로어: 미리보기 크기/애니메이션/전환모드 토글 및 세로 렌더링 확인
 - [ ] JSON 백업 내보내기 → 가져오기 라운드트립
 - [ ] 브라우저 콘솔에 에러 없음 (특히 `ReferenceError`)
 - [ ] 모바일 뷰(반응형) 레이아웃 확인
