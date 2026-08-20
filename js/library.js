@@ -51,6 +51,7 @@
     const isEditOnlyCombinationMode = leftPanelTab === 'combo' && isComposedEditOnlyView;
     const hasSelectedPrompts = selected.some(item => item.source === 'prompt');
     if (!hasSelectedPrompts) activeSelectedPromptGridMode = false;
+    const coreSelection = activeSelectedPromptGridMode ? findCoreSubCategorySelection() : null;
     panel.classList.toggle('combo-mode', leftPanelTab === 'combo');
     if (main) main.classList.toggle('combo-mode', leftPanelTab === 'combo');
     panel.classList.toggle('custom-combo-mode', isCustomComboMode);
@@ -59,9 +60,30 @@
     if (comboFooter) comboFooter.classList.toggle('custom-combo-footer', isCustomComboMode);
     if (selectedPromptGridButton) {
       selectedPromptGridButton.hidden = isCustomComboMode;
-      selectedPromptGridButton.disabled = !hasSelectedPrompts;
+      selectedPromptGridButton.classList.toggle('core-quick-access-btn', !!coreSelection);
+      selectedPromptGridButton.classList.toggle('selected-prompt-grid-return-feedback', selectedPromptGridReturnFeedback);
       selectedPromptGridButton.removeAttribute('aria-pressed');
-      selectedPromptGridButton.textContent = '현재 조합 보기';
+      if (coreSelection) {
+        const { mainCategory, subCategory } = coreSelection;
+        selectedPromptGridButton.disabled = false;
+        selectedPromptGridButton.textContent = `핵심 : ${subCategory}`;
+        selectedPromptGridButton.title = `${mainCategory} > ${subCategory} 핵심 분류 바로 열기`;
+        selectedPromptGridButton.onclick = () => {
+          selectedPromptGridReturnFeedback = true;
+          if (selectedPromptGridReturnFeedbackTimer) window.clearTimeout(selectedPromptGridReturnFeedbackTimer);
+          selectedPromptGridReturnFeedbackTimer = window.setTimeout(() => {
+            selectedPromptGridReturnFeedback = false;
+            selectedPromptGridReturnFeedbackTimer = null;
+            render();
+          }, 360);
+          openCoreSubCategory(mainCategory, subCategory);
+        };
+      } else {
+        selectedPromptGridButton.disabled = !hasSelectedPrompts;
+        selectedPromptGridButton.textContent = '현재 조합 보기';
+        selectedPromptGridButton.removeAttribute('title');
+        selectedPromptGridButton.onclick = showSelectedPromptGrid;
+      }
     }
   }
 
@@ -1342,6 +1364,7 @@
   function render() {
     renderTapComposeToggle();
     renderCoreCategoryWideCardToggle();
+    renderLargeItemGridToggle();
     renderExportMetadataSanitizationToggle();
     renderCoreQuickAccessRow();
     renderPreviewAnimationLevel();
@@ -1408,27 +1431,42 @@
     return true;
   }
 
+  function scrollSelectedPromptChipIntoView(promptId) {
+    if (!promptId) return;
+    requestAnimationFrame(() => {
+      const chip = document.querySelector(`#selected-chips .selected-chip[data-prompt-id="${CSS.escape(String(promptId))}"]`);
+      if (!chip) return;
+      chip.classList.remove('scroll-focus');
+      void chip.offsetWidth;
+      chip.classList.add('scroll-focus');
+      chip.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'nearest' });
+      window.setTimeout(() => chip.classList.remove('scroll-focus'), 620);
+    });
+  }
+
+  function highlightSelectedPromptChip(promptId) {
+    if (!promptId) return;
+    requestAnimationFrame(() => {
+      const chip = document.querySelector(`.selected-chip[data-prompt-id="${CSS.escape(String(promptId))}"]`);
+      if (!chip) return;
+      chip.classList.remove('scroll-focus');
+      void chip.offsetWidth;
+      chip.classList.add('scroll-focus');
+      window.setTimeout(() => chip.classList.remove('scroll-focus'), 620);
+    });
+  }
+
   function renderSelected() {
     const container = document.getElementById('selected-chips');
     if (!container) return;
+    const coreContainer = document.getElementById('selected-chips-core');
     const customPreviewContainer = document.getElementById('custom-combo-preview-chips');
 
-    if (!container._chipTouchDragBound) {
-      container._chipTouchDragBound = true;
-      container.addEventListener('pointerdown', event => {
-        const chip = event.target.closest('.selected-chip');
-        if (!chip || !container.contains(chip)) return;
-        chipPointerDown(event, chip);
-      });
-      container.addEventListener('pointermove', chipPointerMove);
-      container.addEventListener('pointerup', chipPointerEnd);
-      container.addEventListener('pointercancel', chipPointerEnd);
-    }
-
-    container.ondragover = dragOverSelectedContainer;
-    container.ondrop = dropOnSelectedContainer;
-
     container.innerHTML = '';
+    if (coreContainer) {
+      coreContainer.innerHTML = '';
+      coreContainer.hidden = true;
+    }
 
     if (leftPanelTab === 'combo' && isCustomComboTabOpen) {
       const renderCustomComboChips = (target, includeEmptyId) => {
@@ -1566,20 +1604,29 @@
       e.textContent = '선택된 프롬프트가 없습니다';
       container.appendChild(e);
     } else {
+      const mainCategoryRank = new Map(categoryConfig.mainOrder.map((category, index) => [category, index]));
       const selectedForRender = selected
         .map((prompt, index) => ({ prompt, index }))
         .sort((a, b) => {
-          const aIsCore = isSubCategoryCoreEnabled(a.prompt.mainCategory, a.prompt.subCategory);
-          const bIsCore = isSubCategoryCoreEnabled(b.prompt.mainCategory, b.prompt.subCategory);
-          return Number(bIsCore) - Number(aIsCore);
+          const aMainRank = mainCategoryRank.get(a.prompt.mainCategory) ?? Number.MAX_SAFE_INTEGER;
+          const bMainRank = mainCategoryRank.get(b.prompt.mainCategory) ?? Number.MAX_SAFE_INTEGER;
+          if (aMainRank !== bMainRank) return aMainRank - bMainRank;
+
+          const aSubOrder = getMainCategoryConfig(a.prompt.mainCategory).subOrder || [];
+          const bSubOrder = getMainCategoryConfig(b.prompt.mainCategory).subOrder || [];
+          const aSubRank = aSubOrder.indexOf(a.prompt.subCategory);
+          const bSubRank = bSubOrder.indexOf(b.prompt.subCategory);
+          if (aSubRank !== bSubRank) return aSubRank - bSubRank;
+
+          return a.index - b.index;
         });
 
       selectedForRender.forEach(({ prompt: p, index: i }) => {
         const isCore = isSubCategoryCoreEnabled(p.mainCategory, p.subCategory);
         const chip = document.createElement('div');
         chip.className = `selected-chip${isCore ? ' core' : ''}`;
-        chip.draggable = true;
         chip.dataset.idx = i;
+        chip.dataset.promptId = p.id;
         chip.title = '탭하면 중앙 목록의 해당 프롬프트 카드로 이동합니다';
         chip.innerHTML = `
           ${isCore ? '<span class="chip-core-mark">핵심</span>' : ''}
@@ -1597,12 +1644,12 @@
           if (event.target.closest('.chip-remove')) return;
           jumpToPromptCardFromSelected(i);
         });
-        chip.addEventListener('dragstart', dragStart);
-        chip.addEventListener('dragend', dragEnd);
-        chip.addEventListener('dragover', dragOver);
-        chip.addEventListener('drop', drop);
-        chip.addEventListener('dragleave', dragLeave);
-        container.appendChild(chip);
+        if (isCore && coreContainer) {
+          coreContainer.hidden = false;
+          coreContainer.appendChild(chip);
+        } else {
+          container.appendChild(chip);
+        }
       });
     }
 

@@ -104,6 +104,7 @@
       <div class="panel-header">
         <span id="selected-chips-title">선택된 프롬프트</span>
       </div>
+      <div class="selected-chips-core" id="selected-chips-core" hidden></div>
       <div class="selected-chips" id="selected-chips">
         <span class="empty-state" id="chips-empty">선택된 프롬프트가 없습니다</span>
       </div>
@@ -367,6 +368,11 @@
         <div class="settings-option-title">핵심 분류 가로 카드</div>
         <div class="settings-option-description">현재 조합 그리드에서 핵심 분류로 지정된 카드를 한 줄 전체(가로 3칸)를 차지하는 가로 카드로 표시합니다.</div>
         <button id="core-category-wide-card-toggle-btn" class="tap-compose-toggle-btn" type="button" aria-pressed="false" onclick="toggleCoreCategoryWideCard()">가로 카드 꺼짐</button>
+      </div>
+      <div class="settings-option-card">
+        <div class="settings-option-title">아이템 그리드 크게 보기</div>
+        <div class="settings-option-description">전체 아이템과 태그별 이미지 그리드를 3열 기본 보기에서 2열 크게 보기로 전환합니다.</div>
+        <button id="large-item-grid-toggle-btn" class="tap-compose-toggle-btn" type="button" aria-pressed="false" onclick="toggleLargeItemGrid()">3열 기본 보기</button>
       </div>
       <div class="settings-option-card">
         <div class="settings-option-title">백업 / 복원</div>

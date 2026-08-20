@@ -8,15 +8,6 @@
   let activeCategoryComposed = null;
   let activeComposedCategoryGridMode = false;
   let isComposedEditOnlyView = false;
-  let dragIdx = null;
-  let touchDragIdx = null;
-  let touchDropIdx = null;
-  let touchPointerId = null;
-  let touchDragPressTimer = null;
-  let isTouchChipDragActive = false;
-  let touchDragStartX = 0;
-  let touchDragStartY = 0;
-  let touchDragElement = null;
   let leftPanelTab = 'prompt';
   let isCustomComboTabOpen = false;
   let selectedCustomCombo = [];
@@ -54,6 +45,8 @@
   let activePromptTagBrowser = false;
   let activePromptCategoryGridMode = false;
   let activeSelectedPromptGridMode = false;
+  let selectedPromptGridReturnFeedback = false;
+  let selectedPromptGridReturnFeedbackTimer = null;
   let activeCustomComboFocusId = null;
   let customComboFocusTimer = null;
   let promptTagLayouts = {};
@@ -83,6 +76,7 @@
   let previewTransitionMode = 'scale';
   let previewRenderMode = 'landscape';
   let isCoreCategoryWideCardEnabled = false;
+  let isLargeItemGridEnabled = false;
   let isExportMetadataSanitizationEnabled = true;
   let promptImageEditOrientation = 'landscape';
   let composedImageEditOrientation = 'landscape';

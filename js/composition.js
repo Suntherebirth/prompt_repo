@@ -189,6 +189,7 @@
     selectingFromPreviewId = p.id;
     selected.push({ ...p, source: 'prompt' });
     render();
+    scrollSelectedPromptChipIntoView(p.id);
     if (options.scrollToCard) {
       requestAnimationFrame(() => {
         const list = document.getElementById('prompt-list');
@@ -244,6 +245,8 @@
     } else {
       render();
     }
+
+    highlightSelectedPromptChip(prompt.id);
 
     requestAnimationFrame(() => {
       const target = document.querySelector(`.prompt-item[data-prompt-id="${prompt.id}"]`);

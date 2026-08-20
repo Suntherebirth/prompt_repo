@@ -95,10 +95,17 @@
   }
 
   function renderSelectedPromptGrid(preview, selectedPrompts) {
+    const mainCategoryRank = new Map(categoryConfig.mainOrder.map((category, index) => [category, index]));
     const sortedPrompts = [...selectedPrompts].sort((a, b) => {
-      const aIsCore = isSubCategoryCoreEnabled(a.mainCategory, a.subCategory);
-      const bIsCore = isSubCategoryCoreEnabled(b.mainCategory, b.subCategory);
-      return Number(bIsCore) - Number(aIsCore);
+      const aMainRank = mainCategoryRank.get(a.mainCategory) ?? Number.MAX_SAFE_INTEGER;
+      const bMainRank = mainCategoryRank.get(b.mainCategory) ?? Number.MAX_SAFE_INTEGER;
+      if (aMainRank !== bMainRank) return aMainRank - bMainRank;
+
+      const aSubOrder = getMainCategoryConfig(a.mainCategory).subOrder || [];
+      const bSubOrder = getMainCategoryConfig(b.mainCategory).subOrder || [];
+      const aSubRank = aSubOrder.indexOf(a.subCategory);
+      const bSubRank = bSubOrder.indexOf(b.subCategory);
+      return aSubRank - bSubRank;
     });
     const cards = sortedPrompts.map(prompt => {
       const isCore = isSubCategoryCoreEnabled(prompt.mainCategory, prompt.subCategory);
@@ -715,6 +722,7 @@
     }
 
     requestAnimationFrame(() => {
+      scrollSelectedPromptChipIntoView(prompt.id);
       const target = document.querySelector(`.prompt-item[data-prompt-id="${prompt.id}"]`);
       if (target) target.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'nearest' });
     });

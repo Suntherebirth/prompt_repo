@@ -131,6 +131,7 @@
       previewTransitionMode,
       previewRenderMode,
       isCoreCategoryWideCardEnabled,
+      isLargeItemGridEnabled,
       isExportMetadataSanitizationEnabled,
     };
   }
@@ -144,6 +145,7 @@
     localStorage.setItem(PREVIEW_TRANSITION_MODE_KEY, payload.previewTransitionMode);
     localStorage.setItem(PREVIEW_RENDER_MODE_KEY, payload.previewRenderMode);
     localStorage.setItem(CORE_CATEGORY_WIDE_CARD_KEY, payload.isCoreCategoryWideCardEnabled ? '1' : '0');
+    localStorage.setItem(LARGE_ITEM_GRID_KEY, payload.isLargeItemGridEnabled ? '1' : '0');
     localStorage.setItem(EXPORT_METADATA_SANITIZATION_KEY, payload.isExportMetadataSanitizationEnabled ? '1' : '0');
   }
 
@@ -162,6 +164,7 @@
     setPreviewTransitionMode(storedSettings?.previewTransitionMode ?? localStorage.getItem(PREVIEW_TRANSITION_MODE_KEY) ?? 'scale');
     setPreviewRenderMode(storedSettings?.previewRenderMode ?? localStorage.getItem(PREVIEW_RENDER_MODE_KEY) ?? localStorage.getItem(LEGACY_VIEW_ORIENTATION_KEY) ?? 'landscape');
     setCoreCategoryWideCard(storedSettings?.isCoreCategoryWideCardEnabled ?? localStorage.getItem(CORE_CATEGORY_WIDE_CARD_KEY));
+    setLargeItemGrid(storedSettings?.isLargeItemGridEnabled ?? localStorage.getItem(LARGE_ITEM_GRID_KEY));
     isExportMetadataSanitizationEnabled = storedSettings?.isExportMetadataSanitizationEnabled
       ?? localStorage.getItem(EXPORT_METADATA_SANITIZATION_KEY) !== '0';
     saveSettings();

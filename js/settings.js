@@ -200,12 +200,26 @@
     return false;
   }
 
+  function normalizeLargeItemGrid(value) {
+    if (value === true || value === '1' || value === 1) return true;
+    return false;
+  }
+
   function renderCoreCategoryWideCardToggle() {
     const btn = document.getElementById('core-category-wide-card-toggle-btn');
     if (!btn) return;
     btn.classList.toggle('active', isCoreCategoryWideCardEnabled);
     btn.setAttribute('aria-pressed', isCoreCategoryWideCardEnabled ? 'true' : 'false');
     btn.textContent = isCoreCategoryWideCardEnabled ? '가로 카드 켜짐' : '가로 카드 꺼짐';
+  }
+
+  function renderLargeItemGridToggle() {
+    const button = document.getElementById('large-item-grid-toggle-btn');
+    document.body.classList.toggle('large-item-grid-mode', isLargeItemGridEnabled);
+    if (!button) return;
+    button.classList.toggle('active', isLargeItemGridEnabled);
+    button.setAttribute('aria-pressed', isLargeItemGridEnabled ? 'true' : 'false');
+    button.textContent = isLargeItemGridEnabled ? '2열 크게 보기 켜짐' : '3열 기본 보기';
   }
 
   function renderExportMetadataSanitizationToggle() {
@@ -225,6 +239,21 @@
 
   function toggleExportMetadataSanitization() {
     setExportMetadataSanitizationEnabled(!isExportMetadataSanitizationEnabled, { notify: true });
+  }
+
+  function setLargeItemGrid(enabled, options = {}) {
+    isLargeItemGridEnabled = normalizeLargeItemGrid(enabled);
+    saveSettings();
+    renderLargeItemGridToggle();
+    renderPromptDescriptionPreview();
+    renderComposedDescriptionPreview();
+    if (options.notify) {
+      showToast(isLargeItemGridEnabled ? '아이템 그리드를 2열로 크게 표시합니다' : '아이템 그리드를 3열 기본으로 표시합니다');
+    }
+  }
+
+  function toggleLargeItemGrid() {
+    setLargeItemGrid(!isLargeItemGridEnabled, { notify: true });
   }
 
   function setCoreCategoryWideCard(enabled, options = {}) {
