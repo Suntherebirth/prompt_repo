@@ -112,7 +112,7 @@
       : (
         leftPanelTab === 'combo' && isCustomComboTabOpen
           ? await getCustomComboFlowGallery()
-          : [leftPanelTab === 'combo' ? getActiveComposedPreviewImage() : getActivePromptPreviewImage()]
+          : (leftPanelTab === 'combo' ? getActiveComposedPreviewImage() : getActivePromptPreviewImage())
       );
 
     gallery = gallery.filter(Boolean);

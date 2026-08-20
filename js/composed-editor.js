@@ -729,6 +729,7 @@
     const preview = document.getElementById('custom-combo-image-preview');
     const nameInput = document.getElementById('custom-combo-image-name');
     const meta = document.getElementById('custom-combo-image-meta');
+    const landscapeButton = document.getElementById('custom-combo-image-tab-landscape');
     const portraitButton = document.getElementById('custom-combo-image-tab-portrait');
     if (!preview || !nameInput || !meta) return;
     const name = document.getElementById('custom-combo-name')?.value.trim() || '커스텀 콤보';
@@ -738,7 +739,8 @@
     nameInput.value = imageName;
     preview.classList.toggle('orientation-portrait', orientation === 'portrait');
     preview.style.setProperty('--preview-aspect-ratio', orientation === 'portrait' ? '3 / 4' : '4 / 3');
-    portraitButton?.classList.add('active');
+    landscapeButton?.classList.toggle('active', orientation === 'landscape');
+    portraitButton?.classList.toggle('active', orientation === 'portrait');
     if (pendingImage?.dataUrl) {
       preview.innerHTML = `<img src="${pendingImage.dataUrl}" alt="${esc(imageName)}" /><button class="prompt-image-remove-btn" type="button" onclick="removePendingCustomComboImage()" title="이 방향 이미지 삭제" aria-label="이 방향 이미지 삭제">삭제</button>`;
       meta.textContent = `${getImageOrientationLabel(orientation)} 이미지 편집 중 · ${imageName}`;

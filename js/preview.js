@@ -41,8 +41,16 @@
       return;
     }
 
-    const imageSrc = getPromptImageSource(prompt);
-    queuePromptImageLoad(prompt);
+    const promptId = prompt?.id || '';
+    if (promptPreviewOrientationItemId !== promptId) {
+      promptPreviewOrientation = 'portrait';
+      promptPreviewOrientationItemId = promptId;
+    }
+    const canTogglePromptOrientation = !!prompt && promptHasOrientationImage(prompt, 'portrait') && promptHasOrientationImage(prompt, 'landscape');
+    const promptOrientation = canTogglePromptOrientation ? promptPreviewOrientation : 'portrait';
+    const imageSrc = getPromptImageSource(prompt, promptOrientation);
+    queuePromptImageLoad(prompt, promptOrientation);
+    if (canTogglePromptOrientation) queuePromptImageLoad(prompt, promptOrientation === 'portrait' ? 'landscape' : 'portrait');
     if (!imageSrc && !prompt) {
       const selectedPrompts = selected.filter(item => item.source === 'prompt');
       if (selectedPrompts.length) {
@@ -52,18 +60,29 @@
     }
     if (imageSrc) {
       const altText = prompt.imageName || getPromptDisplayName(prompt.mainCategory, prompt.subCategory);
-      const nextImageKey = `${prompt.id || ''}:${imageSrc}`;
+      const nextImageKey = `${prompt.id || ''}:${promptOrientation}:${imageSrc}`;
       const shouldAnimateTransition = nextImageKey !== lastRenderedPromptPreviewImageKey;
       const portraitDescription = `<div class="preview-description-text">${prompt?.description && isSubCategoryCoreEnabled(prompt.mainCategory, prompt.subCategory) ? esc(formatPromptDescriptionForDisplay(prompt.description)) : ''}</div>`;
       const portraitTags = `<button class="preview-tag-list-header" type="button">태그</button>${normalizePromptTags(prompt?.tags).map(tag => `<span class="preview-tag-swipe-item"><button class="preview-tag-chip" type="button" data-tag="${esc(tag)}">${esc(tag)}</button></span>`).join('')}`;
       const portraitCaption = `<div class="preview-details-panel">${portraitDescription}<div class="preview-tag-list">${portraitTags}</div></div>`;
+      const orientationDots = canTogglePromptOrientation
+        ? `<div class="preview-orientation-dots is-prompt" aria-hidden="true"><span class="preview-orientation-dot${promptOrientation === 'portrait' ? ' active' : ''}"></span><span class="preview-orientation-dot${promptOrientation === 'landscape' ? ' active' : ''}"></span></div>`
+        : '';
       shouldAnimatePromptPreviewClear = false;
       preview.classList.add('has-image');
       preview.classList.remove('image-clear-feedback');
       preview.classList.remove('image-switch-feedback');
       preview.title = '터치하면 이미지를 크게 봅니다';
-      preview.innerHTML = `<div class="preview-portrait-stack has-caption"><div class="preview-image-shell"><img class="${shouldAnimateTransition ? 'preview-image-enter' : ''}" src="${imageSrc}" alt="${esc(altText)}" /></div>${portraitCaption}</div>`;
+      preview.innerHTML = `<div class="preview-portrait-stack has-caption"><div class="preview-image-shell">${orientationDots}<img class="${shouldAnimateTransition ? 'preview-image-enter' : ''}" src="${imageSrc}" alt="${esc(altText)}" /></div>${portraitCaption}</div>`;
       bindPreviewTagSwipe(preview.querySelector('.preview-tag-list'), '.preview-tag-swipe-item');
+      if (canTogglePromptOrientation) {
+        bindPreviewOrientationSwipe(preview.querySelector('.preview-image-shell'), {
+          canSwipeForward: () => promptPreviewOrientation === 'portrait',
+          canSwipeBack: () => promptPreviewOrientation === 'landscape',
+          onSwipeForward: () => setPromptPreviewOrientation('landscape'),
+          onSwipeBack: () => setPromptPreviewOrientation('portrait'),
+        });
+      }
       if (shouldAnimateTransition) {
         // 클래스를 다시 붙여 연속 전환에서도 피드백 애니메이션이 반복 실행되도록 한다.
         void preview.offsetWidth;
@@ -210,16 +229,35 @@
 
     const composed = getActiveComposedPreviewItem();
     preview.style.removeProperty('--custom-combo-flow-count');
-    const imageSrc = getPromptImageSource(composed);
-    queuePromptImageLoad(composed);
+    const composedId = composed?.id || '';
+    if (composedPreviewOrientationItemId !== composedId) {
+      composedPreviewOrientation = 'portrait';
+      composedPreviewOrientationItemId = composedId;
+    }
+    const canToggleComposedOrientation = !!composed && promptHasOrientationImage(composed, 'portrait') && promptHasOrientationImage(composed, 'landscape');
+    const composedOrientation = canToggleComposedOrientation ? composedPreviewOrientation : 'portrait';
+    const imageSrc = getPromptImageSource(composed, composedOrientation);
+    queuePromptImageLoad(composed, composedOrientation);
+    if (canToggleComposedOrientation) queuePromptImageLoad(composed, composedOrientation === 'portrait' ? 'landscape' : 'portrait');
     if (imageSrc) {
       const altText = composed.imageName || getPromptDisplayName(composed.mainCategory, composed.subCategory);
-      const nextImageKey = `${composed.id || ''}:${imageSrc}`;
+      const nextImageKey = `${composed.id || ''}:${composedOrientation}:${imageSrc}`;
       const shouldAnimateTransition = nextImageKey !== lastRenderedComposedPreviewImageKey;
+      const orientationDots = canToggleComposedOrientation
+        ? `<div class="preview-orientation-dots is-combo" aria-hidden="true"><span class="preview-orientation-dot${composedOrientation === 'portrait' ? ' active' : ''}"></span><span class="preview-orientation-dot${composedOrientation === 'landscape' ? ' active' : ''}"></span></div>`
+        : '';
       preview.classList.add('has-image');
       preview.classList.remove('image-switch-feedback');
       preview.title = '터치하면 이미지를 크게 봅니다';
-      preview.innerHTML = `<div class="preview-image-shell"><img class="${shouldAnimateTransition ? 'preview-image-enter' : ''}" src="${imageSrc}" alt="${esc(altText)}" /></div>`;
+      preview.innerHTML = `<div class="preview-image-shell">${orientationDots}<img class="${shouldAnimateTransition ? 'preview-image-enter' : ''}" src="${imageSrc}" alt="${esc(altText)}" /></div>`;
+      if (canToggleComposedOrientation) {
+        bindPreviewOrientationSwipe(preview.querySelector('.preview-image-shell'), {
+          canSwipeForward: () => composedPreviewOrientation === 'portrait',
+          canSwipeBack: () => composedPreviewOrientation === 'landscape',
+          onSwipeForward: () => setComposedPreviewOrientation('landscape'),
+          onSwipeBack: () => setComposedPreviewOrientation('portrait'),
+        });
+      }
       if (shouldAnimateTransition) {
         void preview.offsetWidth;
         preview.classList.add('image-switch-feedback');
@@ -236,36 +274,99 @@
     lastRenderedComposedPreviewImageKey = '';
   }
 
+  function bindPreviewOrientationSwipe(shell, { canSwipeForward, canSwipeBack, onSwipeForward, onSwipeBack }) {
+    if (!shell) return;
+    let pointerId = null;
+    let startX = 0;
+    let startY = 0;
+    let swiping = false;
+    const SWIPE_THRESHOLD = 40;
+
+    shell.addEventListener('pointerdown', event => {
+      if (event.pointerType === 'mouse' && event.button !== 0) return;
+      pointerId = event.pointerId;
+      startX = event.clientX;
+      startY = event.clientY;
+      swiping = false;
+    });
+
+    shell.addEventListener('pointermove', event => {
+      if (event.pointerId !== pointerId) return;
+      const dx = event.clientX - startX;
+      const dy = event.clientY - startY;
+      if (!swiping) {
+        if (Math.abs(dx) < 8 || Math.abs(dx) <= Math.abs(dy)) return;
+        swiping = true;
+        try { shell.setPointerCapture(event.pointerId); } catch {}
+      }
+      event.preventDefault();
+    });
+
+    const finishSwipe = event => {
+      if (event.pointerId !== pointerId) return;
+      const dx = event.clientX - startX;
+      const dy = event.clientY - startY;
+      pointerId = null;
+      if (swiping && Math.abs(dx) > SWIPE_THRESHOLD && Math.abs(dx) > Math.abs(dy)) {
+        if (dx < 0 && canSwipeForward()) onSwipeForward();
+        else if (dx > 0 && canSwipeBack()) onSwipeBack();
+      }
+      swiping = false;
+    };
+    shell.addEventListener('pointerup', finishSwipe);
+    shell.addEventListener('pointercancel', finishSwipe);
+  }
+
+  function setPromptPreviewOrientation(orientation) {
+    const normalized = orientation === 'landscape' ? 'landscape' : 'portrait';
+    if (promptPreviewOrientation === normalized) return;
+    promptPreviewOrientation = normalized;
+    renderPromptDescriptionPreview();
+  }
+
+  function setComposedPreviewOrientation(orientation) {
+    const normalized = orientation === 'landscape' ? 'landscape' : 'portrait';
+    if (composedPreviewOrientation === normalized) return;
+    composedPreviewOrientation = normalized;
+    renderComposedDescriptionPreview();
+  }
+
   function getActivePromptPreviewImage() {
     const prompt = prompts.find(item => item.id === activePromptPreviewId)
       || selected.find(item => item.source === 'prompt' && item.imageData)
       || selected.find(item => item.source === 'prompt');
+    if (!prompt) return [];
 
-    queuePromptImageLoad(prompt);
-    const imageSrc = getPromptImageSource(prompt);
-    if (!imageSrc) {
-      queuePromptImageLoad(prompt);
-      return null;
+    queuePromptImageLoad(prompt, 'portrait');
+    queuePromptImageLoad(prompt, 'landscape');
+    const portraitSrc = promptHasOrientationImage(prompt, 'portrait') ? getPromptImageSource(prompt, 'portrait') : '';
+    const landscapeSrc = promptHasOrientationImage(prompt, 'landscape') ? getPromptImageSource(prompt, 'landscape') : '';
+    const portraitEntry = portraitSrc ? { src: portraitSrc, ...getPromptActiveImageMeta(prompt, 'portrait') } : null;
+    const landscapeEntry = landscapeSrc ? { src: landscapeSrc, ...getPromptActiveImageMeta(prompt, 'landscape') } : null;
+
+    if (portraitEntry && landscapeEntry) {
+      return promptPreviewOrientation === 'landscape' ? [landscapeEntry, portraitEntry] : [portraitEntry, landscapeEntry];
     }
-    return {
-      src: imageSrc,
-      ...getPromptActiveImageMeta(prompt),
-    };
+    return [portraitEntry || landscapeEntry].filter(Boolean);
   }
 
   function getActiveComposedPreviewImage() {
     const composed = getActiveComposedPreviewItem();
-    queuePromptImageLoad(composed);
-    const imageSrc = getPromptImageSource(composed);
-    if (!imageSrc) {
-      queuePromptImageLoad(composed);
-      return null;
+    if (!composed) return [];
+
+    queuePromptImageLoad(composed, 'portrait');
+    queuePromptImageLoad(composed, 'landscape');
+    const portraitSrc = promptHasOrientationImage(composed, 'portrait') ? getPromptImageSource(composed, 'portrait') : '';
+    const landscapeSrc = promptHasOrientationImage(composed, 'landscape') ? getPromptImageSource(composed, 'landscape') : '';
+    const portraitEntry = portraitSrc ? { src: portraitSrc, ...getPromptActiveImageMeta(composed, 'portrait') } : null;
+    const landscapeEntry = landscapeSrc ? { src: landscapeSrc, ...getPromptActiveImageMeta(composed, 'landscape') } : null;
+
+    if (portraitEntry && landscapeEntry) {
+      return composedPreviewOrientation === 'landscape' ? [landscapeEntry, portraitEntry] : [portraitEntry, landscapeEntry];
     }
-    return {
-      src: imageSrc,
-      ...getPromptActiveImageMeta(composed),
-    };
+    return [portraitEntry || landscapeEntry].filter(Boolean);
   }
+
 
   function getCustomComboFlowEntries() {
     if (leftPanelTab !== 'combo' || !isCustomComboTabOpen || selectedCustomCombo.length === 0) return [];

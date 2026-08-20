@@ -19,18 +19,34 @@
   }
 
   function renderPromptImageOrientationTabs() {
+    const current = normalizeImageOrientation(promptImageEditOrientation);
+    const landscapeBtn = document.getElementById('input-image-tab-landscape');
     const portraitBtn = document.getElementById('input-image-tab-portrait');
+    if (landscapeBtn) {
+      const isActive = current === 'landscape';
+      landscapeBtn.classList.toggle('active', isActive);
+      landscapeBtn.setAttribute('aria-pressed', isActive ? 'true' : 'false');
+    }
     if (portraitBtn) {
-      portraitBtn.classList.add('active');
-      portraitBtn.setAttribute('aria-pressed', 'true');
+      const isActive = current === 'portrait';
+      portraitBtn.classList.toggle('active', isActive);
+      portraitBtn.setAttribute('aria-pressed', isActive ? 'true' : 'false');
     }
   }
 
   function renderComposedImageOrientationTabs() {
+    const current = normalizeImageOrientation(composedImageEditOrientation);
+    const landscapeBtn = document.getElementById('combo-image-tab-landscape');
     const portraitBtn = document.getElementById('combo-image-tab-portrait');
+    if (landscapeBtn) {
+      const isActive = current === 'landscape';
+      landscapeBtn.classList.toggle('active', isActive);
+      landscapeBtn.setAttribute('aria-pressed', isActive ? 'true' : 'false');
+    }
     if (portraitBtn) {
-      portraitBtn.classList.add('active');
-      portraitBtn.setAttribute('aria-pressed', 'true');
+      const isActive = current === 'portrait';
+      portraitBtn.classList.toggle('active', isActive);
+      portraitBtn.setAttribute('aria-pressed', isActive ? 'true' : 'false');
     }
   }
 
@@ -239,14 +255,19 @@
     if (saveButton) saveButton.textContent = '적용';
   }
 
-  function getPromptImageSource(prompt) {
+  function getPromptImageSource(prompt, forceOrientation) {
     if (!prompt) return '';
-    const imageDataCandidates = [prompt.portraitImageData, prompt.imageData];
+    const preferPortrait = forceOrientation ? forceOrientation === 'portrait' : true;
+    const imageDataCandidates = preferPortrait
+      ? [prompt.portraitImageData, prompt.imageData]
+      : [prompt.imageData, prompt.portraitImageData];
     for (const imageData of imageDataCandidates) {
       if (imageData) return imageData;
     }
 
-    const imageIdCandidates = [prompt.portraitImageId, prompt.imageId];
+    const imageIdCandidates = preferPortrait
+      ? [prompt.portraitImageId, prompt.imageId]
+      : [prompt.imageId, prompt.portraitImageId];
     for (const imageId of imageIdCandidates) {
       if (!imageId) continue;
       const cached = promptImageUrlCache.get(imageId);
@@ -255,10 +276,23 @@
     return '';
   }
 
-  function getPromptActiveImageMeta(prompt) {
+  // fallback 없이 해당 방향 전용 필드(id 또는 data)가 실제로 존재하는지만 확인한다.
+  function promptHasOrientationImage(prompt, orientation) {
+    if (!prompt) return false;
+    return orientation === 'landscape'
+      ? !!(prompt.imageId || prompt.imageData)
+      : !!(prompt.portraitImageId || prompt.portraitImageData);
+  }
+
+  function getPromptActiveImageMeta(prompt, forceOrientation) {
     if (!prompt) return { imageId: '', alt: '' };
-    const imageId = prompt.portraitImageId || prompt.imageId || '';
-    const imageName = prompt.portraitImageName || prompt.imageName || '';
+    const preferPortrait = forceOrientation ? forceOrientation === 'portrait' : true;
+    const imageId = preferPortrait
+      ? (prompt.portraitImageId || prompt.imageId || '')
+      : (prompt.imageId || prompt.portraitImageId || '');
+    const imageName = preferPortrait
+      ? (prompt.portraitImageName || prompt.imageName || '')
+      : (prompt.imageName || prompt.portraitImageName || '');
     return {
       imageId,
       alt: imageName || getPromptDisplayName(prompt.mainCategory, prompt.subCategory),
@@ -293,10 +327,15 @@
     }
   }
 
-  function queuePromptImageLoad(prompt) {
+  function queuePromptImageLoad(prompt, forceOrientation) {
     if (!prompt) return;
-    const preferredImageId = prompt.portraitImageId || prompt.imageId || '';
-    const preferredImageData = prompt.portraitImageData || prompt.imageData || '';
+    const preferPortrait = forceOrientation ? forceOrientation === 'portrait' : true;
+    const preferredImageId = preferPortrait
+      ? (prompt.portraitImageId || prompt.imageId || '')
+      : (prompt.imageId || prompt.portraitImageId || '');
+    const preferredImageData = preferPortrait
+      ? (prompt.portraitImageData || prompt.imageData || '')
+      : (prompt.imageData || prompt.portraitImageData || '');
     if (!preferredImageId || preferredImageData || promptImageUrlCache.has(preferredImageId)) return;
 
     getPromptImageObjectUrl(preferredImageId)

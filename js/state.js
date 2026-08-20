@@ -68,6 +68,10 @@
   let selectingFromPreviewId = null;
   let lastRenderedPromptPreviewImageKey = '';
   let lastRenderedComposedPreviewImageKey = '';
+  let promptPreviewOrientation = 'portrait';
+  let promptPreviewOrientationItemId = '';
+  let composedPreviewOrientation = 'portrait';
+  let composedPreviewOrientationItemId = '';
   let isPromptPreviewSuppressed = false;
   let shouldAnimatePromptPreviewClear = false;
   let isSettingsDrawerOpen = false;
