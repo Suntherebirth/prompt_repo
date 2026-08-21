@@ -1091,8 +1091,8 @@
     .prompt-description-preview .preview-image-shell.is-edit-image-crossfade img {
       position: absolute;
       inset: 0;
-      animation-duration: .46s;
-      animation-timing-function: cubic-bezier(0.16, 0.84, 0.44, 1);
+      animation-duration: .8s;
+      animation-timing-function: linear;
       animation-fill-mode: both;
     }
 
@@ -2310,6 +2310,29 @@
       object-fit: cover;
     }
 
+    .prompt-description-preview .preview-tag-image-card .composed-card-edit-flip {
+      position: relative;
+      display: block;
+      width: 100%;
+      aspect-ratio: 3 / 4;
+      overflow: hidden;
+      background: #171512;
+    }
+
+    .prompt-description-preview .preview-tag-image-card .composed-card-edit-flip img {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .prompt-description-preview .preview-tag-image-card .composed-card-edit-flip .composed-card-edit-before {
+      opacity: 0;
+      animation: composedCardEditFlip 1.9s linear infinite;
+      will-change: opacity;
+    }
+
     .prompt-description-preview .preview-tag-image-card .tag-image-name {
       display: flex;
       align-items: center;
@@ -2556,26 +2579,36 @@
     @keyframes previewEditImageFadeOut {
       0% {
         opacity: 1;
-        transform: scale(1);
-        filter: saturate(1) blur(0);
+      }
+      20% {
+        opacity: 0.68;
+      }
+      50% {
+        opacity: 0.5;
+      }
+      80% {
+        opacity: 0.32;
       }
       100% {
         opacity: 0;
-        transform: scale(1.012);
-        filter: saturate(0.92) blur(1px);
       }
     }
 
     @keyframes previewEditImageFadeIn {
       0% {
         opacity: 0;
-        transform: scale(1.012);
-        filter: saturate(0.92) blur(1px);
+      }
+      20% {
+        opacity: 0.32;
+      }
+      50% {
+        opacity: 0.5;
+      }
+      80% {
+        opacity: 0.68;
       }
       100% {
         opacity: 1;
-        transform: scale(1);
-        filter: saturate(1) blur(0);
       }
     }
 
@@ -2588,6 +2621,26 @@
       }
       100% {
         box-shadow: 0 0 0 0 rgba(138, 180, 255, 0);
+      }
+    }
+
+    /* 편집용 커스텀 조합 그리드 카드: 후(기본) → 전(오버레이) 자동 교차.
+       한 주기 1.9s 중 페이드 구간은 각각 약 0.34s(1초 미만)이다. */
+    @keyframes composedCardEditFlip {
+      0% {
+        opacity: 0;
+      }
+      18% {
+        opacity: 1;
+      }
+      50% {
+        opacity: 1;
+      }
+      68% {
+        opacity: 0;
+      }
+      100% {
+        opacity: 0;
       }
     }
 
@@ -2618,6 +2671,10 @@
       .prompt-description-preview.preview-transition-mode-scale img.preview-image-enter,
       .prompt-description-preview.preview-transition-mode-fade img.preview-image-enter,
       .prompt-description-preview.preview-transition-mode-cut img.preview-image-enter {
+        animation: none;
+      }
+
+      .prompt-description-preview .preview-tag-image-card .composed-card-edit-flip .composed-card-edit-before {
         animation: none;
       }
 

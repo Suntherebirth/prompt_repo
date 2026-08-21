@@ -164,9 +164,11 @@
       const titleMetaMarkup = (composedMainEmoji || isEditOnlyComposed)
         ? `${composedMainEmoji ? `<span class="tag-image-name-meta"><span class="tag-image-name-main-emoji" aria-hidden="true">${esc(composedMainEmoji)}</span></span>` : ''}${isEditOnlyComposed ? '<span class="tag-image-name-edit-label is-edit-prefix" aria-hidden="true">편집</span>' : ''}`
         : '';
-      return `<div class="preview-tag-image-card composed-card-summary is-combo-card is-category-name-only" data-composed-id="${esc(item.id)}" title="${esc(label)}">${imageSrc
+      const flipMarkup = isEditOnlyComposed ? renderComposedEditFlipImage(item, label) : '';
+      const imageMarkup = flipMarkup || (imageSrc
         ? `<img src="${imageSrc}" alt="${esc(label)}" />`
-        : '<span class="empty-state">이미지 로딩 중</span>'}<span class="tag-image-name${isEditOnlyComposed ? ' has-edit-prefix' : ''}">${titleMetaMarkup}${esc(label)}</span></div>`;
+        : '<span class="empty-state">이미지 로딩 중</span>');
+      return `<div class="preview-tag-image-card composed-card-summary is-combo-card is-category-name-only" data-composed-id="${esc(item.id)}" title="${esc(label)}">${imageMarkup}<span class="tag-image-name${isEditOnlyComposed ? ' has-edit-prefix' : ''}">${titleMetaMarkup}${esc(label)}</span></div>`;
     }).join('');
 
     preview.innerHTML = `<div class="preview-tag-image-grid is-combo-grid is-prompt-composed-grid${isPromptComposedGridCore ? ' is-core-category-grid' : ''}"><div class="preview-tag-grid-header">${promptEmojiMarkup}<span class="preview-tag-grid-category-chip cat-chip active is-prompt">${esc(prompt.content || '프롬프트')}</span><span class="preview-tag-grid-hint">연결된 커스텀 조합 카드</span><span class="tag-image-grid-total">(${composedItems.length})</span></div>${cards || '<span class="empty-state is-composed-grid-empty">연결된 커스텀 컴포즈 카드가 없습니다.</span>'}</div>`;
@@ -232,6 +234,20 @@
     return promptHasOrientationImage(getComposedPreviewImageItem(composed, stage), orientation);
   }
 
+  // 편집용 커스텀 조합 카드 그리드용 전/후 자동 교차(GIF-like) 마크업.
+  // 전/후 이미지가 모두 등록된 경우에만 플립 레이어를 렌더링한다.
+  function renderComposedEditFlipImage(item, label) {
+    if (!item) return '';
+    const hasAfterImage = !!(item.imageId || item.imageData || item.portraitImageId || item.portraitImageData);
+    const hasBeforeImage = !!(item.beforeImageId || item.beforeImageData || item.beforePortraitImageId || item.beforePortraitImageData);
+    if (!hasAfterImage || !hasBeforeImage) return '';
+    const afterSrc = getPromptImageSource(item);
+    const beforeItem = getComposedPreviewImageItem(item, 'before');
+    const beforeSrc = getPromptImageSource(beforeItem);
+    queuePromptImageLoad(beforeItem);
+    return `<span class="composed-card-edit-flip"><img class="composed-card-edit-after"${afterSrc ? ` src="${afterSrc}"` : ''} alt="${esc(label)}" /><img class="composed-card-edit-before"${beforeSrc ? ` src="${beforeSrc}"` : ''} alt="" aria-hidden="true" /></span>`;
+  }
+
   function setComposedPreviewEditStage(stage) {
     const normalized = stage === 'after' ? 'after' : 'before';
     const orientation = composedPreviewOrientation === 'landscape' ? 'landscape' : 'portrait';
@@ -271,13 +287,16 @@
         return;
       }
 
+      const isEditOnlyCategoryGrid = !!getComposedMainCategoryConfig(activeCategoryComposed).editOnly;
       const cards = categoryItems.map(item => {
         const imageSrc = getPromptImageSource(item);
         queuePromptImageLoad(item);
         const label = item.subCategory || '이름없음';
-        return `<div class="preview-tag-image-card composed-card-summary is-combo-card is-category-name-only" data-composed-id="${esc(item.id)}" title="${esc(label)}">${imageSrc
+        const flipMarkup = isEditOnlyCategoryGrid ? renderComposedEditFlipImage(item, label) : '';
+        const imageMarkup = flipMarkup || (imageSrc
           ? `<img src="${imageSrc}" alt="${esc(label)}" />`
-          : '<span class="empty-state">이미지 로딩 중</span>'}<span class="tag-image-name">${esc(label)}</span></div>`;
+          : '<span class="empty-state">이미지 로딩 중</span>');
+        return `<div class="preview-tag-image-card composed-card-summary is-combo-card is-category-name-only" data-composed-id="${esc(item.id)}" title="${esc(label)}">${imageMarkup}<span class="tag-image-name">${esc(label)}</span></div>`;
       }).join('');
 
       const composedCategoryEmoji = String(getComposedMainCategoryConfig(activeCategoryComposed).emoji || '').trim();

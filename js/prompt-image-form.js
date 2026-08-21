@@ -357,6 +357,17 @@
     document.querySelectorAll('.preview-tag-image-card, .custom-combo-image-tile[data-composed-id]').forEach((card) => {
       const cardId = card.dataset.promptId || card.dataset.composedId;
       if (String(cardId) !== String(promptId)) return;
+      const flipShell = card.querySelector('.composed-card-edit-flip');
+      if (flipShell) {
+        // 플립 카드는 전/후 두 레이어가 같은 composed id를 공유하므로, URL이 어느 쪽 이미지인지 구분해 해당 레이어만 갱신한다.
+        const composed = composedPrompts.find(entry => String(entry.id) === String(promptId));
+        if (!composed) return;
+        const isBeforeUrl = [composed.beforePortraitImageId, composed.beforeImageId]
+          .some(imageId => imageId && promptImageUrlCache.get(imageId) === url);
+        const flipTarget = flipShell.querySelector(isBeforeUrl ? '.composed-card-edit-before' : '.composed-card-edit-after');
+        if (flipTarget && flipTarget.src !== url) flipTarget.src = url;
+        return;
+      }
       const loadingState = card.querySelector('.empty-state, .custom-combo-image-placeholder');
       if (loadingState) {
         const image = document.createElement('img');
