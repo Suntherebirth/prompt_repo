@@ -22,6 +22,11 @@
       return;
     }
 
+    if (activePromptComposedGridMode && leftPanelTab === 'prompt' && prompt) {
+      renderPromptComposedGrid(preview, prompt);
+      return;
+    }
+
     if (activePromptTagFilter) {
       renderPromptTagImageGrid(preview, activePromptTagFilter);
       return;
@@ -108,6 +113,54 @@
     lastRenderedPromptPreviewImageKey = '';
   }
 
+  function renderPromptComposedGrid(preview, prompt) {
+    const composedItems = composedPrompts.filter(item => (
+      Array.isArray(item.items) && item.items.some(entry => String(entry.id) === String(prompt.id))
+    )).sort((a, b) => {
+      const categoryOrder = String(a.mainCategory || '').localeCompare(String(b.mainCategory || ''), 'ko');
+      if (categoryOrder !== 0) return categoryOrder;
+      const nameOrder = String(a.subCategory || '').localeCompare(String(b.subCategory || ''), 'ko');
+      if (nameOrder !== 0) return nameOrder;
+      return String(a.id || '').localeCompare(String(b.id || ''), 'ko');
+    });
+
+    preview.classList.add('has-image');
+    preview.classList.remove('image-clear-feedback', 'image-switch-feedback');
+    preview.title = '';
+
+    const promptMainCategoryEmoji = String(getMainCategoryConfig(prompt.mainCategory).emoji || '').trim();
+    const promptEmojiMarkup = promptMainCategoryEmoji
+      ? `<span class="preview-tag-category-emoji" aria-hidden="true">${esc(promptMainCategoryEmoji)}</span>`
+      : '';
+    const isPromptComposedGridCore = isSubCategoryCoreEnabled(prompt.mainCategory, prompt.subCategory);
+
+    const cards = composedItems.map(item => {
+      const imageSrc = getPromptImageSource(item);
+      queuePromptImageLoad(item);
+      const label = item.subCategory || '이름없음';
+      return `<div class="preview-tag-image-card composed-card-summary is-combo-card is-category-name-only" data-composed-id="${esc(item.id)}" title="${esc(label)}">${imageSrc
+        ? `<img src="${imageSrc}" alt="${esc(label)}" />`
+        : '<span class="empty-state">이미지 로딩 중</span>'}<span class="tag-image-name">${esc(label)}</span></div>`;
+    }).join('');
+
+    preview.innerHTML = `<div class="preview-tag-image-grid is-combo-grid is-prompt-composed-grid${isPromptComposedGridCore ? ' is-core-category-grid' : ''}"><div class="preview-tag-grid-header">${promptEmojiMarkup}<span class="preview-tag-grid-category-chip cat-chip active is-prompt">${esc(prompt.content || '프롬프트')}</span><span class="preview-tag-grid-hint">연결된 커스텀 조합 카드</span><span class="tag-image-grid-total">(${composedItems.length})</span></div>${cards || '<span class="empty-state is-composed-grid-empty">연결된 커스텀 컴포즈 카드가 없습니다.</span>'}</div>`;
+
+    const composedGridHeader = preview.querySelector('.preview-tag-grid-header');
+    const composedGridHint = composedGridHeader?.querySelector('.preview-tag-grid-hint');
+    // 힌트가 말줄임표로 잘리면 카테고리 칩 아래 2열로 내려 전체 텍스트를 보여준다.
+    if (composedGridHint && composedGridHint.scrollWidth > composedGridHint.clientWidth + 1) {
+      composedGridHeader.classList.add('is-hint-wrapped');
+    }
+
+    preview.querySelectorAll('.composed-card-summary').forEach(card => {
+      card.addEventListener('click', event => {
+        event.stopPropagation();
+        runComposedSwipeShortcut(card.dataset.composedId);
+      });
+    });
+    lastRenderedPromptPreviewImageKey = `prompt-composed:${prompt.id}`;
+  }
+
   function showSelectedPromptGrid() {
     if (selected.filter(item => item.source === 'prompt').length === 0) return;
     activeSelectedPromptGridMode = true;
@@ -163,7 +216,7 @@
       const composedCategoryEmojiMarkup = composedCategoryEmoji
         ? `<span class="preview-tag-category-emoji" aria-hidden="true">${esc(composedCategoryEmoji)}</span>`
         : '';
-      preview.innerHTML = `<div class="preview-tag-image-grid is-combo-grid"><div class="preview-tag-grid-header">${composedCategoryEmojiMarkup}<span class="preview-tag-grid-category-chip cat-chip active is-combo">${esc(activeCategoryComposed || '카테고리')}</span><span class="tag-image-grid-total">${categoryItems.length}개</span></div>${cards}</div>`;
+      preview.innerHTML = `<div class="preview-tag-image-grid is-combo-grid"><div class="preview-tag-grid-header">${composedCategoryEmojiMarkup}<span class="preview-tag-grid-category-chip cat-chip active is-combo">${esc(activeCategoryComposed || '카테고리')}</span><span class="tag-image-grid-total">(${categoryItems.length})</span></div>${cards}</div>`;
 
       preview.querySelectorAll('.composed-card-summary').forEach(card => {
         card.addEventListener('click', event => {

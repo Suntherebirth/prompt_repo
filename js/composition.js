@@ -135,7 +135,14 @@
       return;
     }
 
+    if (activePromptPreviewId === p.id) {
+      activePromptComposedGridMode = !activePromptComposedGridMode;
+      render();
+      return;
+    }
+
     clearSelectedPromptGridMode();
+    activePromptComposedGridMode = false;
     isPromptPreviewSuppressed = false;
     activePromptGridReturn = null;
     activePromptTagFilter = null;
@@ -174,6 +181,7 @@
     activePromptTagFilter = null;
     activePromptTagBrowser = false;
     activePromptCategoryGridMode = false;
+    activePromptComposedGridMode = false;
     activeSelectedPromptGridMode = false;
     const suppressToast = !!options.suppressToast;
     const idx = selected.findIndex(s => s.id === p.id && s.source === 'prompt');

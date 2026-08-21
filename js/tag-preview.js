@@ -130,7 +130,7 @@
     preview.classList.add('has-image');
     preview.classList.remove('image-clear-feedback', 'image-switch-feedback');
     preview.title = '현재 조합에 선택된 프롬프트입니다';
-    preview.innerHTML = `<div class="preview-tag-image-grid is-prompt-grid"><div class="preview-tag-grid-header"><span class="preview-tag-grid-category-chip cat-chip active is-prompt">현재 조합</span><span class="tag-image-grid-total">${sortedPrompts.length}개</span></div>${cards}</div>`;
+    preview.innerHTML = `<div class="preview-tag-image-grid is-prompt-grid"><div class="preview-tag-grid-header"><span class="preview-tag-grid-category-chip cat-chip active is-prompt">현재 조합</span><span class="tag-image-grid-total">(${sortedPrompts.length})</span></div>${cards}</div>`;
     bindPromptTagImageCardSwipe(preview);
     lastRenderedPromptPreviewImageKey = `selected:${sortedPrompts.map(prompt => prompt.id).join(',')}`;
   }
@@ -237,7 +237,7 @@
       ? '<button class="preview-tag-grid-irp-copy-btn" type="button">IRP 복사</button>'
       : '';
     shouldAnimatePromptTagSort = false;
-    preview.innerHTML = `<div class="preview-tag-image-grid is-prompt-grid${usesTagGridCards ? ' is-core-category-grid' : ''}${isCategoryItemGridLandscapeMode ? ' is-landscape-item-grid' : ''}"><div class="preview-tag-grid-header">${categoryEmojiMarkup}<span class="preview-tag-grid-category-chip cat-chip active is-prompt is-item-grid-orientation-toggle${shouldAnimateItemGridOrientationToggle ? ' is-changing' : ''}" title="눌러서 가로/세로 카드 전환">${categoryChipLabel}</span>${irpCopyButtonMarkup}<span class="tag-image-grid-total">${categoryPrompts.length}개</span>${sortToggleMarkup}${descriptionMarkup}</div>${cards}</div>`;
+    preview.innerHTML = `<div class="preview-tag-image-grid is-prompt-grid${usesTagGridCards ? ' is-core-category-grid' : ''}${isCategoryItemGridLandscapeMode ? ' is-landscape-item-grid' : ''}"><div class="preview-tag-grid-header">${categoryEmojiMarkup}<span class="preview-tag-grid-category-chip cat-chip active is-prompt is-item-grid-orientation-toggle${shouldAnimateItemGridOrientationToggle ? ' is-changing' : ''}" title="눌러서 가로/세로 카드 전환">${categoryChipLabel}</span>${irpCopyButtonMarkup}<span class="tag-image-grid-total">(${categoryPrompts.length})</span>${sortToggleMarkup}${descriptionMarkup}</div>${cards}</div>`;
     shouldAnimateItemGridOrientationToggle = false;
 
     // 클릭 처리는 태그 그리드와 동일하게 main.js의 위임 리스너에 맡겨 카드마다 리스너/조회를 반복하지 않는다.

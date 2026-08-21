@@ -1422,7 +1422,7 @@
       position: relative;
       grid-column: 1 / -1;
       display: grid;
-      grid-template-columns: max-content max-content minmax(0, 1fr);
+      grid-template-columns: max-content minmax(0, max-content) minmax(0, 1fr);
       justify-content: start;
       align-items: center;
       gap: 8px;
@@ -1514,6 +1514,38 @@
       grid-column: 3;
       justify-self: end;
       white-space: nowrap;
+      font-size: 0.8rem;
+      font-weight: 700;
+      color: #B7C1F7;
+    }
+
+    .prompt-description-preview .is-combo-grid .tag-image-grid-total {
+      color: #F1D5DE;
+    }
+
+    .prompt-description-preview .preview-tag-grid-hint {
+      font-size: 0.78rem;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: #888;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      min-width: 0;
+    }
+
+    .prompt-description-preview .preview-tag-grid-header.is-hint-wrapped .preview-tag-grid-hint {
+      grid-column: 1 / -1;
+      grid-row: 2;
+      justify-self: start;
+    }
+
+    .prompt-description-preview .is-prompt-composed-grid .preview-tag-grid-header {
+      grid-template-columns: max-content minmax(0, max-content) minmax(0, 1fr) max-content;
+    }
+
+    .prompt-description-preview .is-prompt-composed-grid .tag-image-grid-total {
+      grid-column: 4;
     }
 
     .prompt-description-preview .is-core-category-grid .preview-tag-grid-header {
@@ -1531,7 +1563,8 @@
 
     .prompt-description-preview .is-core-category-grid .preview-tag-grid-category-chip,
     .prompt-description-preview .is-core-category-grid .preview-tag-grid-irp-copy-btn,
-    .prompt-description-preview .is-core-category-grid .preview-tag-grid-sort-toggle {
+    .prompt-description-preview .is-core-category-grid .preview-tag-grid-sort-toggle,
+    .prompt-description-preview .is-core-category-grid .preview-tag-grid-hint {
       box-sizing: border-box;
       min-height: 40px;
       padding: 7px 14px;
@@ -1547,6 +1580,15 @@
 
     .prompt-description-preview .is-core-category-grid .tag-image-grid-total {
       margin-right: 6px;
+    }
+
+    .prompt-description-preview .is-prompt-composed-grid.is-core-category-grid .preview-tag-grid-header {
+      grid-template-columns: max-content minmax(0, max-content) minmax(0, 1fr) max-content;
+    }
+
+    .prompt-description-preview .is-prompt-composed-grid.is-core-category-grid .tag-image-grid-total {
+      grid-column: 4;
+      margin-right: 0;
     }
 
     .prompt-description-preview .preview-tag-grid-description {
@@ -2489,6 +2531,11 @@
       color: #7a7a90;
       text-align: center;
       line-height: 1.5;
+    }
+
+    .prompt-description-preview .preview-tag-image-grid .empty-state.is-composed-grid-empty {
+      grid-column: 1 / -1;
+      padding: 24px 12px;
     }
 
     .prompt-image-block {

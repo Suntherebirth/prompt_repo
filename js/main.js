@@ -178,6 +178,11 @@
     const tagGridHeader = e.target.closest('.preview-tag-grid-header');
     if (tagGridHeader) {
       e.stopPropagation();
+      if (activePromptComposedGridMode) {
+        activePromptComposedGridMode = false;
+        renderPromptDescriptionPreview();
+        return;
+      }
       activePromptTagFilter = null;
       activePromptPreviewId = null;
       isPromptPreviewSuppressed = true;
