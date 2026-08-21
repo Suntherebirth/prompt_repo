@@ -377,6 +377,7 @@
     };
 
     selectedCustomCombo.push(entry);
+    activeSelectedCustomComboGridMode = false;
     render();
     showToast('조합된 커스텀 조합에 추가되었습니다');
     return true;
@@ -393,6 +394,7 @@
         source: 'composed',
         content: item.content || item.subCategory || '커스텀 조합',
       }));
+    activeSelectedCustomComboGridMode = false;
     activeCustomComboId = customCombo.id;
     render();
   }
@@ -401,6 +403,7 @@
     if (selectedCustomCombo.length === 0) return;
     if (!confirm('선택된 커스텀 조합을 모두 초기화하시겠습니까?')) return;
     selectedCustomCombo = [];
+    activeSelectedCustomComboGridMode = false;
     activeCustomComboId = null;
     render();
   }
@@ -412,6 +415,7 @@
     if (activeCustomComboId === customCombo.id) {
       activeCustomComboId = null;
       selectedCustomCombo = [];
+      activeSelectedCustomComboGridMode = false;
     }
     save();
     render();
@@ -442,6 +446,7 @@
     }
     clearCoreRandomVisualState();
     activeComposedCategoryGridMode = false;
+    activeComposedSelectedGridMode = false;
     const shouldArmCoreSelection = !getComposedMainCategoryConfig(item.mainCategory).editOnly;
     if (shouldArmCoreSelection) {
       shouldAutoSelectCoreSubCategoryOnPromptTab = true;
@@ -1195,19 +1200,17 @@
             },
             onTap: () => {
               if (isCustomComboTabOpen) {
-                if (tapComposeMode === PROMPT_ADD_MODE.SWIPE) {
+                if (tapComposeMode === PROMPT_ADD_MODE.TAP) {
+                  addComposedPromptToCustomCombo(item);
                   return;
                 }
-                if (tapComposeMode === PROMPT_ADD_MODE.DOUBLE_TAP_PREVIEW) {
-                  if (activeComposedPreviewId === item.id) {
-                    addComposedPromptToCustomCombo(item);
-                  } else {
-                    activeComposedPreviewId = item.id;
-                    render();
-                  }
-                  return;
+                if (activeComposedPreviewId === item.id) {
+                  activeSelectedCustomComboGridMode = !activeSelectedCustomComboGridMode;
+                } else {
+                  activeSelectedCustomComboGridMode = false;
+                  activeComposedPreviewId = item.id;
                 }
-                addComposedPromptToCustomCombo(item);
+                render();
                 return;
               }
               if (isArmedRandomCard) {
@@ -1216,6 +1219,11 @@
               }
               if (isArmedCopyCard) {
                 runComposedCopyShortcut(item.id);
+                return;
+              }
+              if (activeComposedPreviewId === item.id) {
+                activeComposedSelectedGridMode = !activeComposedSelectedGridMode;
+                render();
                 return;
               }
               if (armedCoreRandomComposedId && armedCoreRandomComposedId !== item.id) {
@@ -1227,10 +1235,13 @@
                       armComposedCardCoreRandomShortcut(item.id);
                     }
                   } else if (tapComposeMode === PROMPT_ADD_MODE.DOUBLE_TAP_PREVIEW) {
+                    activeComposedSelectedGridMode = false;
                     activeComposedPreviewId = item.id;
                     render();
                   } else {
-                    loadComposedPrompt(item.id);
+                    activeComposedSelectedGridMode = false;
+                    activeComposedPreviewId = item.id;
+                    render();
                   }
                 });
                 return;
@@ -1247,6 +1258,7 @@
                     armComposedCardCoreRandomShortcut(item.id);
                   }
                 } else {
+                  activeComposedSelectedGridMode = false;
                   activeComposedPreviewId = item.id;
                   render();
                 }

@@ -12,6 +12,7 @@
   let isCustomComboTabOpen = false;
   let selectedCustomCombo = [];
   let activeCustomComboId = null;
+  let activeSelectedCustomComboGridMode = false;
   let categoryManageTab = 'prompt';
   let hiddenMainCategories = new Set();
   let categoryConfig = { mainOrder: [], mains: {} };
@@ -66,6 +67,7 @@
   let shouldAnimatePromptTagSort = false;
   let shouldAnimatePromptTagGridEntry = false;
   let activeComposedPreviewId = null;
+  let activeComposedSelectedGridMode = false;
   let armedCoreRandomComposedId = null;
   let morphingCoreRandomComposedId = null;
   const composedCardActionTransitionUntil = new Map();

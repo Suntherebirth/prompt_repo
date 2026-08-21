@@ -223,23 +223,7 @@
     render();
   }
 
-  function jumpToPromptCardFromSelected(index) {
-    const item = selected[index];
-    if (!item || !item.id) {
-      showToast('선택한 프롬프트를 찾지 못했습니다');
-      return;
-    }
-    if (item.source && item.source !== 'prompt') {
-      showToast('개별 프롬프트 카드에서만 편집으로 이동할 수 있습니다');
-      return;
-    }
-
-    const prompt = prompts.find(entry => entry.id === item.id);
-    if (!prompt) {
-      showToast('원본 프롬프트를 찾지 못했습니다');
-      return;
-    }
-
+  function openPromptFromSelectedChipBehavior(prompt) {
     // 선택 칩 탭은 항상 해당 프롬프트 단일 미리보기로 진입한다.
     isPromptPreviewSuppressed = false;
     activePromptGridReturn = null;
@@ -280,6 +264,38 @@
 
       target.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'nearest' });
     });
+  }
+
+  function jumpToPromptCardByIdWithSelectedBehavior(promptId) {
+    if (!promptId) {
+      showToast('선택한 프롬프트를 찾지 못했습니다');
+      return;
+    }
+    const prompt = prompts.find(entry => String(entry.id) === String(promptId));
+    if (!prompt) {
+      showToast('원본 프롬프트를 찾지 못했습니다');
+      return;
+    }
+    openPromptFromSelectedChipBehavior(prompt);
+  }
+
+  function jumpToPromptCardFromSelected(index) {
+    const item = selected[index];
+    if (!item || !item.id) {
+      showToast('선택한 프롬프트를 찾지 못했습니다');
+      return;
+    }
+    if (item.source && item.source !== 'prompt') {
+      showToast('개별 프롬프트 카드에서만 편집으로 이동할 수 있습니다');
+      return;
+    }
+
+    const prompt = prompts.find(entry => entry.id === item.id);
+    if (!prompt) {
+      showToast('원본 프롬프트를 찾지 못했습니다');
+      return;
+    }
+    openPromptFromSelectedChipBehavior(prompt);
   }
 
   function clearSelected() {

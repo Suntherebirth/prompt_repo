@@ -110,7 +110,7 @@
     let gallery = Array.isArray(options.gallery) && options.gallery.length > 0
       ? options.gallery
       : (
-        leftPanelTab === 'combo' && isCustomComboTabOpen
+        leftPanelTab === 'combo' && isCustomComboTabOpen && !activeComposedPreviewId
           ? await getCustomComboFlowGallery()
           : (leftPanelTab === 'combo' ? getActiveComposedPreviewImage() : getActivePromptPreviewImage())
       );

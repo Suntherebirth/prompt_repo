@@ -218,6 +218,26 @@
   });
 
   document.getElementById('composed-description-preview').addEventListener('click', async (e) => {
+    // "현재 조합" 그리드(선택된 칩 동작과 동일하게 아이템 카드는 해당 프롬프트 카드로 점프시킨다)
+    const isSelectedComboGrid = leftPanelTab === 'combo' && isCustomComboTabOpen && activeSelectedCustomComboGridMode;
+    const isSelectedPromptGrid = leftPanelTab === 'combo' && !isCustomComboTabOpen && activeComposedSelectedGridMode;
+    if (isSelectedComboGrid || isSelectedPromptGrid) {
+      const composedPreviewPromptCard = e.target.closest('.preview-tag-image-card[data-prompt-id]');
+      if (composedPreviewPromptCard) {
+        e.stopPropagation();
+        jumpToPromptCardByIdWithSelectedBehavior(composedPreviewPromptCard.dataset.promptId);
+        return;
+      }
+      const gridHeader = e.target.closest('.preview-tag-grid-header');
+      if (gridHeader) {
+        e.stopPropagation();
+        if (isSelectedComboGrid) activeSelectedCustomComboGridMode = false;
+        else activeComposedSelectedGridMode = false;
+        renderComposedDescriptionPreview();
+        return;
+      }
+      return;
+    }
     const customComboTile = e.target.closest('.custom-combo-image-tile');
     if (customComboTile) {
       e.stopPropagation();

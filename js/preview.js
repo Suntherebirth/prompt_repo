@@ -252,6 +252,74 @@
     const preview = document.getElementById('composed-description-preview');
     if (!preview) return;
 
+    if (leftPanelTab === 'combo' && isCustomComboTabOpen && activeSelectedCustomComboGridMode) {
+      const composed = composedPrompts.find(item => item.id === activeComposedPreviewId);
+      const selectedItems = composed
+        ? (Array.isArray(composed.items) ? composed.items : [])
+          .map(entry => {
+            const entryId = typeof entry === 'object' ? entry.id : entry;
+            return prompts.find(item => String(item.id) === String(entryId)) || entry;
+          })
+          .filter(entry => entry && typeof entry === 'object')
+        : selectedCustomCombo;
+      const cards = selectedItems.map(item => {
+        const imageSrc = getPromptImageSource(item);
+        queuePromptImageLoad(item);
+        const label = item.subCategory || item.content || '커스텀 조합';
+        return `<div class="preview-tag-image-card composed-card-summary is-combo-card is-category-name-only" data-prompt-id="${esc(item.id)}" title="${esc(label)}">${imageSrc
+          ? `<img src="${imageSrc}" alt="${esc(label)}" />`
+          : '<span class="empty-state">이미지 로딩 중</span>'}<span class="tag-image-name">${esc(label)}</span></div>`;
+      }).join('');
+
+      preview.classList.add('has-image');
+      preview.classList.remove('image-switch-feedback');
+      preview.style.removeProperty('--custom-combo-flow-count');
+      preview.title = '터치하면 해당 프롬프트 카드로 이동합니다';
+      preview.innerHTML = `<div class="preview-tag-image-grid is-combo-grid is-selected-custom-combo-grid"><div class="preview-tag-grid-header"><span class="preview-tag-grid-category-chip cat-chip active is-combo">현재 조합</span><span class="tag-image-grid-total">(${selectedItems.length})</span></div>${cards || '<span class="empty-state is-composed-grid-empty">선택된 커스텀 조합 카드가 없습니다.</span>'}</div>`;
+      return;
+    }
+
+    if (leftPanelTab === 'combo' && isCustomComboTabOpen && activeComposedPreviewId) {
+      const composed = composedPrompts.find(item => item.id === activeComposedPreviewId);
+      if (composed) {
+        const imageSrc = getPromptImageSource(composed);
+        queuePromptImageLoad(composed);
+        const label = composed.subCategory || composed.content || '커스텀 조합';
+        preview.classList.add('has-image');
+        preview.classList.remove('image-switch-feedback');
+        preview.style.removeProperty('--custom-combo-flow-count');
+        preview.title = '터치하면 전체화면으로 봅니다';
+        preview.innerHTML = imageSrc
+          ? `<div class="preview-image-shell"><img src="${imageSrc}" alt="${esc(label)}" /></div>`
+          : `<span class="empty-state">이미지 로딩 중</span>`;
+        return;
+      }
+    }
+
+    if (leftPanelTab === 'combo' && !isCustomComboTabOpen && activeComposedSelectedGridMode) {
+      const composed = composedPrompts.find(item => item.id === activeComposedPreviewId);
+      const selectedItems = (Array.isArray(composed?.items) ? composed.items : [])
+        .map(entry => {
+          const entryId = typeof entry === 'object' ? entry.id : entry;
+          return prompts.find(item => String(item.id) === String(entryId)) || entry;
+        })
+        .filter(entry => entry && typeof entry === 'object');
+      const cards = selectedItems.map(item => {
+        const imageSrc = getPromptImageSource(item);
+        queuePromptImageLoad(item);
+        const label = item.content || item.subCategory || '프롬프트';
+        return `<div class="preview-tag-image-card is-prompt-card is-composition-selected" data-prompt-id="${esc(item.id)}" title="${esc(label)}">${imageSrc
+          ? `<img src="${imageSrc}" alt="${esc(label)}" />`
+          : '<span class="empty-state">이미지 로딩 중</span>'}<span class="tag-image-name">${esc(label)}</span></div>`;
+      }).join('');
+      preview.classList.add('has-image');
+      preview.classList.remove('image-switch-feedback');
+      preview.style.removeProperty('--custom-combo-flow-count');
+      preview.title = '터치하면 해당 프롬프트 카드로 이동합니다';
+      preview.innerHTML = `<div class="preview-tag-image-grid is-prompt-grid is-composed-selection-grid"><div class="preview-tag-grid-header"><span class="preview-tag-grid-category-chip cat-chip active is-combo">현재 조합</span><span class="tag-image-grid-total">(${selectedItems.length})</span></div>${cards || '<span class="empty-state is-composed-grid-empty">현재 조합에 선택된 프롬프트가 없습니다.</span>'}</div>`;
+      return;
+    }
+
     if (leftPanelTab === 'combo' && !isCustomComboTabOpen && activeCategoryComposed && activeComposedCategoryGridMode) {
       const categoryItems = composedPrompts.filter(item => item.mainCategory === activeCategoryComposed).sort((a, b) => {
         const aText = String(a.subCategory || '').localeCompare(String(b.subCategory || ''), 'ko');
