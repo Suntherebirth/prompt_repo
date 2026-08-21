@@ -114,8 +114,28 @@
   }
 
   function renderPromptComposedGrid(preview, prompt) {
+    const targetPromptId = String(prompt.id || '');
+    const isEntryLinkedToPrompt = (entry, visitedComposedIds = new Set()) => {
+      if (!entry) return false;
+
+      if (typeof entry === 'string' || typeof entry === 'number') {
+        const entryId = String(entry);
+        if (entryId === targetPromptId) return true;
+
+        // 레거시/편집용 데이터 호환: item이 프롬프트 객체가 아니라 composed id일 수 있다.
+        if (visitedComposedIds.has(entryId)) return false;
+        const nestedComposed = composedPrompts.find(composed => String(composed.id) === entryId);
+        if (!nestedComposed || !Array.isArray(nestedComposed.items)) return false;
+
+        visitedComposedIds.add(entryId);
+        return nestedComposed.items.some(nestedEntry => isEntryLinkedToPrompt(nestedEntry, visitedComposedIds));
+      }
+
+      return String(entry.id || '') === targetPromptId;
+    };
+
     const composedItems = composedPrompts.filter(item => (
-      Array.isArray(item.items) && item.items.some(entry => String(entry.id) === String(prompt.id))
+      Array.isArray(item.items) && item.items.some(entry => isEntryLinkedToPrompt(entry))
     )).sort((a, b) => {
       const categoryOrder = String(a.mainCategory || '').localeCompare(String(b.mainCategory || ''), 'ko');
       if (categoryOrder !== 0) return categoryOrder;
@@ -138,9 +158,15 @@
       const imageSrc = getPromptImageSource(item);
       queuePromptImageLoad(item);
       const label = item.subCategory || '이름없음';
+      const composedMainConfig = getComposedMainCategoryConfig(item.mainCategory);
+      const composedMainEmoji = String(composedMainConfig.emoji || '').trim();
+      const isEditOnlyComposed = !!composedMainConfig.editOnly;
+      const titleMetaMarkup = (composedMainEmoji || isEditOnlyComposed)
+        ? `${composedMainEmoji ? `<span class="tag-image-name-meta"><span class="tag-image-name-main-emoji" aria-hidden="true">${esc(composedMainEmoji)}</span></span>` : ''}${isEditOnlyComposed ? '<span class="tag-image-name-edit-label is-edit-prefix" aria-hidden="true">편집</span>' : ''}`
+        : '';
       return `<div class="preview-tag-image-card composed-card-summary is-combo-card is-category-name-only" data-composed-id="${esc(item.id)}" title="${esc(label)}">${imageSrc
         ? `<img src="${imageSrc}" alt="${esc(label)}" />`
-        : '<span class="empty-state">이미지 로딩 중</span>'}<span class="tag-image-name">${esc(label)}</span></div>`;
+        : '<span class="empty-state">이미지 로딩 중</span>'}<span class="tag-image-name${isEditOnlyComposed ? ' has-edit-prefix' : ''}">${titleMetaMarkup}${esc(label)}</span></div>`;
     }).join('');
 
     preview.innerHTML = `<div class="preview-tag-image-grid is-combo-grid is-prompt-composed-grid${isPromptComposedGridCore ? ' is-core-category-grid' : ''}"><div class="preview-tag-grid-header">${promptEmojiMarkup}<span class="preview-tag-grid-category-chip cat-chip active is-prompt">${esc(prompt.content || '프롬프트')}</span><span class="preview-tag-grid-hint">연결된 커스텀 조합 카드</span><span class="tag-image-grid-total">(${composedItems.length})</span></div>${cards || '<span class="empty-state is-composed-grid-empty">연결된 커스텀 컴포즈 카드가 없습니다.</span>'}</div>`;

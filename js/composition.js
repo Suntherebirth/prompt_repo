@@ -257,7 +257,8 @@
     }
 
     if (leftPanelTab !== 'prompt') {
-      setLeftPanelTab('prompt');
+      // 칩 탭으로 진입할 때는 방금 세팅한 단일 미리보기 상태와 카테고리를 유지한다.
+      setLeftPanelTab('prompt', { preservePromptPreview: true, skipCoreAutoSelect: true });
     } else {
       render();
     }

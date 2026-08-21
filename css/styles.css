@@ -2120,6 +2120,51 @@
       transform: translateY(1px) scale(0.98);
     }
 
+    .prompt-description-preview .preview-tag-image-card.composed-card-summary .tag-image-name-meta {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      margin-right: 2px;
+    }
+
+    .prompt-description-preview .preview-tag-image-card.composed-card-summary .tag-image-name.has-edit-prefix {
+      position: relative;
+      padding-left: 44px;
+    }
+
+    .prompt-description-preview .preview-tag-image-card.composed-card-summary .tag-image-name-edit-label.is-edit-prefix {
+      position: absolute;
+      left: 6px;
+      top: 50%;
+      transform: translateY(-50%);
+      margin: 0;
+    }
+
+    .prompt-description-preview .preview-tag-image-card.composed-card-summary .tag-image-name-main-emoji {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      line-height: 1;
+      font-size: 0.88rem;
+    }
+
+    .prompt-description-preview .preview-tag-image-card.composed-card-summary .tag-image-name-edit-label {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 1.2em;
+      padding: 0 5px;
+      border: 1px solid rgba(210, 125, 152, 0.62);
+      border-radius: 999px;
+      color: #F0A9BE;
+      background: rgba(59, 37, 48, 0.78);
+      font-size: 0.56rem;
+      font-weight: 800;
+      line-height: 1;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
     .prompt-description-preview .preview-tag-image-card.is-composition-core {
       border-width: 1.5px;
       border-color: rgba(116, 132, 232, 0.78);

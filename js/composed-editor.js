@@ -394,7 +394,7 @@
     renderPendingComposedImagePreview();
   }
 
-  function setLeftPanelTab(tab) {
+  function setLeftPanelTab(tab, options = {}) {
     const isComboTabRequest = tab === 'combo';
     const isAlreadyOnComboTab = leftPanelTab === 'combo';
 
@@ -411,13 +411,16 @@
     leftPanelTab = isComboTabRequest ? 'combo' : 'prompt';
     isCustomComboTabOpen = false;
 
-    if (previousTab !== leftPanelTab) {
+    if (previousTab !== leftPanelTab && !options.preservePromptPreview) {
       clearPromptDescriptionPreview({ feedback: true });
     }
     const isPromptTab = leftPanelTab === 'prompt';
     if (isPromptTab && shouldAutoSelectCoreSubCategoryOnPromptTab) {
       shouldAutoSelectCoreSubCategoryOnPromptTab = false;
-      applyCoreSubCategorySelection();
+      // 선택 칩 탭 등 명시적 이동이 선행된 경우 핵심 분류 자동 선택을 건너뛴다.
+      if (!options.skipCoreAutoSelect) {
+        applyCoreSubCategorySelection();
+      }
     }
     document.getElementById('panel-view-prompt').classList.toggle('active', isPromptTab);
     document.getElementById('panel-view-combo').classList.toggle('active', !isPromptTab);
