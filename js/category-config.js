@@ -131,6 +131,7 @@
       return;
     }
     customOutputText = text;
+    pendingIrpPromptText = text;
     if (isOutputEditing) setOutputEditMode(false);
     updateOutput();
     copyPromptSilently(text).then(ok => {
