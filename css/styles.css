@@ -16,6 +16,16 @@
 
     :root {
       --matched-action-width: clamp(134px, calc(17.5vw - 16px), 194px);
+      --toast-text: #F3F6FB;
+      --toast-shadow: 0 10px 24px rgba(15, 17, 23, 0.28);
+      --toast-bg-success: rgba(52, 211, 153, 0.18);
+      --toast-border-success: #34D399;
+      --toast-bg-info: rgba(56, 189, 248, 0.18);
+      --toast-border-info: #38BDF8;
+      --toast-bg-warning: rgba(245, 158, 11, 0.2);
+      --toast-border-warning: #F59E0B;
+      --toast-bg-danger: rgba(248, 113, 113, 0.2);
+      --toast-border-danger: #F87171;
     }
 
     .backup-debug-toolbar {
@@ -2849,17 +2859,21 @@
     }
 
     .cat-chip.used {
-      border-color: rgba(116, 132, 232, 0.34);
-      color: #B7C1F7;
-      background: rgba(76, 91, 214, 0.1);
-      box-shadow: inset 0 0 0 1px rgba(116, 132, 232, 0.06);
     }
 
     .cat-chip.used.active {
-      border-color: #A2AEF5;
-      color: #F0F3FF;
-      background: rgba(116, 132, 232, 0.24);
-      box-shadow: 0 0 0 2px rgba(116, 132, 232, 0.16), 0 4px 14px rgba(76, 91, 214, 0.14);
+    }
+
+    .cat-chip.category-focus {
+      border-color: #7484E8;
+      box-shadow: 0 0 0 3px rgba(116, 132, 232, 0.35), 0 8px 20px rgba(76, 91, 214, 0.24);
+      animation: categoryChipFocus .9s ease-out;
+    }
+
+    @keyframes categoryChipFocus {
+      0% { transform: scale(1); }
+      35% { transform: scale(1.06); }
+      100% { transform: scale(1); }
     }
 
     .cat-chip-mark {
@@ -5103,17 +5117,41 @@
       bottom: 24px;
       left: 50%;
       transform: translateX(-50%) translateY(60px);
-      background: #c084fc;
-      color: #0f0f13;
+      background: linear-gradient(180deg, #1E2430 0%, #171B22 100%);
+      color: var(--toast-text);
+      border: 1px solid var(--toast-border-info);
       padding: 10px 20px;
-      border-radius: 8px;
+      border-radius: 10px;
       font-size: 0.85rem;
       font-weight: 600;
+      letter-spacing: 0.01em;
       opacity: 0;
-      transition: all .3s;
+      box-shadow: var(--toast-shadow);
+      transition: transform .3s, opacity .3s, border-color .2s, background-color .2s;
       z-index: 9999;
       pointer-events: none;
     }
+
+    #toast.toast-success {
+      background: var(--toast-bg-success);
+      border-color: var(--toast-border-success);
+    }
+
+    #toast.toast-info {
+      background: var(--toast-bg-info);
+      border-color: var(--toast-border-info);
+    }
+
+    #toast.toast-warning {
+      background: var(--toast-bg-warning);
+      border-color: var(--toast-border-warning);
+    }
+
+    #toast.toast-danger {
+      background: var(--toast-bg-danger);
+      border-color: var(--toast-border-danger);
+    }
+
     #toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
 
     .empty-state {

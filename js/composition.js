@@ -257,6 +257,7 @@
     }
 
     highlightSelectedPromptChip(prompt.id);
+    focusSubCategoryChip(prompt.mainCategory, prompt.subCategory);
 
     requestAnimationFrame(() => {
       const target = document.querySelector(`.prompt-item[data-prompt-id="${prompt.id}"]`);

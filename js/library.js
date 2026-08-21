@@ -167,6 +167,21 @@
     renderSubCategorySelect();
   }
 
+  function focusSubCategoryChip(mainCategory, subCategory) {
+    if (!mainCategory || !subCategory) return;
+    requestAnimationFrame(() => {
+      const chip = document.querySelector(
+        `.cat-chip[data-main-category="${CSS.escape(String(mainCategory))}"][data-sub-category="${CSS.escape(String(subCategory))}"]`
+      );
+      if (!chip) return;
+      chip.classList.remove('category-focus');
+      void chip.offsetWidth;
+      chip.classList.add('category-focus');
+      chip.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'nearest' });
+      window.setTimeout(() => chip.classList.remove('category-focus'), 900);
+    });
+  }
+
   function renderComposedCategorySelectors() {
     renderComposedMainCategorySelect();
     renderComposedSubCategorySelect();
@@ -268,6 +283,8 @@
           const isActive = activeCategoryPrompt === mainCategory && activeSubCategoryPrompt === subCategory;
           const chip = document.createElement('span');
           chip.className = 'cat-chip' + (used ? ' used' : '') + (isActive ? ' active' : '');
+          chip.dataset.mainCategory = mainCategory;
+          chip.dataset.subCategory = subCategory;
           chip.innerHTML = `<span class="cat-chip-mark${used ? '' : ' hidden'}">✓</span>${esc(subCategory)}`;
           bindPressAction(chip, () => {
             clearSelectedPromptGridMode();
@@ -1420,6 +1437,7 @@
     activeCategoryPrompt = mainCategory;
     activeSubCategoryPrompt = subCategory;
     render();
+    focusSubCategoryChip(mainCategory, subCategory);
 
     requestAnimationFrame(() => {
       const card = document.querySelector(`.prompt-item[data-prompt-id="${CSS.escape(String(selectedPrompt.id))}"]`);

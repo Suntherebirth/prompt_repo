@@ -1,6 +1,38 @@
-  function showToast(msg) {
+  function resolveToastTone(message, toneHint) {
+    const allowed = new Set(['success', 'info', 'warning', 'danger']);
+    if (typeof toneHint === 'string' && allowed.has(toneHint)) return toneHint;
+
+    const text = String(message || '').trim();
+
+    if (!text) return 'info';
+
+    if (/완료|복사되었습니다|저장되었습니다|수정되었습니다|삭제되었습니다|추가되었습니다|변경되었습니다|전환되었습니다|이동했습니다|가져오기 완료|내보내기 완료/.test(text)) {
+      return 'success';
+    }
+
+    if (/실패|오류|복사하지 못|읽지 못|불러오지 못/.test(text)) {
+      return 'danger';
+    }
+
+    if (/없습니다|비어 있|취소|찾지 못|입력하세요|입력해 주세요/.test(text)) {
+      return 'warning';
+    }
+
+    if (/유지합니다|제거합니다|켜졌습니다|꺼졌습니다|변경했습니다|기본으로 표시|크게 표시/.test(text)) {
+      return 'info';
+    }
+
+    return 'info';
+  }
+
+  function showToast(msg, toneHint) {
     const t = document.getElementById('toast');
-    t.textContent = msg;
+    if (!t) return;
+
+    const tone = resolveToastTone(msg, toneHint);
+    t.textContent = String(msg || '');
+    t.classList.remove('toast-success', 'toast-info', 'toast-warning', 'toast-danger');
+    t.classList.add(`toast-${tone}`);
     t.classList.add('show');
     clearTimeout(t._timer);
     t._timer = setTimeout(() => t.classList.remove('show'), 2000);

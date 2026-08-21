@@ -750,6 +750,8 @@
       render();
     }
 
+    focusSubCategoryChip(prompt.mainCategory, prompt.subCategory);
+
     requestAnimationFrame(() => {
       scrollSelectedPromptChipIntoView(prompt.id);
       const target = document.querySelector(`.prompt-item[data-prompt-id="${prompt.id}"]`);
