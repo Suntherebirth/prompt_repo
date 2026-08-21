@@ -71,6 +71,13 @@
   });
 
   document.getElementById('prompt-description-preview').addEventListener('click', e => {
+    const previewGridBackButton = e.target.closest('.preview-grid-back-btn');
+    if (previewGridBackButton) {
+      e.stopPropagation();
+      returnToPromptGridFromPreview();
+      return;
+    }
+
     const compositionRemoveButton = e.target.closest('.preview-composition-remove-btn');
     if (compositionRemoveButton) {
       e.stopPropagation();
@@ -115,6 +122,7 @@
         || selected.find(item => item.source === 'prompt' && item.id === activePromptPreviewId);
       activeCategoryPrompt = prompt?.mainCategory || activeCategoryPrompt;
       activeSubCategoryPrompt = prompt?.subCategory || activeSubCategoryPrompt;
+      activePromptGridReturn = null;
       activePromptTagBrowser = true;
       activePromptTagFilter = null;
       activePromptPreviewId = null;

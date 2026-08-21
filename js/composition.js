@@ -137,6 +137,7 @@
 
     clearSelectedPromptGridMode();
     isPromptPreviewSuppressed = false;
+    activePromptGridReturn = null;
     activePromptTagFilter = null;
     activePromptTagBrowser = false;
     activePromptCategoryGridMode = false;
@@ -232,6 +233,7 @@
     }
 
     isPromptPreviewSuppressed = false;
+    activePromptGridReturn = null;
     activePromptPreviewId = prompt.id;
     activeCategoryPrompt = prompt.mainCategory || activeCategoryPrompt;
     activeSubCategoryPrompt = prompt.subCategory || activeSubCategoryPrompt;

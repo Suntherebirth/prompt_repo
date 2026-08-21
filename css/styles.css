@@ -1069,6 +1069,40 @@
       border-radius: 8px;
     }
 
+    .prompt-description-preview .preview-grid-back-btn {
+      position: absolute;
+      top: 8px;
+      left: 8px;
+      z-index: 3;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 34px;
+      height: 34px;
+      padding: 0;
+      border: 1px solid rgba(255, 255, 255, 0.28);
+      border-radius: 50%;
+      color: rgba(255, 255, 255, 0.82);
+      background: rgba(255, 255, 255, 0.1);
+      font: inherit;
+      font-size: 1.45rem;
+      line-height: 1;
+      cursor: pointer;
+      touch-action: manipulation;
+      transition: background-color .16s ease, border-color .16s ease, color .16s ease, transform .16s ease;
+    }
+
+    .prompt-description-preview .preview-grid-back-btn:hover,
+    .prompt-description-preview .preview-grid-back-btn:active {
+      border-color: rgba(255, 255, 255, 0.58);
+      color: #fff;
+      background: rgba(255, 255, 255, 0.2);
+    }
+
+    .prompt-description-preview .preview-grid-back-btn:active {
+      transform: scale(0.92);
+    }
+
     .preview-orientation-dots {
       position: absolute;
       left: 50%;

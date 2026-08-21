@@ -2,6 +2,7 @@
     activePromptPreviewId = null;
     activePromptTagFilter = null;
     activePromptTagBrowser = false;
+    activePromptGridReturn = null;
     selectingFromPreviewId = null;
     isPromptPreviewSuppressed = true;
     if (options.feedback) {
@@ -657,6 +658,7 @@
 
   function selectPromptFromTagImage(prompt) {
     if (!prompt) return;
+    activePromptGridReturn = null;
     activePromptCategoryGridMode = false;
     activePromptTagFilter = null;
     activePromptTagBrowser = false;
@@ -720,6 +722,11 @@
 
   function jumpToPromptCardFromTagImage(prompt) {
     if (!prompt) return;
+    activePromptGridReturn = activePromptTagFilter
+      ? { type: 'tag', tag: activePromptTagFilter }
+      : activePromptCategoryGridMode
+        ? { type: 'category', mainCategory: activeCategoryPrompt, subCategory: activeSubCategoryPrompt }
+        : null;
     activePromptTagFilter = null;
     activePromptTagBrowser = false;
     activePromptCategoryGridMode = false;
@@ -744,5 +751,19 @@
       const target = document.querySelector(`.prompt-item[data-prompt-id="${prompt.id}"]`);
       if (target) target.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'nearest' });
     });
+  }
+
+  function returnToPromptGridFromPreview() {
+    if (!activePromptGridReturn) return;
+    const returnGrid = activePromptGridReturn;
+    activePromptGridReturn = null;
+    activePromptPreviewId = null;
+    activePromptTagBrowser = false;
+    activePromptTagFilter = returnGrid.type === 'tag' ? returnGrid.tag : null;
+    activePromptCategoryGridMode = returnGrid.type === 'category';
+    activeCategoryPrompt = returnGrid.mainCategory || activeCategoryPrompt;
+    activeSubCategoryPrompt = returnGrid.subCategory || activeSubCategoryPrompt;
+    isPromptPreviewSuppressed = returnGrid.type !== 'tag';
+    renderPromptDescriptionPreview();
   }
 

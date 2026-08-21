@@ -68,12 +68,15 @@
       const orientationDots = canTogglePromptOrientation
         ? `<div class="preview-orientation-dots is-prompt" aria-hidden="true"><span class="preview-orientation-dot${promptOrientation === 'portrait' ? ' active' : ''}"></span><span class="preview-orientation-dot${promptOrientation === 'landscape' ? ' active' : ''}"></span></div>`
         : '';
+      const promptGridBackButton = activePromptGridReturn
+        ? '<button class="preview-grid-back-btn" type="button" aria-label="이전 그리드로 돌아가기">&larr;</button>'
+        : '';
       shouldAnimatePromptPreviewClear = false;
       preview.classList.add('has-image');
       preview.classList.remove('image-clear-feedback');
       preview.classList.remove('image-switch-feedback');
       preview.title = '터치하면 이미지를 크게 봅니다';
-      preview.innerHTML = `<div class="preview-portrait-stack has-caption"><div class="preview-image-shell">${orientationDots}<img class="${shouldAnimateTransition ? 'preview-image-enter' : ''}" src="${imageSrc}" alt="${esc(altText)}" /></div>${portraitCaption}</div>`;
+      preview.innerHTML = `<div class="preview-portrait-stack has-caption"><div class="preview-image-shell">${promptGridBackButton}${orientationDots}<img class="${shouldAnimateTransition ? 'preview-image-enter' : ''}" src="${imageSrc}" alt="${esc(altText)}" /></div>${portraitCaption}</div>`;
       bindPreviewTagSwipe(preview.querySelector('.preview-tag-list'), '.preview-tag-swipe-item');
       if (canTogglePromptOrientation) {
         bindPreviewOrientationSwipe(preview.querySelector('.preview-image-shell'), {

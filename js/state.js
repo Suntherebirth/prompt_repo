@@ -44,6 +44,7 @@
   let activePromptTagFilter = null;
   let activePromptTagBrowser = false;
   let activePromptCategoryGridMode = false;
+  let activePromptGridReturn = null;
   let isCategoryItemGridLandscapeMode = false;
   let lastCategoryItemGridLandscapeKey = '';
   let shouldAnimateItemGridOrientationToggle = false;
