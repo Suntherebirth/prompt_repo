@@ -1088,20 +1088,15 @@
       border-radius: 8px;
     }
 
-    .prompt-description-preview .preview-image-shell.is-edit-image-crossfade img {
+    .prompt-description-preview .preview-image-shell.is-edit-auto-flip img {
       position: absolute;
       inset: 0;
-      animation-duration: .8s;
-      animation-timing-function: linear;
-      animation-fill-mode: both;
     }
 
-    .prompt-description-preview .preview-image-shell.is-edit-image-crossfade .preview-edit-image-out {
-      animation-name: previewEditImageFadeOut;
-    }
-
-    .prompt-description-preview .preview-image-shell.is-edit-image-crossfade .preview-edit-image-in {
-      animation-name: previewEditImageFadeIn;
+    .prompt-description-preview .preview-image-shell.is-edit-auto-flip .preview-edit-flip-before {
+      opacity: 0;
+      animation: composedCardEditFlip 1.9s linear infinite;
+      will-change: opacity;
     }
 
     .prompt-description-preview .preview-grid-back-btn {
@@ -2576,42 +2571,6 @@
       }
     }
 
-    @keyframes previewEditImageFadeOut {
-      0% {
-        opacity: 1;
-      }
-      20% {
-        opacity: 0.68;
-      }
-      50% {
-        opacity: 0.5;
-      }
-      80% {
-        opacity: 0.32;
-      }
-      100% {
-        opacity: 0;
-      }
-    }
-
-    @keyframes previewEditImageFadeIn {
-      0% {
-        opacity: 0;
-      }
-      20% {
-        opacity: 0.32;
-      }
-      50% {
-        opacity: 0.5;
-      }
-      80% {
-        opacity: 0.68;
-      }
-      100% {
-        opacity: 1;
-      }
-    }
-
     @keyframes previewSwitchFeedback {
       0% {
         box-shadow: 0 0 0 0 rgba(138, 180, 255, 0);
@@ -2675,6 +2634,10 @@
       }
 
       .prompt-description-preview .preview-tag-image-card .composed-card-edit-flip .composed-card-edit-before {
+        animation: none;
+      }
+
+      .prompt-description-preview .preview-image-shell.is-edit-auto-flip .preview-edit-flip-before {
         animation: none;
       }
 

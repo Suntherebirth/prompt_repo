@@ -1439,6 +1439,10 @@
 
     activePromptCategoryGridMode = false;
     activePromptTagFilter = null;
+    activePromptTagBrowser = false;
+    activePromptComposedGridMode = false;
+    activePromptPreviewId = selectedPrompt.id;
+    isPromptPreviewSuppressed = false;
     activeCategoryPrompt = mainCategory;
     activeSubCategoryPrompt = subCategory;
     render();

@@ -385,8 +385,18 @@
       if (previewImage && previewImage.src !== url) previewImage.src = url;
     }
     if (activeComposedPreviewId === promptId) {
-      const previewImage = document.querySelector('#composed-description-preview .preview-image-shell img');
-      if (previewImage && previewImage.src !== url) previewImage.src = url;
+      const shell = document.querySelector('#composed-description-preview .preview-image-shell');
+      const flipBefore = shell?.querySelector('.preview-edit-flip-before');
+      if (flipBefore) {
+        const composed = composedPrompts.find(entry => String(entry.id) === String(promptId));
+        const isBeforeUrl = !!composed && [composed.beforePortraitImageId, composed.beforeImageId]
+          .some(imageId => imageId && promptImageUrlCache.get(imageId) === url);
+        const flipTarget = shell.querySelector(isBeforeUrl ? '.preview-edit-flip-before' : '.preview-edit-flip-after');
+        if (flipTarget && flipTarget.src !== url) flipTarget.src = url;
+      } else {
+        const previewImage = shell?.querySelector('img');
+        if (previewImage && previewImage.src !== url) previewImage.src = url;
+      }
     }
   }
 

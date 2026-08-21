@@ -82,9 +82,6 @@
   let promptPreviewOrientationItemId = '';
   let composedPreviewOrientation = 'portrait';
   let composedPreviewOrientationItemId = '';
-  let composedPreviewEditStage = { portrait: 'before', landscape: 'before' };
-  let composedPreviewEditStageItemId = '';
-  let shouldAnimateComposedEditStageToggle = false;
   let isPromptPreviewSuppressed = false;
   let shouldAnimatePromptPreviewClear = false;
   let isSettingsDrawerOpen = false;
