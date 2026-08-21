@@ -240,8 +240,14 @@
       return;
     }
 
+    // 선택 칩 탭은 항상 해당 프롬프트 단일 미리보기로 진입한다.
     isPromptPreviewSuppressed = false;
     activePromptGridReturn = null;
+    activePromptTagFilter = null;
+    activePromptTagBrowser = false;
+    activePromptCategoryGridMode = false;
+    activePromptComposedGridMode = false;
+    activeSelectedPromptGridMode = false;
     activePromptPreviewId = prompt.id;
     activeCategoryPrompt = prompt.mainCategory || activeCategoryPrompt;
     activeSubCategoryPrompt = prompt.subCategory || activeSubCategoryPrompt;
