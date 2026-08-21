@@ -281,7 +281,6 @@
     }
 
     clearOutputOverride();
-    pendingIrpPromptText = null;
     selected = [];
     render();
     if (resetButton) {

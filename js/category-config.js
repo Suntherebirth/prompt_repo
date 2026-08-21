@@ -121,19 +121,26 @@
     };
   }
 
-  // IRP(이미지 레퍼런스 프롬프트): 중분류에 연결된 커스텀 조합 카드의 완성 프롬프트를 클립보드로 복사하고 최종 프롬프트 산출란에도 반영한다.
+  // IRP(이미지 레퍼런스 프롬프트): 중분류에 연결된 커스텀 조합 카드의 실제 아이템들을 현재 조합(selected)에 그대로 불러온다.
+  // customOutputText로 텍스트만 덮어쓰면 selected가 갱신되지 않아, 이후 전체 아이템 그리드 스와이프 선택 시
+  // 엉뚱한 이전 selected 내용으로 되돌아가는 문제가 있었다 (커스텀 조합 카드 로드와 동일하게 selected를 채워야 함).
   function copyLinkedIrpPrompt(mainCategory, subCategory) {
     const composedId = getSubCategoryLinkedComposedId(mainCategory, subCategory);
     const composed = composedPrompts.find(item => item.id === composedId);
-    const text = String(composed?.content || '').trim();
+    if (!composed) {
+      showToast('연결된 IRP가 없습니다');
+      return;
+    }
+    clearOutputOverride();
+    selected = (composed.items || []).map(entry => ({ ...normalizeSelected(entry), source: 'prompt' })).filter(entry => entry && entry.content);
+    const text = getComposedOutputText();
     if (!text) {
       showToast('연결된 IRP가 없습니다');
       return;
     }
-    customOutputText = text;
-    pendingIrpPromptText = text;
-    if (isOutputEditing) setOutputEditMode(false);
     updateOutput();
+    renderSelected();
+    renderPromptList();
     copyPromptSilently(text).then(ok => {
       if (ok) showToast('IRP가 복사되었습니다!');
     });

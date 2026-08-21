@@ -19,7 +19,6 @@
   let openedHiddenMainCategories = new Set();
   let isOutputEditing = false;
   let customOutputText = null;
-  let pendingIrpPromptText = null;
   let tapComposeMode = PROMPT_ADD_MODE.SWIPE;
   let pendingPromptImages = { landscape: null, portrait: null };
   let removedPromptImages = { landscape: false, portrait: false };

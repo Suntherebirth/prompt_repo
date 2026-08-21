@@ -657,7 +657,6 @@
 
   function selectPromptFromTagImage(prompt) {
     if (!prompt) return;
-    const irpText = String(pendingIrpPromptText || '').trim();
     activePromptCategoryGridMode = false;
     activePromptTagFilter = null;
     activePromptTagBrowser = false;
@@ -670,11 +669,6 @@
     }
     const added = addPromptToComposition(prompt, { suppressToast: true });
     if (!added) return;
-    if (irpText) {
-      customOutputText = `${irpText}, ${prompt.content}`;
-      pendingIrpPromptText = null;
-      updateOutput();
-    }
     copyPromptSilently(getComposedOutputText())
       .then(copied => {
         showToast(copied ? '선택한 프롬프트가 조합에 추가되고 클립보드에 복사되었습니다' : '선택한 프롬프트는 추가되었지만 복사에 실패했습니다');
