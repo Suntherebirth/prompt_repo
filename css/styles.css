@@ -885,6 +885,10 @@
       cursor: zoom-in;
     }
 
+    .prompt-description-preview:has(.preview-portrait-stack) {
+      padding: 0;
+    }
+
     .custom-combo-preview-split {
       width: 100%;
       height: 100%;
@@ -1051,6 +1055,9 @@
     .prompt-description-preview .preview-image-shell {
       width: 100%;
       height: 100%;
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
       display: flex;
       align-items: center;
       justify-content: center;
@@ -1065,6 +1072,8 @@
       display: block;
       width: 100%;
       height: 100%;
+      box-sizing: border-box;
+      margin: 0;
       object-fit: cover;
       border-radius: 8px;
     }
@@ -3815,7 +3824,7 @@
       aspect-ratio: 3 / 4;
       border-top: 0;
       border-left: 1px solid #2a2a3a;
-      padding: var(--portrait-preview-inner-padding);
+      padding: 3px var(--portrait-preview-inner-padding) var(--portrait-preview-inner-padding);
       z-index: 3;
     }
 
