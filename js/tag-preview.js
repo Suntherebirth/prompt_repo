@@ -62,10 +62,11 @@
     return parts.join(' | ').trim();
   }
 
-  function renderPromptTagImageCards(promptItems, animateEntry = false) {
+  function renderPromptTagImageCards(promptItems, animateEntry = false, landscape = false) {
     return promptItems.map(prompt => {
-      const imageSrc = getPromptImageSource(prompt);
-      queuePromptImageLoad(prompt);
+      const forceOrientation = landscape ? 'landscape' : undefined;
+      const imageSrc = getPromptImageSource(prompt, forceOrientation);
+      queuePromptImageLoad(prompt, forceOrientation);
       const altText = prompt.imageName || getPromptDisplayName(prompt.mainCategory, prompt.subCategory);
       const descriptionParts = String(prompt.description || '')
         .split('|')
@@ -93,7 +94,7 @@
       const description = descriptionLines
         .map(line => `<span class="tag-image-description-part">${esc(line)}</span>`)
         .join('');
-      return `<div class="preview-tag-image-card is-prompt-card${animateEntry ? ' is-entering' : ''}" data-prompt-id="${esc(prompt.id)}" title="${esc(altText)}">${imageSrc
+      return `<div class="preview-tag-image-card is-prompt-card${landscape ? ' is-landscape-card' : ''}${animateEntry ? ' is-entering' : ''}" data-prompt-id="${esc(prompt.id)}" title="${esc(altText)}">${imageSrc
         ? `<img src="${imageSrc}" alt="${esc(altText)}" />`
         : '<span class="empty-state">이미지 로딩 중</span>'}<span class="tag-image-name">${esc(prompt.content)}</span>${description ? `<span class="tag-image-description">${description}</span>` : ''}<button class="preview-tag-image-select-btn" type="button" aria-label="${esc(prompt.content)} 프롬프트 선택">프롬프트 선택</button></div>`;
     }).join('');
@@ -176,6 +177,11 @@
   }
 
   function renderPromptCategoryGrid(preview) {
+    const categoryGridLandscapeKey = `${activeCategoryPrompt}:${activeSubCategoryPrompt}`;
+    if (lastCategoryItemGridLandscapeKey !== categoryGridLandscapeKey) {
+      isCategoryItemGridLandscapeMode = false;
+      lastCategoryItemGridLandscapeKey = categoryGridLandscapeKey;
+    }
     let categoryPrompts = prompts.filter(prompt => (
       prompt.mainCategory === activeCategoryPrompt && prompt.subCategory === activeSubCategoryPrompt
     )).sort((a, b) => {
@@ -197,12 +203,13 @@
     const usesTagGridCards = isSubCategoryCoreEnabled(activeCategoryPrompt, activeSubCategoryPrompt);
     if (usesTagGridCards) categoryPrompts = sortPromptsForTagGrid(categoryPrompts);
     const cards = usesTagGridCards
-      ? renderPromptTagImageCards(categoryPrompts)
+      ? renderPromptTagImageCards(categoryPrompts, false, isCategoryItemGridLandscapeMode)
       : categoryPrompts.map(prompt => {
-      const imageSrc = getPromptImageSource(prompt);
-      queuePromptImageLoad(prompt);
+      const forceOrientation = isCategoryItemGridLandscapeMode ? 'landscape' : undefined;
+      const imageSrc = getPromptImageSource(prompt, forceOrientation);
+      queuePromptImageLoad(prompt, forceOrientation);
       const altText = prompt.imageName || getPromptDisplayName(prompt.mainCategory, prompt.subCategory);
-      return `<div class="preview-tag-image-card is-prompt-card is-category-name-only" data-prompt-id="${esc(prompt.id)}" title="${esc(altText)}">${imageSrc
+      return `<div class="preview-tag-image-card is-prompt-card is-category-name-only${isCategoryItemGridLandscapeMode ? ' is-landscape-card' : ''}" data-prompt-id="${esc(prompt.id)}" title="${esc(altText)}">${imageSrc
         ? `<img src="${imageSrc}" alt="${esc(altText)}" />`
         : '<span class="empty-state">이미지 로딩 중</span>'}<span class="tag-image-name">${esc(prompt.content)}</span><button class="preview-tag-image-select-btn" type="button" aria-label="${esc(prompt.content)} 프롬프트 선택">프롬프트 선택</button></div>`;
     }).join('');
@@ -223,8 +230,14 @@
     const sortToggleMarkup = usesTagGridCards
       ? `<button class="preview-tag-grid-sort-toggle${shouldAnimatePromptTagSort ? ' is-changing' : ''}" type="button" data-tag-sort="${activePromptTagSort}" aria-label="현재 ${sortLabel}. ${nextSortLabel}(으)로 정렬">${sortLabel}</button>`
       : '';
+    const linkedIrpComposedId = leftPanelTab === 'prompt' ? getSubCategoryLinkedComposedId(activeCategoryPrompt, activeSubCategoryPrompt) : '';
+    const linkedIrpComposed = linkedIrpComposedId ? composedPrompts.find(item => item.id === linkedIrpComposedId) : null;
+    const irpCopyButtonMarkup = linkedIrpComposed
+      ? '<button class="preview-tag-grid-irp-copy-btn" type="button">IRP 복사</button>'
+      : '';
     shouldAnimatePromptTagSort = false;
-    preview.innerHTML = `<div class="preview-tag-image-grid is-prompt-grid${usesTagGridCards ? ' is-core-category-grid' : ''}"><div class="preview-tag-grid-header">${categoryEmojiMarkup}<span class="preview-tag-grid-category-chip cat-chip active is-prompt">${categoryChipLabel}</span><span class="tag-image-grid-total">${categoryPrompts.length}개</span>${sortToggleMarkup}${descriptionMarkup}</div>${cards}</div>`;
+    preview.innerHTML = `<div class="preview-tag-image-grid is-prompt-grid${usesTagGridCards ? ' is-core-category-grid' : ''}${isCategoryItemGridLandscapeMode ? ' is-landscape-item-grid' : ''}"><div class="preview-tag-grid-header">${categoryEmojiMarkup}<span class="preview-tag-grid-category-chip cat-chip active is-prompt is-item-grid-orientation-toggle${shouldAnimateItemGridOrientationToggle ? ' is-changing' : ''}" title="눌러서 가로/세로 카드 전환">${categoryChipLabel}</span>${irpCopyButtonMarkup}<span class="tag-image-grid-total">${categoryPrompts.length}개</span>${sortToggleMarkup}${descriptionMarkup}</div>${cards}</div>`;
+    shouldAnimateItemGridOrientationToggle = false;
 
     // 클릭 처리는 태그 그리드와 동일하게 main.js의 위임 리스너에 맡겨 카드마다 리스너/조회를 반복하지 않는다.
     bindPromptTagImageCardSwipe(preview);

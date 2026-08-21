@@ -148,6 +148,25 @@
       return;
     }
 
+    const itemGridOrientationChip = e.target.closest('.preview-tag-grid-category-chip.is-item-grid-orientation-toggle');
+    if (itemGridOrientationChip) {
+      e.stopPropagation();
+      isCategoryItemGridLandscapeMode = !isCategoryItemGridLandscapeMode;
+      shouldAnimateItemGridOrientationToggle = true;
+      renderPromptDescriptionPreview();
+      return;
+    }
+
+    const irpCopyButton = e.target.closest('.preview-tag-grid-irp-copy-btn');
+    if (irpCopyButton) {
+      e.stopPropagation();
+      irpCopyButton.classList.remove('is-changing');
+      void irpCopyButton.offsetWidth;
+      irpCopyButton.classList.add('is-changing');
+      copyLinkedIrpPrompt(activeCategoryPrompt, activeSubCategoryPrompt);
+      return;
+    }
+
     const tagGridHeader = e.target.closest('.preview-tag-grid-header');
     if (tagGridHeader) {
       e.stopPropagation();

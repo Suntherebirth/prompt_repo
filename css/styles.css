@@ -1297,6 +1297,14 @@
       grid-template-columns: repeat(2, minmax(0, 1fr));
     }
 
+    .prompt-description-preview .preview-tag-image-grid.is-landscape-item-grid {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .prompt-description-preview .preview-tag-grid-category-chip.is-item-grid-orientation-toggle {
+      cursor: pointer;
+    }
+
     .prompt-description-preview .preview-tag-image-grid.is-entering {
       animation: tagGridEnter .38s cubic-bezier(0.16, 1, 0.3, 1);
       transform-origin: center top;
@@ -1368,6 +1376,7 @@
     }
 
     .prompt-description-preview .preview-tag-grid-header {
+      position: relative;
       grid-column: 1 / -1;
       display: grid;
       grid-template-columns: max-content max-content minmax(0, 1fr);
@@ -1376,6 +1385,86 @@
       gap: 8px;
       padding: 0 2px 2px;
       pointer-events: auto;
+    }
+
+    .prompt-description-preview .preview-tag-grid-irp-copy-btn {
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      transform: translate(-50%, -50%);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 30px;
+      padding: 6px 14px;
+      border: 1px solid #63384B;
+      border-radius: 999px;
+      color: #F1D5DE;
+      background: #2B1D27;
+      font-family: inherit;
+      font-size: 0.72rem;
+      font-weight: 700;
+      line-height: 1.2;
+      white-space: nowrap;
+      cursor: pointer;
+      touch-action: manipulation;
+      transition: transform .16s ease, border-color .16s ease, background .16s ease;
+    }
+
+    .prompt-description-preview .preview-tag-grid-irp-copy-btn:hover,
+    .prompt-description-preview .preview-tag-grid-irp-copy-btn:active {
+      border-color: #A95773;
+      background: #3A2632;
+      color: #F1D5DE;
+    }
+
+    .prompt-description-preview .preview-tag-grid-irp-copy-btn:active {
+      transform: translate(-50%, -50%) scale(0.96);
+    }
+
+    .prompt-description-preview .preview-tag-grid-irp-copy-btn.is-changing {
+      animation: tagGridIrpPressFeedback .42s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    @keyframes tagGridIrpPressFeedback {
+      0% {
+        transform: translate(-50%, -50%) scale(0.94);
+        box-shadow: 0 0 0 0 rgba(169, 87, 115, 0);
+      }
+      42% {
+        transform: translate(-50%, -50%) scale(1.06);
+        box-shadow: 0 0 0 4px rgba(169, 87, 115, 0.28);
+      }
+      100% {
+        transform: translate(-50%, -50%) scale(1);
+        box-shadow: 0 0 0 0 rgba(169, 87, 115, 0);
+      }
+    }
+
+    .prompt-description-preview .preview-tag-grid-category-chip.is-item-grid-orientation-toggle.is-changing {
+      animation: tagGridChipPressFeedback .42s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    @keyframes tagGridChipPressFeedback {
+      0% {
+        transform: scale(0.94);
+        box-shadow: 0 0 0 0 rgba(76, 91, 214, 0);
+      }
+      42% {
+        transform: scale(1.06);
+        box-shadow: 0 0 0 4px rgba(76, 91, 214, 0.28);
+      }
+      100% {
+        transform: scale(1);
+        box-shadow: 0 0 0 0 rgba(76, 91, 214, 0);
+      }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .prompt-description-preview .preview-tag-grid-irp-copy-btn.is-changing,
+      .prompt-description-preview .preview-tag-grid-category-chip.is-item-grid-orientation-toggle.is-changing {
+        animation: none;
+      }
     }
 
     .prompt-description-preview .tag-image-grid-total {
@@ -1397,11 +1486,15 @@
       justify-self: end;
     }
 
-    .prompt-description-preview .is-core-category-grid .preview-tag-grid-category-chip {
+    .prompt-description-preview .is-core-category-grid .preview-tag-grid-category-chip,
+    .prompt-description-preview .is-core-category-grid .preview-tag-grid-irp-copy-btn,
+    .prompt-description-preview .is-core-category-grid .preview-tag-grid-sort-toggle {
       box-sizing: border-box;
       min-height: 40px;
       padding: 7px 14px;
       font-size: 0.92rem;
+      font-weight: 700;
+      line-height: 1.2;
       letter-spacing: 0.16em;
     }
 
@@ -1947,6 +2040,11 @@
       width: 100%;
       aspect-ratio: 4 / 3;
       object-fit: cover;
+    }
+
+    .prompt-description-preview .preview-tag-image-card.is-landscape-card img,
+    .prompt-description-preview .preview-tag-image-card.is-landscape-card .empty-state {
+      aspect-ratio: 4 / 3;
     }
 
     .prompt-description-preview .preview-composition-remove-btn {
@@ -5389,6 +5487,18 @@
 
     .category-manage-actions-sub .category-manage-move-target {
       min-width: 170px;
+    }
+
+    .category-manage-irp-option {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 0.78rem;
+      color: #cfcbe0;
+    }
+
+    .category-manage-irp-select {
+      min-width: 130px;
     }
 
     .category-manage-sub-list {

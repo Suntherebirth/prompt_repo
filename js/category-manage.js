@@ -18,6 +18,11 @@
     if (!mainCategory) return;
     const mainConfig = ensureMainCategoryConfig(mainCategory);
     mainConfig.hiddenByDefault = !!hiddenByDefault;
+    if (mainConfig.hiddenByDefault) {
+      hiddenMainCategories.add(mainCategory);
+    } else {
+      hiddenMainCategories.delete(mainCategory);
+    }
     hiddenMainCategories = new Set(
       getMainCategories().filter(category => getMainCategoryConfig(category).hiddenByDefault)
     );
@@ -717,6 +722,31 @@
           coreInput.checked = isSubCategoryCoreEnabled(mainCategory, subCategory);
           coreInput.onchange = () => toggleSubCategoryCore(mainCategory, subCategory, coreInput.checked);
 
+          const irpLabel = document.createElement('label');
+          irpLabel.className = 'category-manage-option category-manage-irp-option';
+          irpLabel.innerHTML = '<span>IRP 연결</span>';
+          const irpSelect = document.createElement('select');
+          irpSelect.className = 'category-manage-move-select category-manage-irp-select';
+          irpSelect.setAttribute('aria-label', `${subCategory} IRP 연결`);
+          const irpNoneOption = document.createElement('option');
+          irpNoneOption.value = '';
+          irpNoneOption.textContent = '연결 안 함';
+          irpSelect.appendChild(irpNoneOption);
+          composedPrompts.forEach(composed => {
+            const option = document.createElement('option');
+            option.value = composed.id;
+            option.textContent = composed.subCategory || composed.content || '이름 없는 조합';
+            irpSelect.appendChild(option);
+          });
+          irpSelect.value = getSubCategoryLinkedComposedId(mainCategory, subCategory);
+          irpSelect.onchange = () => {
+            setSubCategoryLinkedComposedId(mainCategory, subCategory, irpSelect.value);
+            save();
+            render();
+            renderCategoryManageList();
+          };
+          irpLabel.appendChild(irpSelect);
+
           const subUpBtn = document.createElement('button');
           subUpBtn.type = 'button';
           subUpBtn.className = 'btn btn-secondary btn-sm category-manage-btn-move';
@@ -810,6 +840,7 @@
 
           subHeaderRight.appendChild(randomLabel);
           subHeaderRight.appendChild(coreLabel);
+          subHeaderRight.appendChild(irpLabel);
           subButtonRow.appendChild(subUpBtn);
           subButtonRow.appendChild(subDownBtn);
           subButtonRow.appendChild(subDescriptionBtn);

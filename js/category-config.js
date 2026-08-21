@@ -108,6 +108,36 @@
     return !!getSubCategoryConfig(mainCategory, subCategory).isCore;
   }
 
+  function getSubCategoryLinkedComposedId(mainCategory, subCategory) {
+    return String(getSubCategoryConfig(mainCategory, subCategory).linkedComposedId || '').trim();
+  }
+
+  function setSubCategoryLinkedComposedId(mainCategory, subCategory, composedId) {
+    if (!mainCategory || !subCategory) return;
+    const mainConfig = ensureMainCategoryConfig(mainCategory);
+    mainConfig.subSettings[subCategory] = {
+      ...(mainConfig.subSettings[subCategory] || {}),
+      linkedComposedId: String(composedId || '').trim(),
+    };
+  }
+
+  // IRP(이미지 레퍼런스 프롬프트): 중분류에 연결된 커스텀 조합 카드의 완성 프롬프트를 클립보드로 복사하고 최종 프롬프트 산출란에도 반영한다.
+  function copyLinkedIrpPrompt(mainCategory, subCategory) {
+    const composedId = getSubCategoryLinkedComposedId(mainCategory, subCategory);
+    const composed = composedPrompts.find(item => item.id === composedId);
+    const text = String(composed?.content || '').trim();
+    if (!text) {
+      showToast('연결된 IRP가 없습니다');
+      return;
+    }
+    customOutputText = text;
+    if (isOutputEditing) setOutputEditMode(false);
+    updateOutput();
+    copyPromptSilently(text).then(ok => {
+      if (ok) showToast('IRP가 복사되었습니다!');
+    });
+  }
+
   function findCoreSubCategorySelection() {
     const mainCategories = getMainCategories();
     for (const mainCategory of mainCategories) {
