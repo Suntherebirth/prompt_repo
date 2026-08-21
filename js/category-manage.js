@@ -433,7 +433,7 @@
 
     const removedImageIds = composedPrompts
       .filter(item => item.mainCategory === mainCategory)
-      .flatMap(item => [item.imageId, item.portraitImageId])
+      .flatMap(item => [item.imageId, item.portraitImageId, item.beforeImageId, item.beforePortraitImageId])
       .filter(Boolean);
 
     composedPrompts = composedPrompts.filter(item => item.mainCategory !== mainCategory);
@@ -493,7 +493,7 @@
 
     const removedImageIds = composedPrompts
       .filter(item => item.mainCategory === mainCategory && item.subCategory === subCategory)
-      .flatMap(item => [item.imageId, item.portraitImageId])
+      .flatMap(item => [item.imageId, item.portraitImageId, item.beforeImageId, item.beforePortraitImageId])
       .filter(Boolean);
 
     composedPrompts = composedPrompts.filter(item => !(item.mainCategory === mainCategory && item.subCategory === subCategory));

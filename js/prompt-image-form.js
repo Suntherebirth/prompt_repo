@@ -10,12 +10,25 @@
     return orientation === 'portrait' ? 'landscape' : 'portrait';
   }
 
+  function normalizeImageEditStage(value) {
+    return value === 'before' ? 'before' : 'after';
+  }
+
+  function getImageEditStageLabel(stage) {
+    return stage === 'before' ? '편집 전' : '편집 후';
+  }
+
+  function isComposedImageEditOnlyModalActive() {
+    const mainCategory = document.getElementById('combo-main-category')?.value?.trim() || '';
+    return !!mainCategory && !!getComposedMainCategoryConfig(mainCategory).editOnly;
+  }
+
   function getPendingPromptImage(orientation = promptImageEditOrientation) {
     return pendingPromptImages?.[normalizeImageOrientation(orientation)] || null;
   }
 
-  function getPendingComposedImage(orientation = composedImageEditOrientation) {
-    return pendingComposedImages?.[normalizeImageOrientation(orientation)] || null;
+  function getPendingComposedImage(orientation = composedImageEditOrientation, stage = composedImageEditStage) {
+    return pendingComposedImages?.[normalizeImageOrientation(orientation)]?.[normalizeImageEditStage(stage)] || null;
   }
 
   function renderPromptImageOrientationTabs() {
@@ -59,6 +72,34 @@
   function setComposedImageEditOrientation(orientation) {
     composedImageEditOrientation = normalizeImageOrientation(orientation);
     renderComposedImageOrientationTabs();
+    renderPendingComposedImagePreview();
+  }
+
+  function renderComposedImageStageTabs() {
+    const wrap = document.getElementById('combo-image-stage-tabs');
+    const afterBtn = document.getElementById('combo-image-tab-after');
+    const beforeBtn = document.getElementById('combo-image-tab-before');
+    const isEditOnly = isComposedImageEditOnlyModalActive();
+    if (wrap) wrap.hidden = !isEditOnly;
+    if (!isEditOnly && composedImageEditStage !== 'after') {
+      composedImageEditStage = 'after';
+    }
+    const current = normalizeImageEditStage(composedImageEditStage);
+    if (afterBtn) {
+      const isActive = current === 'after';
+      afterBtn.classList.toggle('active', isActive);
+      afterBtn.setAttribute('aria-pressed', isActive ? 'true' : 'false');
+    }
+    if (beforeBtn) {
+      const isActive = current === 'before';
+      beforeBtn.classList.toggle('active', isActive);
+      beforeBtn.setAttribute('aria-pressed', isActive ? 'true' : 'false');
+    }
+  }
+
+  function setComposedImageEditStage(stage) {
+    composedImageEditStage = normalizeImageEditStage(stage);
+    renderComposedImageStageTabs();
     renderPendingComposedImagePreview();
   }
 
@@ -142,60 +183,71 @@
     const meta = document.getElementById('combo-image-meta');
     if (!preview || !nameInput || !meta) return;
 
+    renderComposedImageStageTabs();
+
     const mainCategory = document.getElementById('combo-main-category')?.value?.trim() || '';
     const subCategory = document.getElementById('combo-sub-category')?.value?.trim() || '';
     const content = getComposedOutputText();
-    const imageName = buildComposedImageName(mainCategory, subCategory, content);
+    const stage = normalizeImageEditStage(composedImageEditStage);
+    const stageLabel = getImageEditStageLabel(stage);
+    const isEditOnly = isComposedImageEditOnlyModalActive();
+    const baseImageName = buildComposedImageName(mainCategory, subCategory, content);
+    const imageName = isEditOnly ? `${baseImageName} - ${stageLabel}` : baseImageName;
     nameInput.value = imageName;
 
     const orientation = normalizeImageOrientation(composedImageEditOrientation);
     const orientationLabel = getImageOrientationLabel(orientation);
-    const otherImage = getPendingComposedImage(getOtherImageOrientation(orientation));
-    const pendingComposedImage = getPendingComposedImage(orientation);
+    const otherImage = getPendingComposedImage(getOtherImageOrientation(orientation), stage);
+    const pendingComposedImage = getPendingComposedImage(orientation, stage);
     preview.classList.toggle('orientation-portrait', orientation === 'portrait');
     preview.style.setProperty('--preview-aspect-ratio', orientation === 'portrait' ? '3 / 4' : '4 / 3');
     renderComposedImageOrientationTabs();
 
+    const stagePrefix = isEditOnly ? `${stageLabel} ` : '';
     if (pendingComposedImage?.dataUrl) {
       preview.innerHTML = `<img src="${pendingComposedImage.dataUrl}" alt="${esc(imageName)}" /><button class="prompt-image-remove-btn" type="button" onclick="removePendingComposedImage()" title="이 방향 이미지 삭제" aria-label="이 방향 이미지 삭제">삭제</button>`;
       const fileText = pendingComposedImage.fileName
         ? `${imageName} · ${pendingComposedImage.fileName}`
         : imageName;
-      meta.textContent = `${orientationLabel} 이미지 편집 중 · ${fileText}`;
+      meta.textContent = `${stagePrefix}${orientationLabel} 이미지 편집 중 · ${fileText}`;
       return;
     }
 
     preview.innerHTML = '<span class="empty-state" style="padding:0">선택한 설명 이미지가 여기에 표시됩니다.</span>';
-    meta.textContent = `${orientationLabel} 이미지가 비어 있습니다. ${otherImage?.dataUrl ? '다른 방향 이미지는 유지됩니다. ' : ''}${imageName} 이름으로 저장됩니다.`;
+    meta.textContent = `${stagePrefix}${orientationLabel} 이미지가 비어 있습니다. ${otherImage?.dataUrl ? '다른 방향 이미지는 유지됩니다. ' : ''}${imageName} 이름으로 저장됩니다.`;
   }
 
   function setPendingComposedImage(file, dataUrl) {
     const orientation = normalizeImageOrientation(composedImageEditOrientation);
+    const stage = normalizeImageEditStage(composedImageEditStage);
     if (!file || !dataUrl) {
-      pendingComposedImages[orientation] = null;
+      pendingComposedImages[orientation][stage] = null;
       renderPendingComposedImagePreview();
       return;
     }
 
-    pendingComposedImages[orientation] = {
+    const isEditOnly = isComposedImageEditOnlyModalActive();
+    const baseImageName = buildComposedImageName(
+      document.getElementById('combo-main-category')?.value?.trim(),
+      document.getElementById('combo-sub-category')?.value?.trim(),
+      getComposedOutputText(),
+    );
+    pendingComposedImages[orientation][stage] = {
       dataUrl,
       fileName: file.name || '',
       mimeType: file.type || '',
       file,
-      imageName: buildComposedImageName(
-        document.getElementById('combo-main-category')?.value?.trim(),
-        document.getElementById('combo-sub-category')?.value?.trim(),
-        getComposedOutputText(),
-      ),
+      imageName: isEditOnly ? `${baseImageName} - ${getImageEditStageLabel(stage)}` : baseImageName,
     };
-    removedComposedImages[orientation] = false;
+    removedComposedImages[orientation][stage] = false;
     renderPendingComposedImagePreview();
   }
 
   function removePendingComposedImage() {
     const orientation = normalizeImageOrientation(composedImageEditOrientation);
-    pendingComposedImages[orientation] = null;
-    removedComposedImages[orientation] = true;
+    const stage = normalizeImageEditStage(composedImageEditStage);
+    pendingComposedImages[orientation][stage] = null;
+    removedComposedImages[orientation][stage] = true;
     const fileInput = document.getElementById('combo-image-file');
     if (fileInput) fileInput.value = '';
     renderPendingComposedImagePreview();
@@ -215,10 +267,10 @@
 
   function clearPendingComposedImage(options = {}) {
     if (options.all) {
-      pendingComposedImages = { landscape: null, portrait: null };
-      removedComposedImages = { landscape: false, portrait: false };
+      pendingComposedImages = { landscape: { after: null, before: null }, portrait: { after: null, before: null } };
+      removedComposedImages = { landscape: { after: false, before: false }, portrait: { after: false, before: false } };
     } else {
-      pendingComposedImages[normalizeImageOrientation(composedImageEditOrientation)] = null;
+      pendingComposedImages[normalizeImageOrientation(composedImageEditOrientation)][normalizeImageEditStage(composedImageEditStage)] = null;
     }
     const fileInput = document.getElementById('combo-image-file');
     if (fileInput) fileInput.value = '';

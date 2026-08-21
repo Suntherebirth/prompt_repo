@@ -112,12 +112,25 @@
     };
   }
 
-  function normalizeComposedPrompt(item) {
+  function normalizeComposedPrompt(item, composedSourceById = null) {
     if (!item) return null;
     const mainCategory = (item.mainCategory ?? item.category ?? '').trim() || '커스텀 조합';
     const subCategory = (item.subCategory ?? item.name ?? '').trim() || '이름없음';
     let items = Array.isArray(item.items)
-      ? item.items.map(normalizePrompt).filter(Boolean)
+      ? item.items.map((entry) => {
+        if (typeof entry === 'string' || typeof entry === 'number') {
+          const referencedComposed = composedSourceById?.get(String(entry))
+            || composedPrompts.find(composed => String(composed.id) === String(entry));
+          if (!referencedComposed) return null;
+          return {
+            id: referencedComposed.id,
+            mainCategory: referencedComposed.mainCategory,
+            subCategory: referencedComposed.subCategory,
+            content: String(referencedComposed.content || '').trim() || getComposedItemText(referencedComposed),
+          };
+        }
+        return normalizePrompt(entry);
+      }).filter(Boolean)
       : [];
 
     // 이전 포맷({category, content}) 호환: 단일 문자열을 1개 프롬프트 아이템으로 변환
@@ -147,6 +160,13 @@
       // 레거시 데이터 호환용. 새 저장에서는 사용하지 않는다.
       portraitImageData: (item.portraitImageData ?? '').trim(),
       portraitImageName: (item.portraitImageName ?? '').trim(),
+      // 편집용(editOnly) 대분류에서 사용하는 편집 전 이미지. 일반 조합에서는 비어 있다.
+      beforeImageId: (item.beforeImageId ?? '').trim(),
+      beforeImageData: (item.beforeImageData ?? '').trim(),
+      beforeImageName: (item.beforeImageName ?? '').trim(),
+      beforePortraitImageId: (item.beforePortraitImageId ?? '').trim(),
+      beforePortraitImageData: (item.beforePortraitImageData ?? '').trim(),
+      beforePortraitImageName: (item.beforePortraitImageName ?? '').trim(),
     };
   }
 

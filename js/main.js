@@ -35,7 +35,7 @@
       const dataUrl = await readFileAsDataUrl(file);
       setPendingComposedImage(file, dataUrl);
     } catch {
-      pendingComposedImages[normalizeImageOrientation(composedImageEditOrientation)] = null;
+      pendingComposedImages[normalizeImageOrientation(composedImageEditOrientation)][normalizeImageEditStage(composedImageEditStage)] = null;
       renderPendingComposedImagePreview();
       showToast('이미지를 읽지 못했습니다');
     }
@@ -225,6 +225,18 @@
       const targetIndex = Number(customComboTile.dataset.flowIndex ?? 0);
       openImageViewer({ gallery, index: targetIndex });
       return;
+    }
+    const editImageShell = e.target.closest('.preview-image-shell');
+    if (editImageShell && getActiveComposedPreviewItem() && getComposedMainCategoryConfig(getActiveComposedPreviewItem().mainCategory).editOnly) {
+      const composed = getActiveComposedPreviewItem();
+      const currentEditStage = getComposedPreviewEditStage();
+      const orientation = composedPreviewOrientation;
+      if (getComposedPreviewImageSource(composed, currentEditStage, orientation)
+        && getComposedPreviewImageSource(composed, currentEditStage === 'before' ? 'after' : 'before', orientation)) {
+        e.stopPropagation();
+        setComposedPreviewEditStage(currentEditStage === 'before' ? 'after' : 'before');
+        return;
+      }
     }
     if (!e.target.closest('img')) return;
     openImageViewer();

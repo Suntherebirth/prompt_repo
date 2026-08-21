@@ -627,9 +627,14 @@
     editingComposedImageData = '';
     editingComposedPortraitImageId = '';
     editingComposedPortraitImageData = '';
-    removedComposedImages = { landscape: false, portrait: false };
+    editingComposedBeforeImageId = '';
+    editingComposedBeforeImageData = '';
+    editingComposedBeforePortraitImageId = '';
+    editingComposedBeforePortraitImageData = '';
+    removedComposedImages = { landscape: { after: false, before: false }, portrait: { after: false, before: false } };
     renderSaveComposedModalMode();
     renderComposedCategorySelectors();
+    setComposedImageEditStage('after');
     setComposedImageEditOrientation('landscape');
     clearPendingComposedImage({ all: true });
     const modal = document.getElementById('save-composed-modal');
@@ -850,6 +855,10 @@
     editingComposedImageData = '';
     editingComposedPortraitImageId = '';
     editingComposedPortraitImageData = '';
+    editingComposedBeforeImageId = '';
+    editingComposedBeforeImageData = '';
+    editingComposedBeforePortraitImageId = '';
+    editingComposedBeforePortraitImageData = '';
     clearPendingComposedImage({ all: true });
     renderSaveComposedModalMode();
   }
@@ -906,35 +915,67 @@
     editingComposedImageData = target.imageData || '';
     editingComposedPortraitImageId = target.portraitImageId || '';
     editingComposedPortraitImageData = target.portraitImageData || '';
+    editingComposedBeforeImageId = target.beforeImageId || '';
+    editingComposedBeforeImageData = target.beforeImageData || '';
+    editingComposedBeforePortraitImageId = target.beforePortraitImageId || '';
+    editingComposedBeforePortraitImageData = target.beforePortraitImageData || '';
+    removedComposedImages = { landscape: { after: false, before: false }, portrait: { after: false, before: false } };
 
-    const [landscapeUrl, portraitUrl] = await Promise.all([
+    const [landscapeUrl, portraitUrl, beforeLandscapeUrl, beforePortraitUrl] = await Promise.all([
       (!editingComposedImageData && target.imageId)
         ? getPromptImageObjectUrl(target.imageId)
         : Promise.resolve(''),
       (!editingComposedPortraitImageData && target.portraitImageId)
         ? getPromptImageObjectUrl(target.portraitImageId)
         : Promise.resolve(''),
+      (!editingComposedBeforeImageData && target.beforeImageId)
+        ? getPromptImageObjectUrl(target.beforeImageId)
+        : Promise.resolve(''),
+      (!editingComposedBeforePortraitImageData && target.beforePortraitImageId)
+        ? getPromptImageObjectUrl(target.beforePortraitImageId)
+        : Promise.resolve(''),
     ]);
 
     const landscapeDataUrl = editingComposedImageData || landscapeUrl || '';
     const portraitDataUrl = editingComposedPortraitImageData || portraitUrl || '';
+    const beforeLandscapeDataUrl = editingComposedBeforeImageData || beforeLandscapeUrl || '';
+    const beforePortraitDataUrl = editingComposedBeforePortraitImageData || beforePortraitUrl || '';
 
     pendingComposedImages = {
-      landscape: landscapeDataUrl ? {
-        dataUrl: landscapeDataUrl,
-        fileName: target.imageName || '',
-        mimeType: '',
-        file: null,
-        imageName: target.imageName || buildComposedImageName(target.mainCategory, target.subCategory, getComposedItemText(target)),
-      } : null,
-      portrait: portraitDataUrl ? {
-        dataUrl: portraitDataUrl,
-        fileName: target.portraitImageName || '',
-        mimeType: '',
-        file: null,
-        imageName: target.portraitImageName || buildComposedImageName(target.mainCategory, target.subCategory, getComposedItemText(target)),
-      } : null,
+      landscape: {
+        after: landscapeDataUrl ? {
+          dataUrl: landscapeDataUrl,
+          fileName: target.imageName || '',
+          mimeType: '',
+          file: null,
+          imageName: target.imageName || buildComposedImageName(target.mainCategory, target.subCategory, getComposedItemText(target)),
+        } : null,
+        before: beforeLandscapeDataUrl ? {
+          dataUrl: beforeLandscapeDataUrl,
+          fileName: target.beforeImageName || '',
+          mimeType: '',
+          file: null,
+          imageName: target.beforeImageName || buildComposedImageName(target.mainCategory, target.subCategory, getComposedItemText(target)),
+        } : null,
+      },
+      portrait: {
+        after: portraitDataUrl ? {
+          dataUrl: portraitDataUrl,
+          fileName: target.portraitImageName || '',
+          mimeType: '',
+          file: null,
+          imageName: target.portraitImageName || buildComposedImageName(target.mainCategory, target.subCategory, getComposedItemText(target)),
+        } : null,
+        before: beforePortraitDataUrl ? {
+          dataUrl: beforePortraitDataUrl,
+          fileName: target.beforePortraitImageName || '',
+          mimeType: '',
+          file: null,
+          imageName: target.beforePortraitImageName || buildComposedImageName(target.mainCategory, target.subCategory, getComposedItemText(target)),
+        } : null,
+      },
     };
+    setComposedImageEditStage('after');
     setComposedImageEditOrientation('landscape');
     renderPendingComposedImagePreview();
 

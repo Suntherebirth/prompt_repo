@@ -209,6 +209,48 @@
     return composedPrompts.find(item => item.id === activeComposedPreviewId) || null;
   }
 
+  function getComposedPreviewImageItem(composed, stage) {
+    if (!composed) return null;
+    if (stage !== 'before') return composed;
+    return {
+      ...composed,
+      imageId: composed.beforeImageId,
+      imageData: composed.beforeImageData,
+      imageName: composed.beforeImageName,
+      portraitImageId: composed.beforePortraitImageId,
+      portraitImageData: composed.beforePortraitImageData,
+      portraitImageName: composed.beforePortraitImageName,
+    };
+  }
+
+  function getComposedPreviewImageSource(composed, stage, orientation) {
+    const image = getComposedPreviewImageItem(composed, stage);
+    return promptHasOrientationImage(image, orientation) ? getPromptImageSource(image, orientation) : '';
+  }
+
+  function hasComposedPreviewImage(composed, stage, orientation) {
+    return promptHasOrientationImage(getComposedPreviewImageItem(composed, stage), orientation);
+  }
+
+  function setComposedPreviewEditStage(stage) {
+    const normalized = stage === 'after' ? 'after' : 'before';
+    const orientation = composedPreviewOrientation === 'landscape' ? 'landscape' : 'portrait';
+    if (composedPreviewEditStage[orientation] === normalized) return;
+    composedPreviewEditStage[orientation] = normalized;
+    shouldAnimateComposedEditStageToggle = true;
+    renderComposedDescriptionPreview();
+  }
+
+  function getComposedPreviewEditStage() {
+    const orientation = composedPreviewOrientation === 'landscape' ? 'landscape' : 'portrait';
+    const composed = getActiveComposedPreviewItem();
+    const stage = composedPreviewEditStage[orientation];
+    if (!composed) return stage;
+    return hasComposedPreviewImage(composed, stage, orientation)
+      ? stage
+      : (stage === 'before' ? 'after' : 'before');
+  }
+
   function renderComposedDescriptionPreview() {
     const preview = document.getElementById('composed-description-preview');
     if (!preview) return;
@@ -316,22 +358,42 @@
       composedPreviewOrientation = 'portrait';
       composedPreviewOrientationItemId = composedId;
     }
-    const canToggleComposedOrientation = !!composed && promptHasOrientationImage(composed, 'portrait') && promptHasOrientationImage(composed, 'landscape');
+    if (composedPreviewEditStageItemId !== composedId) {
+      composedPreviewEditStage = { portrait: 'before', landscape: 'before' };
+      composedPreviewEditStageItemId = composedId;
+    }
+    const isEditOnlyComposed = !!composed && !!getComposedMainCategoryConfig(composed.mainCategory).editOnly;
+    const beforeImage = getComposedPreviewImageItem(composed, 'before');
+    const afterImage = getComposedPreviewImageItem(composed, 'after');
+    const canToggleComposedOrientation = !!composed
+      && ['portrait', 'landscape'].every(orientation => (
+        hasComposedPreviewImage(composed, 'before', orientation)
+        || hasComposedPreviewImage(composed, 'after', orientation)
+      ));
     const composedOrientation = canToggleComposedOrientation ? composedPreviewOrientation : 'portrait';
-    const imageSrc = getPromptImageSource(composed, composedOrientation);
-    queuePromptImageLoad(composed, composedOrientation);
-    if (canToggleComposedOrientation) queuePromptImageLoad(composed, composedOrientation === 'portrait' ? 'landscape' : 'portrait');
+    const currentEditStage = isEditOnlyComposed ? getComposedPreviewEditStage() : 'after';
+    const currentImage = currentEditStage === 'before' ? beforeImage : afterImage;
+    const previousImage = currentEditStage === 'before' ? afterImage : beforeImage;
+    const imageSrc = getComposedPreviewImageSource(composed, currentEditStage, composedOrientation);
+    const previousImageSrc = getComposedPreviewImageSource(composed, currentEditStage === 'before' ? 'after' : 'before', composedOrientation);
+    const canToggleComposedEditStage = isEditOnlyComposed && !!imageSrc && !!previousImageSrc;
+    queuePromptImageLoad(currentImage, composedOrientation);
+    if (isEditOnlyComposed && hasComposedPreviewImage(composed, currentEditStage === 'before' ? 'after' : 'before', composedOrientation)) {
+      queuePromptImageLoad(previousImage, composedOrientation);
+    }
+    if (canToggleComposedOrientation) queuePromptImageLoad(currentImage, composedOrientation === 'portrait' ? 'landscape' : 'portrait');
     if (imageSrc) {
-      const altText = composed.imageName || getPromptDisplayName(composed.mainCategory, composed.subCategory);
-      const nextImageKey = `${composed.id || ''}:${composedOrientation}:${imageSrc}`;
+      const altText = currentImage.imageName || getPromptDisplayName(composed.mainCategory, composed.subCategory);
+      const nextImageKey = `${composed.id || ''}:${composedOrientation}:${currentEditStage}:${imageSrc}`;
       const shouldAnimateTransition = nextImageKey !== lastRenderedComposedPreviewImageKey;
+      const shouldCrossfadeEditStage = canToggleComposedEditStage && shouldAnimateComposedEditStageToggle;
       const orientationDots = canToggleComposedOrientation
         ? `<div class="preview-orientation-dots is-combo" aria-hidden="true"><span class="preview-orientation-dot${composedOrientation === 'portrait' ? ' active' : ''}"></span><span class="preview-orientation-dot${composedOrientation === 'landscape' ? ' active' : ''}"></span></div>`
         : '';
       preview.classList.add('has-image');
       preview.classList.remove('image-switch-feedback');
-      preview.title = '터치하면 이미지를 크게 봅니다';
-      preview.innerHTML = `<div class="preview-image-shell">${orientationDots}<img class="${shouldAnimateTransition ? 'preview-image-enter' : ''}" src="${imageSrc}" alt="${esc(altText)}" /></div>`;
+      preview.title = canToggleComposedEditStage ? '터치하면 편집 전후 이미지를 전환합니다' : '터치하면 이미지를 크게 봅니다';
+      preview.innerHTML = `<div class="preview-image-shell${shouldCrossfadeEditStage ? ' is-edit-image-crossfade' : ''}">${orientationDots}${shouldCrossfadeEditStage ? `<img class="preview-edit-image-out" src="${previousImageSrc}" alt="" aria-hidden="true" />` : ''}<img class="${shouldAnimateTransition && !shouldCrossfadeEditStage ? 'preview-image-enter' : ''}${shouldCrossfadeEditStage ? ' preview-edit-image-in' : ''}" src="${imageSrc}" alt="${esc(altText)}" /></div>`;
       if (canToggleComposedOrientation) {
         bindPreviewOrientationSwipe(preview.querySelector('.preview-image-shell'), {
           canSwipeForward: () => composedPreviewOrientation === 'portrait',
@@ -345,6 +407,7 @@
         preview.classList.add('image-switch-feedback');
       }
       lastRenderedComposedPreviewImageKey = nextImageKey;
+      shouldAnimateComposedEditStageToggle = false;
       return;
     }
 
@@ -354,6 +417,7 @@
     preview.title = '';
     preview.innerHTML = '<span class="empty-state">선택한 커스텀 조합의 설명 이미지가 표시됩니다.</span>';
     lastRenderedComposedPreviewImageKey = '';
+    shouldAnimateComposedEditStageToggle = false;
   }
 
   function bindPreviewOrientationSwipe(shell, { canSwipeForward, canSwipeBack, onSwipeForward, onSwipeBack }) {
@@ -435,6 +499,20 @@
   function getActiveComposedPreviewImage() {
     const composed = getActiveComposedPreviewItem();
     if (!composed) return [];
+
+    const isEditOnlyComposed = !!getComposedMainCategoryConfig(composed.mainCategory).editOnly;
+    if (isEditOnlyComposed) {
+      const orientation = composedPreviewOrientation;
+      const stage = getComposedPreviewEditStage();
+      const image = getComposedPreviewImageItem(composed, stage);
+      const src = getComposedPreviewImageSource(composed, stage, orientation);
+      if (!src) return [];
+      return [{
+        src,
+        ...getPromptActiveImageMeta(image, orientation),
+        alt: image.imageName || getPromptDisplayName(composed.mainCategory, composed.subCategory),
+      }];
+    }
 
     queuePromptImageLoad(composed, 'portrait');
     queuePromptImageLoad(composed, 'landscape');

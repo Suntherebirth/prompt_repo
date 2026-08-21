@@ -491,7 +491,12 @@
     if (!confirm('정말 삭제하시겠습니까?')) return;
     clearOutputOverride();
     const removed = composedPrompts.find(p => p.id === id);
-    const removedImageId = removed?.imageId || '';
+    const removedImageIds = [
+      removed?.imageId || '',
+      removed?.portraitImageId || '',
+      removed?.beforeImageId || '',
+      removed?.beforePortraitImageId || '',
+    ].filter(Boolean);
     composedPrompts = composedPrompts.filter(p => p.id !== id);
     if (activeComposedPreviewId === id) {
       activeComposedPreviewId = null;
@@ -500,8 +505,8 @@
       clearCoreRandomVisualState();
     }
     selected = selected.filter(s => !(s.id === id && s.source === 'composed'));
-    if (removedImageId) {
-      await deleteImageIfOrphaned(removedImageId);
+    for (const imageId of removedImageIds) {
+      await deleteImageIfOrphaned(imageId);
     }
     save();
     render();

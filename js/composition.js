@@ -461,13 +461,13 @@
     const previousComposed = isEditMode ? composedPrompts.find(item => item.id === editingComposedPromptId) : null;
     const previousImageId = previousComposed?.imageId || editingComposedImageId || '';
     const previousPortraitImageId = previousComposed?.portraitImageId || editingComposedPortraitImageId || '';
-    let nextImageId = previousImageId;
-    let nextPortraitImageId = previousPortraitImageId;
+    const previousBeforeImageId = previousComposed?.beforeImageId || editingComposedBeforeImageId || '';
+    const previousBeforePortraitImageId = previousComposed?.beforePortraitImageId || editingComposedBeforePortraitImageId || '';
 
-    const pendingLandscapeImage = getPendingComposedImage('landscape');
-    const pendingPortraitImage = getPendingComposedImage('portrait');
-    if (isEditMode && removedComposedImages.landscape) nextImageId = '';
-    if (isEditMode && removedComposedImages.portrait) nextPortraitImageId = '';
+    const pendingLandscapeImage = getPendingComposedImage('landscape', 'after');
+    const pendingPortraitImage = getPendingComposedImage('portrait', 'after');
+    const pendingBeforeLandscapeImage = getPendingComposedImage('landscape', 'before');
+    const pendingBeforePortraitImage = getPendingComposedImage('portrait', 'before');
 
     if (!mainCategory) {
       showToast('커스텀 조합 대분류를 입력하세요');
@@ -482,45 +482,50 @@
       return;
     }
 
-    try {
-      if (pendingLandscapeImage?.file instanceof File) {
-        nextImageId = await saveImageBlobRecord({
-          blob: pendingLandscapeImage.file,
-          mimeType: pendingLandscapeImage.mimeType || pendingLandscapeImage.file.type || '',
-          fileName: pendingLandscapeImage.fileName || pendingLandscapeImage.file.name || '',
+    // 방향/편집 전후 4개의 이미지 슬롯 모두에 대해 동일한 저장 로직을 재사용한다.
+    async function resolveComposedImageId(pendingImage, previousId, isRemoved) {
+      let nextId = isRemoved ? '' : previousId;
+      if (pendingImage?.file instanceof File) {
+        nextId = await saveImageBlobRecord({
+          blob: pendingImage.file,
+          mimeType: pendingImage.mimeType || pendingImage.file.type || '',
+          fileName: pendingImage.fileName || pendingImage.file.name || '',
         });
-      } else if (!previousImageId && pendingLandscapeImage?.dataUrl?.startsWith('data:')) {
-        const blob = dataUrlToBlob(pendingLandscapeImage.dataUrl);
-        nextImageId = await saveImageBlobRecord({
+      } else if (!previousId && pendingImage?.dataUrl?.startsWith('data:')) {
+        const blob = dataUrlToBlob(pendingImage.dataUrl);
+        nextId = await saveImageBlobRecord({
           blob,
-          mimeType: pendingLandscapeImage.mimeType || blob.type || '',
-          fileName: pendingLandscapeImage.fileName || '',
+          mimeType: pendingImage.mimeType || blob.type || '',
+          fileName: pendingImage.fileName || '',
         });
       }
+      return nextId;
+    }
 
-      if (pendingPortraitImage?.file instanceof File) {
-        nextPortraitImageId = await saveImageBlobRecord({
-          blob: pendingPortraitImage.file,
-          mimeType: pendingPortraitImage.mimeType || pendingPortraitImage.file.type || '',
-          fileName: pendingPortraitImage.fileName || pendingPortraitImage.file.name || '',
-        });
-      } else if (!previousPortraitImageId && pendingPortraitImage?.dataUrl?.startsWith('data:')) {
-        const blob = dataUrlToBlob(pendingPortraitImage.dataUrl);
-        nextPortraitImageId = await saveImageBlobRecord({
-          blob,
-          mimeType: pendingPortraitImage.mimeType || blob.type || '',
-          fileName: pendingPortraitImage.fileName || '',
-        });
-      }
+    let nextImageId = previousImageId;
+    let nextPortraitImageId = previousPortraitImageId;
+    let nextBeforeImageId = previousBeforeImageId;
+    let nextBeforePortraitImageId = previousBeforePortraitImageId;
+
+    try {
+      nextImageId = await resolveComposedImageId(pendingLandscapeImage, previousImageId, isEditMode && removedComposedImages.landscape.after);
+      nextPortraitImageId = await resolveComposedImageId(pendingPortraitImage, previousPortraitImageId, isEditMode && removedComposedImages.portrait.after);
+      nextBeforeImageId = await resolveComposedImageId(pendingBeforeLandscapeImage, previousBeforeImageId, isEditMode && removedComposedImages.landscape.before);
+      nextBeforePortraitImageId = await resolveComposedImageId(pendingBeforePortraitImage, previousBeforePortraitImageId, isEditMode && removedComposedImages.portrait.before);
     } catch {
       showToast('이미지 저장 중 오류가 발생했습니다');
       return;
     }
 
+    const composedContent = items.map(p => p.content).join(', ');
     const imageName = pendingLandscapeImage?.imageName
-      || buildComposedImageName(mainCategory, subCategory, items.map(p => p.content).join(', '));
+      || buildComposedImageName(mainCategory, subCategory, composedContent);
     const portraitImageName = pendingPortraitImage?.imageName
-      || buildComposedImageName(mainCategory, subCategory, items.map(p => p.content).join(', '));
+      || buildComposedImageName(mainCategory, subCategory, composedContent);
+    const beforeImageName = pendingBeforeLandscapeImage?.imageName
+      || buildComposedImageName(mainCategory, subCategory, composedContent);
+    const beforePortraitImageName = pendingBeforePortraitImage?.imageName
+      || buildComposedImageName(mainCategory, subCategory, composedContent);
 
     const nextComposed = {
       id: editingComposedPromptId || uid(),
@@ -528,13 +533,19 @@
       subCategory,
       category: mainCategory,
       items,
-      content: items.map(p => p.content).join(', '),
+      content: composedContent,
       imageId: nextImageId,
       imageData: nextImageId ? '' : (pendingLandscapeImage?.dataUrl || editingComposedImageData || ''),
       imageName,
       portraitImageId: nextPortraitImageId,
       portraitImageData: nextPortraitImageId ? '' : (pendingPortraitImage?.dataUrl || editingComposedPortraitImageData || ''),
       portraitImageName,
+      beforeImageId: nextBeforeImageId,
+      beforeImageData: nextBeforeImageId ? '' : (pendingBeforeLandscapeImage?.dataUrl || editingComposedBeforeImageData || ''),
+      beforeImageName,
+      beforePortraitImageId: nextBeforePortraitImageId,
+      beforePortraitImageData: nextBeforePortraitImageId ? '' : (pendingBeforePortraitImage?.dataUrl || editingComposedBeforePortraitImageData || ''),
+      beforePortraitImageName,
     };
 
     if (isEditMode) {
@@ -551,6 +562,8 @@
       const removedImageIds = [];
       if (previousImageId && previousImageId !== nextImageId) removedImageIds.push(previousImageId);
       if (previousPortraitImageId && previousPortraitImageId !== nextPortraitImageId) removedImageIds.push(previousPortraitImageId);
+      if (previousBeforeImageId && previousBeforeImageId !== nextBeforeImageId) removedImageIds.push(previousBeforeImageId);
+      if (previousBeforePortraitImageId && previousBeforePortraitImageId !== nextBeforePortraitImageId) removedImageIds.push(previousBeforePortraitImageId);
       for (const imageId of uniqueInOrder(removedImageIds)) {
         await deleteImageIfOrphaned(imageId);
       }
@@ -561,5 +574,6 @@
     closeSaveComposedModal();
     showToast(isEditMode ? '조합 프롬프트가 수정되었습니다' : '조합 프롬프트가 저장되었습니다');
   }
+
 
   // ── ZIP Backup (metadata + images) ──

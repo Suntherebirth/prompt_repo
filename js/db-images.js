@@ -179,6 +179,8 @@
     composedPrompts.forEach((composed) => {
       if (composed?.imageId) ids.add(composed.imageId);
       if (composed?.portraitImageId) ids.add(composed.portraitImageId);
+      if (composed?.beforeImageId) ids.add(composed.beforeImageId);
+      if (composed?.beforePortraitImageId) ids.add(composed.beforePortraitImageId);
       if (!Array.isArray(composed?.items)) return;
       composed.items.forEach((item) => {
         if (item?.imageId) ids.add(item.imageId);

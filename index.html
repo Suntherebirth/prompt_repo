@@ -225,6 +225,10 @@
             <button id="combo-image-tab-landscape" class="image-orientation-tab" type="button" onclick="setComposedImageEditOrientation('landscape')">가로 이미지</button>
             <button id="combo-image-tab-portrait" class="image-orientation-tab active" type="button" onclick="setComposedImageEditOrientation('portrait')">세로 이미지</button>
           </div>
+          <div class="image-orientation-tabs" id="combo-image-stage-tabs" role="tablist" aria-label="커스텀 조합 편집 전/후 선택" hidden>
+            <button id="combo-image-tab-after" class="image-orientation-tab active" type="button" onclick="setComposedImageEditStage('after')">편집 후</button>
+            <button id="combo-image-tab-before" class="image-orientation-tab" type="button" onclick="setComposedImageEditStage('before')">편집 전</button>
+          </div>
           <div class="prompt-image-row">
             <input id="combo-image-file" type="file" accept="image/*" />
             <input id="combo-image-name" type="text" placeholder="자동 생성된 이미지 이름" readonly />

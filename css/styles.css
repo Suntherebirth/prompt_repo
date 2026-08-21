@@ -1088,6 +1088,22 @@
       border-radius: 8px;
     }
 
+    .prompt-description-preview .preview-image-shell.is-edit-image-crossfade img {
+      position: absolute;
+      inset: 0;
+      animation-duration: .46s;
+      animation-timing-function: cubic-bezier(0.16, 0.84, 0.44, 1);
+      animation-fill-mode: both;
+    }
+
+    .prompt-description-preview .preview-image-shell.is-edit-image-crossfade .preview-edit-image-out {
+      animation-name: previewEditImageFadeOut;
+    }
+
+    .prompt-description-preview .preview-image-shell.is-edit-image-crossfade .preview-edit-image-in {
+      animation-name: previewEditImageFadeIn;
+    }
+
     .prompt-description-preview .preview-grid-back-btn {
       position: absolute;
       top: 8px;
@@ -2537,6 +2553,32 @@
       }
     }
 
+    @keyframes previewEditImageFadeOut {
+      0% {
+        opacity: 1;
+        transform: scale(1);
+        filter: saturate(1) blur(0);
+      }
+      100% {
+        opacity: 0;
+        transform: scale(1.012);
+        filter: saturate(0.92) blur(1px);
+      }
+    }
+
+    @keyframes previewEditImageFadeIn {
+      0% {
+        opacity: 0;
+        transform: scale(1.012);
+        filter: saturate(0.92) blur(1px);
+      }
+      100% {
+        opacity: 1;
+        transform: scale(1);
+        filter: saturate(1) blur(0);
+      }
+    }
+
     @keyframes previewSwitchFeedback {
       0% {
         box-shadow: 0 0 0 0 rgba(138, 180, 255, 0);
@@ -2608,6 +2650,10 @@
     .image-orientation-tabs {
       display: flex;
       gap: 6px;
+    }
+
+    .image-orientation-tabs[hidden] {
+      display: none;
     }
 
     .image-orientation-tab {

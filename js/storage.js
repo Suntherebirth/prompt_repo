@@ -8,7 +8,14 @@
     try {
       const rawComposed = localStorage.getItem(COMPOSED_STORAGE_KEY);
       const loadedComposed = rawComposed ? JSON.parse(rawComposed) : [];
-      composedPrompts = loadedComposed.map(normalizeComposedPrompt).filter(Boolean);
+      const composedSourceById = new Map(
+        (Array.isArray(loadedComposed) ? loadedComposed : [])
+          .filter(item => item?.id)
+          .map(item => [String(item.id), item])
+      );
+      composedPrompts = (Array.isArray(loadedComposed) ? loadedComposed : [])
+        .map(item => normalizeComposedPrompt(item, composedSourceById))
+        .filter(Boolean);
     } catch { composedPrompts = []; }
 
     try {
@@ -98,6 +105,12 @@
       portraitImageId: item.portraitImageId || '',
       portraitImageData: !item.portraitImageId && item.portraitImageData ? item.portraitImageData : '',
       portraitImageName: item.portraitImageName || '',
+      beforeImageId: item.beforeImageId || '',
+      beforeImageData: !item.beforeImageId && item.beforeImageData ? item.beforeImageData : '',
+      beforeImageName: item.beforeImageName || '',
+      beforePortraitImageId: item.beforePortraitImageId || '',
+      beforePortraitImageData: !item.beforePortraitImageId && item.beforePortraitImageData ? item.beforePortraitImageData : '',
+      beforePortraitImageName: item.beforePortraitImageName || '',
     }));
 
     localStorage.setItem(STORAGE_KEY, JSON.stringify(promptPayload));

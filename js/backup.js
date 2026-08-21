@@ -59,6 +59,12 @@
         portraitImageId: item.portraitImageId || '',
         portraitImageData: !item.portraitImageId && item.portraitImageData ? item.portraitImageData : '',
         portraitImageName: item.portraitImageName || '',
+        beforeImageId: item.beforeImageId || '',
+        beforeImageData: !item.beforeImageId && item.beforeImageData ? item.beforeImageData : '',
+        beforeImageName: item.beforeImageName || '',
+        beforePortraitImageId: item.beforePortraitImageId || '',
+        beforePortraitImageData: !item.beforePortraitImageId && item.beforePortraitImageData ? item.beforePortraitImageData : '',
+        beforePortraitImageName: item.beforePortraitImageName || '',
       })),
       customCombos: customCombos.map(item => ({
         id: item.id,
@@ -90,7 +96,11 @@
 
   function applyImportedBackupData(parsed) {
     const nextPrompts = Array.isArray(parsed.prompts) ? parsed.prompts.map(normalizePrompt).filter(Boolean) : [];
-    const nextComposed = Array.isArray(parsed.composedPrompts) ? parsed.composedPrompts.map(normalizeComposedPrompt).filter(Boolean) : [];
+    const composedEntries = Array.isArray(parsed.composedPrompts) ? parsed.composedPrompts : [];
+    const composedSourceById = new Map(
+      composedEntries.filter(item => item?.id).map(item => [String(item.id), item])
+    );
+    const nextComposed = composedEntries.map(item => normalizeComposedPrompt(item, composedSourceById)).filter(Boolean);
     const nextCustomCombos = Array.isArray(parsed.customCombos)
       ? parsed.customCombos.filter(item => item && item.id).map(item => ({
         id: item.id,

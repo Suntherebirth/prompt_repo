@@ -1,6 +1,6 @@
   // ── State ──
   let prompts = [];          // [{id, mainCategory, subCategory, content, description, imageId, imageName, portraitImageId, portraitImageName}] 개별 프롬프트
-  let composedPrompts = [];  // [{id, mainCategory, subCategory, items, content}] 조합 저장 프롬프트
+  let composedPrompts = [];  // [{id, mainCategory, subCategory, items, content}] 조합 저장 프롬프트. 편집용(editOnly) 대분류는 방향별 편집 전(before*)/편집 후(image*, portraitImage*) 이미지를 각각 가질 수 있다.
   let customCombos = [];     // [{id, mainCategory, subCategory, items: [composedPromptId], comboImagePosition}]
   let selected = [];         // [{id, mainCategory, subCategory, content, description, source}]
   let activeCategoryPrompt = null;
@@ -22,8 +22,9 @@
   let tapComposeMode = PROMPT_ADD_MODE.SWIPE;
   let pendingPromptImages = { landscape: null, portrait: null };
   let removedPromptImages = { landscape: false, portrait: false };
-  let pendingComposedImages = { landscape: null, portrait: null };
-  let removedComposedImages = { landscape: false, portrait: false };
+  // 편집용 조합은 방향별로 편집 전/후 이미지를 각각 보관한다.
+  let pendingComposedImages = { landscape: { after: null, before: null }, portrait: { after: null, before: null } };
+  let removedComposedImages = { landscape: { after: false, before: false }, portrait: { after: false, before: false } };
   let pendingCustomComboImages = { landscape: null, portrait: null };
   let removedCustomComboImages = { landscape: false, portrait: false };
   let pendingCustomComboItemImages = {};
@@ -40,6 +41,10 @@
   let editingComposedImageData = '';
   let editingComposedPortraitImageId = '';
   let editingComposedPortraitImageData = '';
+  let editingComposedBeforeImageId = '';
+  let editingComposedBeforeImageData = '';
+  let editingComposedBeforePortraitImageId = '';
+  let editingComposedBeforePortraitImageData = '';
   let activePromptPreviewId = null;
   let activePromptTagFilter = null;
   let activePromptTagBrowser = false;
@@ -77,6 +82,9 @@
   let promptPreviewOrientationItemId = '';
   let composedPreviewOrientation = 'portrait';
   let composedPreviewOrientationItemId = '';
+  let composedPreviewEditStage = { portrait: 'before', landscape: 'before' };
+  let composedPreviewEditStageItemId = '';
+  let shouldAnimateComposedEditStageToggle = false;
   let isPromptPreviewSuppressed = false;
   let shouldAnimatePromptPreviewClear = false;
   let isSettingsDrawerOpen = false;
@@ -86,6 +94,7 @@
   let isExportMetadataSanitizationEnabled = true;
   let promptImageEditOrientation = 'portrait';
   let composedImageEditOrientation = 'portrait';
+  let composedImageEditStage = 'after';
   let activeImageViewer = null;
   let imageViewerScale = 1;
   let imageViewerTranslateX = 0;
