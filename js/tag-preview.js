@@ -667,7 +667,7 @@
         && item.mainCategory === prompt.mainCategory
         && item.subCategory === prompt.subCategory));
     }
-    const added = addPromptToComposition(prompt, { suppressToast: true });
+    const added = addPromptToComposition(prompt, { suppressToast: true, scrollToCard: true });
     if (!added) return;
     copyPromptSilently(getComposedOutputText())
       .then(copied => {
