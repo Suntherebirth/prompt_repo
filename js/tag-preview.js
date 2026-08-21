@@ -658,7 +658,11 @@
 
   function selectPromptFromTagImage(prompt) {
     if (!prompt) return;
-    activePromptGridReturn = null;
+    activePromptGridReturn = activePromptTagFilter
+      ? { type: 'tag', tag: activePromptTagFilter }
+      : activePromptCategoryGridMode
+        ? { type: 'category', mainCategory: activeCategoryPrompt, subCategory: activeSubCategoryPrompt }
+        : null;
     activePromptCategoryGridMode = false;
     activePromptTagFilter = null;
     activePromptTagBrowser = false;
