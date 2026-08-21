@@ -760,6 +760,7 @@
   function returnToPromptGridFromPreview() {
     if (!activePromptGridReturn) return;
     const returnGrid = activePromptGridReturn;
+    const returnPromptId = activePromptPreviewId;
     activePromptGridReturn = null;
     activePromptPreviewId = null;
     activePromptTagBrowser = false;
@@ -769,5 +770,15 @@
     activeSubCategoryPrompt = returnGrid.subCategory || activeSubCategoryPrompt;
     isPromptPreviewSuppressed = returnGrid.type !== 'tag';
     renderPromptDescriptionPreview();
+
+    requestAnimationFrame(() => {
+      const preview = document.getElementById('prompt-description-preview');
+      const targetCard = [...(preview?.querySelectorAll('.preview-tag-image-card[data-prompt-id]') || [])]
+        .find(card => card.dataset.promptId === returnPromptId);
+      if (!targetCard) return;
+      targetCard.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'nearest' });
+      targetCard.classList.add('preview-grid-return-focus');
+      window.setTimeout(() => targetCard.classList.remove('preview-grid-return-focus'), 900);
+    });
   }
 

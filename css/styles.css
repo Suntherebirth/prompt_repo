@@ -1987,6 +1987,27 @@
       transform: translateY(1px) scale(0.98);
     }
 
+    .prompt-description-preview .preview-tag-image-card.preview-grid-return-focus {
+      border-color: #aebcff;
+      box-shadow: 0 0 0 3px rgba(116, 132, 232, 0.52), 0 10px 22px rgba(76, 91, 214, 0.3);
+      animation: previewGridReturnFocus .9s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    @keyframes previewGridReturnFocus {
+      0% {
+        transform: scale(0.94);
+        box-shadow: 0 0 0 0 rgba(116, 132, 232, 0), 0 0 0 rgba(76, 91, 214, 0);
+      }
+      45% {
+        transform: scale(1.035);
+        box-shadow: 0 0 0 7px rgba(116, 132, 232, 0.2), 0 12px 26px rgba(76, 91, 214, 0.34);
+      }
+      100% {
+        transform: scale(1);
+        box-shadow: 0 0 0 3px rgba(116, 132, 232, 0.52), 0 10px 22px rgba(76, 91, 214, 0.3);
+      }
+    }
+
     .prompt-description-preview .preview-tag-image-card.is-prompt-card .tag-image-name,
     .prompt-description-preview .preview-tag-image-card.is-prompt-card .tag-image-description {
       background: #1c213b;
