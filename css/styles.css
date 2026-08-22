@@ -5862,6 +5862,15 @@
       max-width: 3.2rem;
     }
 
+    .category-manage-main-item.category-manage-private-visible .category-manage-main-meta {
+      flex-wrap: wrap;
+    }
+
+    .category-manage-main-item.category-manage-private-visible .category-manage-main-title {
+      flex: 0 0 100%;
+      order: -1;
+    }
+
     .category-manage-main-title {
       flex: 1 1 auto;
       min-width: 0;
@@ -5975,6 +5984,11 @@
       min-width: 0;
       word-break: break-word;
       padding-top: 4px;
+    }
+
+    .category-manage-sub-item.category-manage-private-visible .category-manage-sub-title {
+      grid-column: 1 / -1;
+      padding-top: 0;
     }
 
     .category-manage-sub-head-right {

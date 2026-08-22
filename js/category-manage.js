@@ -653,6 +653,7 @@
       const mainConfig = getMainCategoryConfig(mainCategory);
       const mainItem = document.createElement('div');
       mainItem.className = 'category-manage-main-item';
+      if (!hidePrivateControls) mainItem.classList.add('category-manage-private-visible');
 
       const top = document.createElement('div');
       top.className = 'category-manage-main-top';
@@ -744,6 +745,7 @@
         subCategories.forEach((subCategory, subIndex) => {
           const subItem = document.createElement('div');
           subItem.className = 'category-manage-sub-item';
+          if (!hidePrivateControls) subItem.classList.add('category-manage-private-visible');
 
           const subTitle = document.createElement('span');
           subTitle.className = 'category-manage-sub-title';
@@ -952,6 +954,7 @@
       const mainConfig = getComposedMainCategoryConfig(mainCategory);
       const mainItem = document.createElement('div');
       mainItem.className = 'category-manage-main-item';
+      if (!hidePrivateControls) mainItem.classList.add('category-manage-private-visible');
 
       const top = document.createElement('div');
       top.className = 'category-manage-main-top';
@@ -1043,6 +1046,7 @@
         subCategories.forEach((subCategory, subIndex) => {
           const subItem = document.createElement('div');
           subItem.className = 'category-manage-sub-item';
+          if (!hidePrivateControls) subItem.classList.add('category-manage-private-visible');
 
           const subTitle = document.createElement('span');
           subTitle.className = 'category-manage-sub-title';

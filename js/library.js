@@ -1473,6 +1473,7 @@
     renderCustomComboCollection();
     renderPromptDescriptionPreview();
     renderComposedDescriptionPreview();
+    renderSettingsDrawer();
     if (document.getElementById('category-manage-modal')?.classList.contains('open')) {
       renderCategoryManageTabs();
       renderCategoryManageList();
