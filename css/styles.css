@@ -2255,6 +2255,62 @@
       box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.28);
     }
 
+    .prompt-description-preview .preview-composition-swipe-remove-btn {
+      position: absolute;
+      inset: 0;
+      z-index: 3;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border: 0;
+      color: #ffe1e5;
+      background: rgba(125, 42, 54, 0.48);
+      box-shadow: inset 0 0 0 1px rgba(232, 116, 130, 0.72), inset 0 0 24px rgba(54, 13, 19, 0.3);
+      font: inherit;
+      font-size: 0.8rem;
+      font-weight: 700;
+      letter-spacing: 0;
+      opacity: 0;
+      pointer-events: none;
+      text-shadow: 0 1px 3px rgba(0, 0, 0, 0.85);
+      transform: scale(0.96);
+      transition: opacity .2s ease, transform .24s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .prompt-description-preview .preview-tag-image-card.is-composition-swipe-remove-visible .preview-composition-swipe-remove-btn {
+      opacity: 1;
+      pointer-events: auto;
+      transform: scale(1);
+    }
+
+    .prompt-description-preview .preview-composition-swipe-replace-btn {
+      position: absolute;
+      inset: 0;
+      z-index: 3;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border: 0;
+      color: #e1e8ff;
+      background: rgba(42, 54, 125, 0.48);
+      box-shadow: inset 0 0 0 1px rgba(116, 132, 232, 0.72), inset 0 0 24px rgba(13, 19, 54, 0.3);
+      font: inherit;
+      font-size: 0.8rem;
+      font-weight: 700;
+      letter-spacing: 0;
+      opacity: 0;
+      pointer-events: none;
+      text-shadow: 0 1px 3px rgba(0, 0, 0, 0.85);
+      transform: scale(0.96);
+      transition: opacity .2s ease, transform .24s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .prompt-description-preview .preview-tag-image-card.is-composition-swipe-replace-visible .preview-composition-swipe-replace-btn {
+      opacity: 1;
+      pointer-events: auto;
+      transform: scale(1);
+    }
+
     .prompt-description-preview .preview-tag-image-select-btn {
       position: absolute;
       inset: 0;

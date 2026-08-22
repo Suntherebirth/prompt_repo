@@ -666,6 +666,34 @@
     isCoreRandomFadeOutRunning = false;
   }
 
+  function dismissArmedComposedCardAction() {
+    if (!armedCoreRandomComposedId && !armedComposedCopyId) return;
+    clearCoreRandomVisualState();
+    render();
+  }
+
+  document.addEventListener('pointerdown', event => {
+    const openActionCards = document.querySelectorAll('.prompt-item.combo-card-item.actions-open');
+    const armedCard = document.querySelector('.prompt-item.combo-card-item.core-random-armed');
+    if (!openActionCards.length && !armedCard) return;
+
+    const activeCard = event.target.closest?.('.prompt-item.combo-card-item.actions-open, .prompt-item.combo-card-item.core-random-armed');
+    if (activeCard) return;
+
+    openActionCards.forEach(card => {
+      card.classList.remove('actions-open');
+      const swipeContent = card.querySelector('.prompt-item-swipe-content');
+      if (swipeContent) {
+        swipeContent.style.transform = '';
+        swipeContent.style.opacity = '';
+        swipeContent.style.transition = '';
+      }
+    });
+    dismissArmedComposedCardAction();
+    event.preventDefault();
+    event.stopPropagation();
+  }, true);
+
   function fadeOutArmedCoreRandomCard(onAfterFade) {
     const runNext = () => {
       clearCoreRandomVisualState();
@@ -889,6 +917,7 @@
     const allowRightSwipeCommit = options.allowRightSwipeCommit !== false;
     const allowLeftSwipeActions = options.allowLeftSwipeActions !== false;
     const requireSwipeComposeMode = options.requireSwipeComposeMode !== false;
+    const onSwipeDismiss = typeof options.onSwipeDismiss === 'function' ? options.onSwipeDismiss : null;
     const canCommitRightSwipe = () => allowRightSwipeCommit && (!requireSwipeComposeMode || isSwipeComposeMode());
 
     const closedX = 0;
@@ -1004,13 +1033,19 @@
 
       if (swiping) {
         const swipeDx = e.clientX - startX;
+        if (onSwipeDismiss && swipeDx < 0) {
+          onSwipeDismiss();
+          return;
+        }
         if (canCommitRightSwipe() && currentX >= rightSwipeCommitX) {
           closeAllPromptSwipeActions(promptData.id);
           commitAddAnimation();
           return;
         }
 
-        if (swipeDx > 0) triggerSwipeMissFeedback();
+        if (swipeDx > 0 && !(item.classList.contains('combo-card-item') && item.classList.contains('actions-open'))) {
+          triggerSwipeMissFeedback();
+        }
 
         if (allowLeftSwipeActions && currentX <= openedX / 2) openActions();
         else closeActions();
@@ -1138,6 +1173,7 @@
             allowRightSwipeCommit: false,
             allowLeftSwipeActions: false,
             requireSwipeComposeMode: true,
+            onSwipeDismiss: dismissArmedComposedCardAction,
             onTap: (event) => {
               const tappedChoice = event
                 ? (document.elementFromPoint(event.clientX, event.clientY)?.closest('[data-combo-choice]')
@@ -1155,6 +1191,7 @@
             allowRightSwipeCommit: false,
             allowLeftSwipeActions: false,
             requireSwipeComposeMode: true,
+            onSwipeDismiss: dismissArmedComposedCardAction,
             onTap: () => runComposedCopyShortcut(item.id),
           });
         } else {

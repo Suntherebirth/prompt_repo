@@ -124,13 +124,13 @@
       const description = [prompt.mainCategory, prompt.subCategory].filter(Boolean).join(' · ');
       return `<div class="preview-tag-image-card is-prompt-card is-composition-selected${isCore ? ' is-composition-core' : ''}${isWideCard ? ' is-composition-core-wide' : ''}" data-prompt-id="${esc(prompt.id)}" title="${esc(altText)}">${imageSrc
         ? `<img src="${imageSrc}" alt="${esc(altText)}" />`
-        : '<span class="empty-state">이미지 로딩 중</span>'}${isCore ? '<span class="preview-composition-core-mark">핵심</span>' : ''}<span class="tag-image-name">${esc(prompt.content)}</span>${(!isWideCard && description) ? `<span class="tag-image-description"><span class="tag-image-description-part">${esc(description)}</span></span>` : ''}<button class="preview-composition-remove-btn" type="button" aria-label="${esc(prompt.content)} 선택 제외">×</button></div>`;
+        : '<span class="empty-state">이미지 로딩 중</span>'}${isCore ? '<span class="preview-composition-core-mark">핵심</span>' : ''}<span class="tag-image-name">${esc(prompt.content)}</span>${(!isWideCard && description) ? `<span class="tag-image-description"><span class="tag-image-description-part">${esc(description)}</span></span>` : ''}<button class="preview-composition-swipe-remove-btn" type="button" aria-label="${esc(prompt.content)} 선택 제외">제외</button><button class="preview-composition-swipe-replace-btn" type="button" aria-label="${esc(prompt.content)} 제외 후 해당 분류로 이동">제외하고 해당 분류로 이동</button></div>`;
     }).join('');
 
     preview.classList.add('has-image');
     preview.classList.remove('image-clear-feedback', 'image-switch-feedback');
     preview.title = '현재 조합에 선택된 프롬프트입니다';
-    preview.innerHTML = `<div class="preview-tag-image-grid is-prompt-grid"><div class="preview-tag-grid-header"><span class="preview-tag-grid-category-chip cat-chip active is-prompt">현재 조합</span><span class="tag-image-grid-total">(${sortedPrompts.length})</span></div>${cards}</div>`;
+    preview.innerHTML = `<div class="preview-tag-image-grid is-prompt-grid is-selected-prompt-grid"><div class="preview-tag-grid-header"><span class="preview-tag-grid-category-chip cat-chip active is-prompt">현재 조합</span><span class="tag-image-grid-total">(${sortedPrompts.length})</span></div>${cards}</div>`;
     bindPromptTagImageCardSwipe(preview);
     lastRenderedPromptPreviewImageKey = `selected:${sortedPrompts.map(prompt => prompt.id).join(',')}`;
   }
@@ -603,9 +603,23 @@
     let startY = 0;
     let swiping = false;
 
+    const closeCompositionSwipeActions = () => {
+      preview.querySelectorAll('.preview-tag-image-card.is-composition-swipe-remove-visible, .preview-tag-image-card.is-composition-swipe-replace-visible').forEach(card => {
+        card.classList.remove('is-composition-swipe-remove-visible', 'is-composition-swipe-replace-visible');
+        card._swipeClickSuppressUntil = Date.now() + 350;
+      });
+      preview._swipeActionDismissClickUntil = Date.now() + 350;
+    };
+
     preview.addEventListener('pointerdown', event => {
       if (event.pointerType === 'mouse' && event.button !== 0) return;
       const card = event.target.closest('.preview-tag-image-card');
+      const compositionSwipeAction = event.target.closest('.preview-composition-swipe-remove-btn, .preview-composition-swipe-replace-btn');
+      const hasOpenCompositionSwipeAction = !!preview.querySelector('.preview-tag-image-card.is-composition-swipe-remove-visible, .preview-tag-image-card.is-composition-swipe-replace-visible');
+      if (hasOpenCompositionSwipeAction && !compositionSwipeAction) {
+        closeCompositionSwipeActions();
+        return;
+      }
       if (!card || event.target.closest('.preview-tag-image-select-btn, .preview-composition-remove-btn')) return;
       pointerId = event.pointerId;
       activeCard = card;
@@ -621,7 +635,8 @@
       const dy = event.clientY - startY;
       if (!swiping) {
         if (Math.abs(dx) < 8) return;
-        if (Math.abs(dx) <= Math.abs(dy) || dx < 0) {
+        const isSelectedPromptGridCard = !!activeCard.closest('.is-selected-prompt-grid');
+        if (Math.abs(dx) <= Math.abs(dy) || (!isSelectedPromptGridCard && dx < 0)) {
           pointerId = null;
           activeCard = null;
           return;
@@ -629,12 +644,19 @@
         swiping = true;
       }
       event.preventDefault();
-      if (dx < 36) return;
-      preview.querySelectorAll('.preview-tag-image-card.is-swipe-action-visible').forEach(card => {
-        if (card !== activeCard) card.classList.remove('is-swipe-action-visible');
+      if (Math.abs(dx) < 36) return;
+      const isSelectedPromptGridCard = !!activeCard.closest('.is-selected-prompt-grid');
+      preview.querySelectorAll('.preview-tag-image-card.is-swipe-action-visible, .preview-tag-image-card.is-composition-swipe-remove-visible, .preview-tag-image-card.is-composition-swipe-replace-visible').forEach(card => {
+        if (card !== activeCard) card.classList.remove('is-swipe-action-visible', 'is-composition-swipe-remove-visible', 'is-composition-swipe-replace-visible');
       });
-      if (!activeCard.classList.contains('is-swipe-action-visible')) {
-        activeCard.classList.add('is-swipe-action-visible');
+      const actionClass = isSelectedPromptGridCard
+        ? (dx < 0 ? 'is-composition-swipe-remove-visible' : 'is-composition-swipe-replace-visible')
+        : 'is-swipe-action-visible';
+      const isNewAction = !activeCard.classList.contains(actionClass);
+      activeCard.classList.toggle('is-swipe-action-visible', actionClass === 'is-swipe-action-visible');
+      activeCard.classList.toggle('is-composition-swipe-remove-visible', actionClass === 'is-composition-swipe-remove-visible');
+      activeCard.classList.toggle('is-composition-swipe-replace-visible', actionClass === 'is-composition-swipe-replace-visible');
+      if (isNewAction) {
         activeCard._swipeActionTransitionUntil = performance.now() + 240;
       }
     });
@@ -645,7 +667,7 @@
       if (swiping) {
         event.preventDefault();
         card._swipeClickSuppressUntil = Date.now() + 350;
-        if (!card.classList.contains('is-swipe-action-visible')) notifyInvalidSwipeTouch(card);
+        if (!card.classList.contains('is-swipe-action-visible') && !card.classList.contains('is-composition-swipe-remove-visible') && !card.classList.contains('is-composition-swipe-replace-visible')) notifyInvalidSwipeTouch(card);
       }
       pointerId = null;
       activeCard = null;

@@ -71,10 +71,65 @@
   });
 
   document.getElementById('prompt-description-preview').addEventListener('click', e => {
+    if (Date.now() < Number(e.currentTarget._swipeActionDismissClickUntil || 0)) {
+      e.stopPropagation();
+      return;
+    }
+
     const previewGridBackButton = e.target.closest('.preview-grid-back-btn');
     if (previewGridBackButton) {
       e.stopPropagation();
       returnToPromptGridFromPreview();
+      return;
+    }
+
+    const compositionSwipeRemoveButton = e.target.closest('.preview-composition-swipe-remove-btn');
+    if (compositionSwipeRemoveButton) {
+      e.stopPropagation();
+      const card = compositionSwipeRemoveButton.closest('.preview-tag-image-card');
+      const promptIndex = selected.findIndex(item => item.source === 'prompt' && String(item.id) === String(card?.dataset.promptId));
+      if (promptIndex < 0) return;
+      removeSelected(promptIndex);
+      copyPromptSilently(getComposedOutputText())
+        .then(copied => showToast(copied ? '프롬프트가 제외되고 새 조합이 클립보드에 복사되었습니다' : '프롬프트는 제외되었지만 복사에 실패했습니다'))
+        .catch(() => showToast('프롬프트는 제외되었지만 복사에 실패했습니다'));
+      return;
+    }
+
+    const compositionSwipeReplaceButton = e.target.closest('.preview-composition-swipe-replace-btn');
+    if (compositionSwipeReplaceButton) {
+      e.stopPropagation();
+      const card = compositionSwipeReplaceButton.closest('.preview-tag-image-card');
+      const prompt = prompts.find(item => String(item.id) === String(card?.dataset.promptId));
+      const promptIndex = selected.findIndex(item => item.source === 'prompt' && String(item.id) === String(card?.dataset.promptId));
+      if (!prompt || promptIndex < 0) return;
+      removeSelected(promptIndex);
+      const openPromptCategoryGrid = () => {
+        activeSelectedPromptGridMode = false;
+        activePromptPreviewId = null;
+        activePromptTagFilter = null;
+        activePromptTagBrowser = false;
+        activePromptComposedGridMode = false;
+        activePromptGridReturn = null;
+        activePromptCategoryGridMode = true;
+        activeCategoryPrompt = prompt.mainCategory;
+        activeSubCategoryPrompt = prompt.subCategory;
+        isPromptPreviewSuppressed = true;
+        if (prompt.mainCategory && getMainCategoryConfig(prompt.mainCategory).hiddenByDefault) {
+          openedHiddenMainCategories.add(prompt.mainCategory);
+        }
+        render();
+        focusSubCategoryChip(prompt.mainCategory, prompt.subCategory);
+      };
+      copyPromptSilently(getComposedOutputText())
+        .then(copied => {
+          openPromptCategoryGrid();
+          showToast(copied ? '프롬프트가 제외되고 새 조합이 복사되었습니다' : '프롬프트는 제외되었지만 복사에 실패했습니다');
+        })
+        .catch(() => {
+          openPromptCategoryGrid();
+          showToast('프롬프트는 제외되었지만 복사에 실패했습니다');
+        });
       return;
     }
 
