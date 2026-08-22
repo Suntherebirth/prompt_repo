@@ -2050,6 +2050,18 @@
       transform: translateY(1px) scale(0.98);
     }
 
+    .prompt-description-preview .preview-tag-image-card .tag-image-unlinked-mark {
+      position: absolute;
+      left: 0;
+      bottom: 0;
+      width: 14px;
+      height: 14px;
+      background: #e5484d;
+      clip-path: polygon(0 0, 0 100%, 100% 100%);
+      pointer-events: none;
+      z-index: 1;
+    }
+
     .prompt-description-preview .preview-tag-image-card.preview-grid-return-focus {
       border-color: #aebcff;
       box-shadow: 0 0 0 3px rgba(116, 132, 232, 0.52), 0 10px 22px rgba(76, 91, 214, 0.3);

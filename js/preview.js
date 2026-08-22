@@ -113,8 +113,8 @@
     lastRenderedPromptPreviewImageKey = '';
   }
 
-  function renderPromptComposedGrid(preview, prompt) {
-    const targetPromptId = String(prompt.id || '');
+  function getComposedItemsLinkedToPrompt(promptId) {
+    const targetPromptId = String(promptId || '');
     const isEntryLinkedToPrompt = (entry, visitedComposedIds = new Set()) => {
       if (!entry) return false;
 
@@ -134,9 +134,17 @@
       return String(entry.id || '') === targetPromptId;
     };
 
-    const composedItems = composedPrompts.filter(item => (
+    return composedPrompts.filter(item => (
       Array.isArray(item.items) && item.items.some(entry => isEntryLinkedToPrompt(entry))
-    )).sort((a, b) => {
+    ));
+  }
+
+  function isPromptLinkedToAnyComposed(promptId) {
+    return getComposedItemsLinkedToPrompt(promptId).length > 0;
+  }
+
+  function renderPromptComposedGrid(preview, prompt) {
+    const composedItems = getComposedItemsLinkedToPrompt(prompt.id).sort((a, b) => {
       const categoryOrder = String(a.mainCategory || '').localeCompare(String(b.mainCategory || ''), 'ko');
       if (categoryOrder !== 0) return categoryOrder;
       const nameOrder = String(a.subCategory || '').localeCompare(String(b.subCategory || ''), 'ko');

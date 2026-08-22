@@ -210,9 +210,10 @@
       const imageSrc = getPromptImageSource(prompt, forceOrientation);
       queuePromptImageLoad(prompt, forceOrientation);
       const altText = prompt.imageName || getPromptDisplayName(prompt.mainCategory, prompt.subCategory);
-      return `<div class="preview-tag-image-card is-prompt-card is-category-name-only${isCategoryItemGridLandscapeMode ? ' is-landscape-card' : ''}" data-prompt-id="${esc(prompt.id)}" title="${esc(altText)}">${imageSrc
+      const isUnlinkedComposed = !isPromptLinkedToAnyComposed(prompt.id);
+      return `<div class="preview-tag-image-card is-prompt-card is-category-name-only${isCategoryItemGridLandscapeMode ? ' is-landscape-card' : ''}${isUnlinkedComposed ? ' is-unlinked-composed' : ''}" data-prompt-id="${esc(prompt.id)}" title="${esc(altText)}">${imageSrc
         ? `<img src="${imageSrc}" alt="${esc(altText)}" />`
-        : '<span class="empty-state">이미지 로딩 중</span>'}<span class="tag-image-name">${esc(prompt.content)}</span><button class="preview-tag-image-select-btn" type="button" aria-label="${esc(prompt.content)} 프롬프트 선택">프롬프트 선택</button></div>`;
+        : '<span class="empty-state">이미지 로딩 중</span>'}<span class="tag-image-name">${esc(prompt.content)}</span>${isUnlinkedComposed ? '<span class="tag-image-unlinked-mark" aria-hidden="true"></span>' : ''}<button class="preview-tag-image-select-btn" type="button" aria-label="${esc(prompt.content)} 프롬프트 선택">프롬프트 선택</button></div>`;
     }).join('');
 
     const categoryDescription = getSubCategoryDescription(activeCategoryPrompt, activeSubCategoryPrompt);
@@ -237,7 +238,7 @@
       ? '<button class="preview-tag-grid-irp-copy-btn" type="button">IRP 복사</button>'
       : '';
     shouldAnimatePromptTagSort = false;
-    preview.innerHTML = `<div class="preview-tag-image-grid is-prompt-grid${usesTagGridCards ? ' is-core-category-grid' : ''}${isCategoryItemGridLandscapeMode ? ' is-landscape-item-grid' : ''}"><div class="preview-tag-grid-header">${categoryEmojiMarkup}<span class="preview-tag-grid-category-chip cat-chip active is-prompt is-item-grid-orientation-toggle${shouldAnimateItemGridOrientationToggle ? ' is-changing' : ''}" title="눌러서 가로/세로 카드 전환">${categoryChipLabel}</span>${irpCopyButtonMarkup}<span class="tag-image-grid-total">(${categoryPrompts.length})</span>${sortToggleMarkup}${descriptionMarkup}</div>${cards}</div>`;
+    preview.innerHTML = `<div class="preview-tag-image-grid is-prompt-grid${usesTagGridCards ? ' is-core-category-grid' : ''}${isCategoryItemGridLandscapeMode ? ' is-landscape-item-grid' : ''}"><div class="preview-tag-grid-header">${categoryEmojiMarkup}<span class="preview-tag-grid-category-chip cat-chip active is-prompt is-item-grid-orientation-toggle${shouldAnimateItemGridOrientationToggle ? ' is-changing' : ''}" title="눌러서 가로/세로 카드 전환">${categoryChipLabel}</span>${irpCopyButtonMarkup}<span class="tag-image-grid-total">(${categoryPrompts.length})</span>${sortToggleMarkup}</div>${descriptionMarkup}${cards}</div>`;
     shouldAnimateItemGridOrientationToggle = false;
 
     // 클릭 처리는 태그 그리드와 동일하게 main.js의 위임 리스너에 맡겨 카드마다 리스너/조회를 반복하지 않는다.
