@@ -7,6 +7,7 @@
       : (prompts.find(item => item.id === activePromptPreviewId)
         || selected.find(item => item.source === 'prompt' && item.imageData)
         || selected.find(item => item.source === 'prompt'));
+    const visiblePrompt = isPromptVisibleInCurrentMode(prompt) ? prompt : null;
 
     if (activeSelectedPromptGridMode) {
       const selectedPrompts = selected.filter(item => item.source === 'prompt');
@@ -22,8 +23,8 @@
       return;
     }
 
-    if (activePromptComposedGridMode && leftPanelTab === 'prompt' && prompt) {
-      renderPromptComposedGrid(preview, prompt);
+    if (activePromptComposedGridMode && leftPanelTab === 'prompt' && visiblePrompt) {
+      renderPromptComposedGrid(preview, visiblePrompt);
       return;
     }
 
@@ -37,7 +38,7 @@
       return;
     }
 
-    if (leftPanelTab === 'prompt' && !prompt && activeCategoryPrompt && activeSubCategoryPrompt) {
+    if (leftPanelTab === 'prompt' && !visiblePrompt && activeCategoryPrompt && activeSubCategoryPrompt) {
       if (activePromptCategoryGridMode) {
         renderPromptCategoryGrid(preview);
         return;
@@ -46,29 +47,29 @@
       return;
     }
 
-    const promptId = prompt?.id || '';
+    const promptId = visiblePrompt?.id || '';
     if (promptPreviewOrientationItemId !== promptId) {
       promptPreviewOrientation = 'portrait';
       promptPreviewOrientationItemId = promptId;
     }
-    const canTogglePromptOrientation = !!prompt && promptHasOrientationImage(prompt, 'portrait') && promptHasOrientationImage(prompt, 'landscape');
+    const canTogglePromptOrientation = !!visiblePrompt && promptHasOrientationImage(visiblePrompt, 'portrait') && promptHasOrientationImage(visiblePrompt, 'landscape');
     const promptOrientation = canTogglePromptOrientation ? promptPreviewOrientation : 'portrait';
-    const imageSrc = getPromptImageSource(prompt, promptOrientation);
-    queuePromptImageLoad(prompt, promptOrientation);
-    if (canTogglePromptOrientation) queuePromptImageLoad(prompt, promptOrientation === 'portrait' ? 'landscape' : 'portrait');
-    if (!imageSrc && !prompt) {
-      const selectedPrompts = selected.filter(item => item.source === 'prompt');
+    const imageSrc = getPromptImageSource(visiblePrompt, promptOrientation);
+    queuePromptImageLoad(visiblePrompt, promptOrientation);
+    if (canTogglePromptOrientation) queuePromptImageLoad(visiblePrompt, promptOrientation === 'portrait' ? 'landscape' : 'portrait');
+    if (!imageSrc && !visiblePrompt) {
+      const selectedPrompts = selected.filter(item => item.source === 'prompt' && isPromptVisibleInCurrentMode(item));
       if (selectedPrompts.length) {
         renderSelectedPromptGrid(preview, selectedPrompts);
         return;
       }
     }
     if (imageSrc) {
-      const altText = prompt.imageName || getPromptDisplayName(prompt.mainCategory, prompt.subCategory);
-      const nextImageKey = `${prompt.id || ''}:${promptOrientation}:${imageSrc}`;
+      const altText = visiblePrompt.imageName || getPromptDisplayName(visiblePrompt.mainCategory, visiblePrompt.subCategory);
+      const nextImageKey = `${visiblePrompt.id || ''}:${promptOrientation}:${imageSrc}`;
       const shouldAnimateTransition = nextImageKey !== lastRenderedPromptPreviewImageKey;
-      const portraitDescription = `<div class="preview-description-text">${prompt?.description && isSubCategoryCoreEnabled(prompt.mainCategory, prompt.subCategory) ? esc(formatPromptDescriptionForDisplay(prompt.description)) : ''}</div>`;
-      const portraitTags = `<button class="preview-tag-list-header" type="button">태그</button>${normalizePromptTags(prompt?.tags).map(tag => `<span class="preview-tag-swipe-item"><button class="preview-tag-chip" type="button" data-tag="${esc(tag)}">${esc(tag)}</button></span>`).join('')}`;
+      const portraitDescription = `<div class="preview-description-text">${visiblePrompt?.description && isSubCategoryCoreEnabled(visiblePrompt.mainCategory, visiblePrompt.subCategory) ? esc(formatPromptDescriptionForDisplay(visiblePrompt.description)) : ''}</div>`;
+      const portraitTags = `<button class="preview-tag-list-header" type="button">태그</button>${normalizePromptTags(visiblePrompt?.tags).map(tag => `<span class="preview-tag-swipe-item"><button class="preview-tag-chip" type="button" data-tag="${esc(tag)}">${esc(tag)}</button></span>`).join('')}`;
       const portraitCaption = `<div class="preview-details-panel">${portraitDescription}<div class="preview-tag-list">${portraitTags}</div></div>`;
       const orientationDots = canTogglePromptOrientation
         ? `<div class="preview-orientation-dots is-prompt" aria-hidden="true"><span class="preview-orientation-dot${promptOrientation === 'portrait' ? ' active' : ''}"></span><span class="preview-orientation-dot${promptOrientation === 'landscape' ? ' active' : ''}"></span></div>`
@@ -134,7 +135,7 @@
       return String(entry.id || '') === targetPromptId;
     };
 
-    return composedPrompts.filter(item => (
+    return composedPrompts.filter(item => isComposedPromptVisibleInCurrentMode(item) && (
       Array.isArray(item.items) && item.items.some(entry => isEntryLinkedToPrompt(entry))
     ));
   }
@@ -216,7 +217,8 @@
   }
 
   function getActiveComposedPreviewItem() {
-    return composedPrompts.find(item => item.id === activeComposedPreviewId) || null;
+    const item = composedPrompts.find(entry => entry.id === activeComposedPreviewId) || null;
+    return isComposedPromptVisibleInCurrentMode(item) ? item : null;
   }
 
   function getComposedPreviewImageItem(composed, stage) {
@@ -268,7 +270,7 @@
             const entryId = typeof entry === 'object' ? entry.id : entry;
             return prompts.find(item => String(item.id) === String(entryId)) || entry;
           })
-          .filter(entry => entry && typeof entry === 'object')
+          .filter(entry => entry && typeof entry === 'object' && isPromptVisibleInCurrentMode(entry))
         : selectedCustomCombo;
       const cards = selectedItems.map(item => {
         const imageSrc = getPromptImageSource(item);
@@ -289,7 +291,7 @@
 
     if (leftPanelTab === 'combo' && isCustomComboTabOpen && activeComposedPreviewId) {
       const composed = composedPrompts.find(item => item.id === activeComposedPreviewId);
-      if (composed) {
+      if (isComposedPromptVisibleInCurrentMode(composed)) {
         const imageSrc = getPromptImageSource(composed);
         queuePromptImageLoad(composed);
         const label = composed.subCategory || composed.content || '커스텀 조합';
@@ -311,7 +313,7 @@
           const entryId = typeof entry === 'object' ? entry.id : entry;
           return prompts.find(item => String(item.id) === String(entryId)) || entry;
         })
-        .filter(entry => entry && typeof entry === 'object');
+        .filter(entry => entry && typeof entry === 'object' && isPromptVisibleInCurrentMode(entry));
       const cards = selectedItems.map(item => {
         const imageSrc = getPromptImageSource(item);
         queuePromptImageLoad(item);
@@ -329,7 +331,7 @@
     }
 
     if (leftPanelTab === 'combo' && !isCustomComboTabOpen && activeCategoryComposed && activeComposedCategoryGridMode) {
-      const categoryItems = composedPrompts.filter(item => item.mainCategory === activeCategoryComposed).sort((a, b) => {
+      const categoryItems = composedPrompts.filter(item => item.mainCategory === activeCategoryComposed && isComposedPromptVisibleInCurrentMode(item)).sort((a, b) => {
         const aText = String(a.subCategory || '').localeCompare(String(b.subCategory || ''), 'ko');
         if (aText !== 0) return aText;
         return String(a.id || '').localeCompare(String(b.id || ''), 'ko');
@@ -382,7 +384,7 @@
         return;
       }
 
-      const activeCustomCombo = customCombos.find(item => item.id === activeCustomComboId);
+      const activeCustomCombo = customCombos.find(item => item.id === activeCustomComboId && isCustomComboVisibleInCurrentMode(item));
       const imageTiles = items.map((item, index) => {
         const label = item.subCategory || item.content || '커스텀 조합';
         const comboItemImage = activeCustomCombo?.itemImages?.[item.id] || null;
@@ -547,7 +549,7 @@
     const prompt = prompts.find(item => item.id === activePromptPreviewId)
       || selected.find(item => item.source === 'prompt' && item.imageData)
       || selected.find(item => item.source === 'prompt');
-    if (!prompt) return [];
+    if (!isPromptVisibleInCurrentMode(prompt)) return [];
 
     queuePromptImageLoad(prompt, 'portrait');
     queuePromptImageLoad(prompt, 'landscape');
@@ -597,8 +599,9 @@
 
   function getCustomComboFlowEntries() {
     if (leftPanelTab !== 'combo' || !isCustomComboTabOpen || selectedCustomCombo.length === 0) return [];
-    const activeCustomCombo = customCombos.find(item => item.id === activeCustomComboId);
+    const activeCustomCombo = customCombos.find(item => item.id === activeCustomComboId && isCustomComboVisibleInCurrentMode(item));
     const items = selectedCustomCombo.map((item) => {
+      if (!isComposedPromptVisibleInCurrentMode(item)) return null;
       const override = activeCustomCombo?.itemImages?.[item.id] || null;
       const itemPrompt = override
         ? { ...override, id: item.id }

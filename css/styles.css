@@ -286,6 +286,46 @@
       margin-left: auto;
       display: flex;
       align-items: center;
+      position: relative;
+    }
+
+    .private-entry-stage1-hotspot {
+      position: absolute;
+      right: 42px;
+      top: 0;
+      width: 36px;
+      height: 38px;
+      border: 0;
+      padding: 0;
+      margin: 0;
+      background: transparent;
+      opacity: 0;
+      cursor: default;
+      -webkit-tap-highlight-color: transparent;
+      touch-action: manipulation;
+    }
+
+    .private-entry-stage1-hotspot:focus,
+    .private-entry-stage1-hotspot:focus-visible {
+      outline: none;
+    }
+
+    .private-entry-stage1-indicator {
+      position: absolute;
+      right: 58px;
+      top: 14px;
+      width: 4px;
+      height: 4px;
+      border-radius: 999px;
+      background: rgba(236, 225, 255, 0.92);
+      box-shadow: 0 0 6px rgba(236, 225, 255, 0.55);
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity .18s ease;
+    }
+
+    .private-entry-stage1-indicator.show {
+      opacity: 1;
     }
 
     .settings-trigger-btn {
@@ -5331,7 +5371,87 @@
       border-color: var(--toast-border-danger);
     }
 
+    #toast.toast-secret-premium {
+      background: linear-gradient(135deg, rgba(251, 191, 36, 0.24) 0%, rgba(236, 72, 153, 0.22) 52%, rgba(96, 165, 250, 0.24) 100%);
+      border-color: rgba(251, 191, 36, 0.95);
+      color: #fff7db;
+      text-shadow: 0 0 8px rgba(251, 191, 36, 0.5);
+      box-shadow: 0 0 0 1px rgba(251, 191, 36, 0.35), 0 12px 30px rgba(251, 191, 36, 0.22), 0 8px 22px rgba(236, 72, 153, 0.2);
+      letter-spacing: 0.02em;
+      animation: toastSecretPremiumPulse 0.9s ease-in-out 2;
+    }
+
+    @keyframes toastSecretPremiumPulse {
+      0% { transform: translateX(-50%) translateY(0) scale(1); }
+      50% { transform: translateX(-50%) translateY(-1px) scale(1.02); }
+      100% { transform: translateX(-50%) translateY(0) scale(1); }
+    }
+
     #toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+    .secret-unlock-effect {
+      position: fixed;
+      left: 50%;
+      top: 50%;
+      width: 180px;
+      height: 180px;
+      transform: translate(-50%, -50%);
+      pointer-events: none;
+      z-index: 10000;
+      opacity: 0;
+      display: grid;
+      place-items: center;
+    }
+
+    .secret-unlock-effect.show {
+      animation: secretUnlockFade 900ms ease-out forwards;
+    }
+
+    .secret-unlock-glyph {
+      font-size: 68px;
+      line-height: 1;
+      filter: drop-shadow(0 4px 12px rgba(251, 191, 36, 0.32));
+      transform: scale(0.75) rotate(-8deg);
+      opacity: 0;
+    }
+
+    .secret-unlock-effect.show .secret-unlock-glyph {
+      animation: secretUnlockGlyph 900ms cubic-bezier(.2,.85,.2,1) forwards;
+    }
+
+    .secret-unlock-ring {
+      position: absolute;
+      width: 56px;
+      height: 56px;
+      border-radius: 999px;
+      border: 3px solid rgba(251, 191, 36, 0.85);
+      box-shadow: 0 0 24px rgba(251, 191, 36, 0.32);
+      opacity: 0;
+      transform: scale(0.35);
+    }
+
+    .secret-unlock-effect.show .secret-unlock-ring {
+      animation: secretUnlockRing 900ms ease-out forwards;
+    }
+
+    @keyframes secretUnlockFade {
+      0% { opacity: 0; }
+      10% { opacity: 1; }
+      85% { opacity: 1; }
+      100% { opacity: 0; }
+    }
+
+    @keyframes secretUnlockGlyph {
+      0% { transform: scale(0.7) rotate(-12deg); opacity: 0; }
+      35% { transform: scale(1.08) rotate(3deg); opacity: 1; }
+      100% { transform: scale(1) rotate(0deg); opacity: 1; }
+    }
+
+    @keyframes secretUnlockRing {
+      0% { transform: scale(0.35); opacity: 0; }
+      20% { opacity: 1; }
+      100% { transform: scale(2.45); opacity: 0; }
+    }
 
     .empty-state {
       text-align: center;

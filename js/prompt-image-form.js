@@ -288,9 +288,15 @@
     const modalTitle = document.getElementById('add-prompt-title');
     const saveButton = document.querySelector('#add-prompt-modal .modal-actions .btn-primary');
     const tagsInput = document.getElementById('input-tags');
+    const privateInput = document.getElementById('input-is-private');
     if (modalTitle) modalTitle.textContent = '새 프롬프트 추가';
     if (saveButton) saveButton.textContent = '+ 저장';
     if (tagsInput) tagsInput.value = '';
+    if (privateInput) {
+      privateInput.checked = false;
+      privateInput.disabled = false;
+      privateInput.dataset.manualChecked = '0';
+    }
   }
 
   function setPromptFormToEdit(prompt) {
@@ -453,6 +459,7 @@
     const contentInput = document.getElementById('input-content');
     const tagsInput = document.getElementById('input-tags');
     const descriptionInput = document.getElementById('input-description');
+    const privateInput = document.getElementById('input-is-private');
     if (!mainSelect || !subSelect || !contentInput || !prompt) return;
 
     mainSelect.value = prompt.mainCategory || '';
@@ -466,7 +473,13 @@
     if (descriptionInput) {
       descriptionInput.value = prompt.description || '';
     }
+    if (privateInput) {
+      privateInput.checked = !!prompt.isPrivate;
+      privateInput.disabled = false;
+      privateInput.dataset.manualChecked = privateInput.checked ? '1' : '0';
+    }
     renderPromptDescriptionField();
+    syncPromptPrivateInput({ restoreManual: false });
   }
 
   async function openEditPromptModal(id, e) {

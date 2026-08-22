@@ -365,6 +365,10 @@
 
   function addComposedPromptToCustomCombo(item) {
     if (!item || !item.id) return false;
+    if (!isComposedPromptVisibleInCurrentMode(item)) {
+      showToast('현재 모드에서는 해당 커스텀 조합을 사용할 수 없습니다');
+      return false;
+    }
     if (selectedCustomCombo.some(entry => entry.id === item.id)) {
       showToast('이미 조합된 커스텀 조합 목록에 있습니다');
       return false;
@@ -385,10 +389,14 @@
 
   function loadCustomCombo(customCombo) {
     if (!customCombo?.id) return;
+    if (!isCustomComboVisibleInCurrentMode(customCombo)) {
+      showToast('현재 모드에서는 해당 커스텀 콤보를 불러올 수 없습니다');
+      return;
+    }
     const itemIds = Array.isArray(customCombo.items) ? customCombo.items : [];
     selectedCustomCombo = itemIds
       .map(itemId => composedPrompts.find(item => item.id === itemId))
-      .filter(Boolean)
+      .filter(item => isComposedPromptVisibleInCurrentMode(item))
       .map(item => ({
         ...item,
         source: 'composed',
@@ -444,6 +452,10 @@
       showToast('불러올 조합을 찾지 못했습니다');
       return;
     }
+    if (!isComposedPromptVisibleInCurrentMode(item)) {
+      showToast('현재 모드에서는 해당 커스텀 조합을 불러올 수 없습니다');
+      return;
+    }
     clearCoreRandomVisualState();
     activeComposedCategoryGridMode = false;
     activeComposedSelectedGridMode = false;
@@ -455,6 +467,7 @@
     activeComposedPreviewId = id;
     clearOutputOverride();
     selected = item.items.map(entry => ({ ...normalizeSelected(entry), source: 'prompt' })).filter(entry => entry && entry.content);
+    applyPrivateStealthModeSanitization();
     render();
 
     requestAnimationFrame(() => {
@@ -535,6 +548,7 @@
 
   function getSortedPromptsForSubCategory(mainCategory, subCategory) {
     return prompts.filter(p => {
+      if (!isPromptVisibleInCurrentMode(p)) return false;
       if (mainCategory && p.mainCategory !== mainCategory) return false;
       if (subCategory && p.subCategory !== subCategory) return false;
       return true;
@@ -590,6 +604,7 @@
     }
 
     const filteredPrompts = prompts.filter(prompt => {
+      if (!isPromptVisibleInCurrentMode(prompt)) return false;
       if (!normalizePromptTags(prompt.tags).includes(tag)) return false;
       if (activeCategoryPrompt && prompt.mainCategory !== activeCategoryPrompt) return false;
       if (activeSubCategoryPrompt && prompt.subCategory !== activeSubCategoryPrompt) return false;
@@ -1089,13 +1104,14 @@
       }
 
       const filteredComposed = composedPrompts.filter(item => item.mainCategory === activeCategoryComposed);
-      if (filteredComposed.length === 0) {
+      const visibleComposed = filteredComposed.filter(item => isComposedPromptVisibleInCurrentMode(item));
+      if (visibleComposed.length === 0) {
         list.innerHTML = '<div class="empty-state">선택한 대분류에 표시할 커스텀 조합 카드가 없습니다.</div>';
         return;
       }
 
       list.innerHTML = '';
-      filteredComposed.forEach(item => {
+      visibleComposed.forEach(item => {
         const composedText = getComposedItemText(item);
         const isPreview = activeComposedPreviewId === item.id;
         const isArmedRandomCard = armedCoreRandomComposedId === item.id;
@@ -1324,6 +1340,7 @@
     }
 
     const filteredPrompts = prompts.filter(p => {
+      if (!isPromptVisibleInCurrentMode(p)) return false;
       if (activeCategoryPrompt && p.mainCategory !== activeCategoryPrompt) return false;
       if (activeSubCategoryPrompt && p.subCategory !== activeSubCategoryPrompt) return false;
       return true;
@@ -1433,6 +1450,7 @@
   }
 
   function render() {
+    applyPrivateStealthModeSanitization();
     renderTapComposeToggle();
     renderCoreCategoryWideCardToggle();
     renderLargeItemGridToggle();
@@ -1461,11 +1479,12 @@
     const countBadge = document.getElementById('count-badge');
     if (leftPanelTab === 'combo') {
       const count = activeCategoryComposed
-        ? composedPrompts.filter(item => item.mainCategory === activeCategoryComposed).length
+        ? composedPrompts.filter(item => item.mainCategory === activeCategoryComposed && isComposedPromptVisibleInCurrentMode(item)).length
         : 0;
       countBadge.textContent = count ? `(${count})` : '';
     } else {
-      countBadge.textContent = prompts.length ? `(${prompts.length})` : '';
+      const visiblePromptCount = prompts.filter(item => isPromptVisibleInCurrentMode(item)).length;
+      countBadge.textContent = visiblePromptCount ? `(${visiblePromptCount})` : '';
     }
   }
 
@@ -1542,6 +1561,7 @@
     }
 
     if (leftPanelTab === 'combo' && isCustomComboTabOpen) {
+      const visibleCustomCombos = customCombos.filter(item => isCustomComboVisibleInCurrentMode(item));
       const renderCustomComboChips = (target, includeEmptyId) => {
         target.innerHTML = '';
         if (selectedCustomCombo.length === 0) {
@@ -1576,14 +1596,14 @@
       };
 
       container.innerHTML = '';
-      if (customCombos.length === 0) {
+      if (visibleCustomCombos.length === 0) {
         const empty = document.createElement('span');
         empty.id = 'chips-empty';
         empty.className = 'empty-state';
         empty.textContent = '저장된 커스텀 콤보가 없습니다';
         container.appendChild(empty);
       } else {
-        customCombos.forEach((customCombo) => {
+        visibleCustomCombos.forEach((customCombo) => {
           const comboCard = document.createElement('div');
           const isActive = activeCustomComboId === customCombo.id;
           comboCard.className = `prompt-item custom-combo-selected-card${isActive ? ' selected' : ''}`;

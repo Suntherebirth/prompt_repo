@@ -24,6 +24,8 @@
     <button class="workspace-mode-toggle" id="workspace-mode-toggle" type="button" onclick="toggleCustomComboTab()" aria-pressed="false" hidden>조합</button>
   </h1>
   <div class="header-right">
+    <button id="private-entry-stage1-hotspot" class="private-entry-stage1-hotspot" type="button" tabindex="-1" aria-hidden="true"></button>
+    <span id="private-entry-stage1-indicator" class="private-entry-stage1-indicator" aria-hidden="true"></span>
     <button id="settings-trigger-btn" class="settings-trigger-btn" type="button" aria-label="설정 열기" aria-haspopup="dialog" aria-expanded="false" onclick="toggleSettingsDrawer()">
       <svg viewBox="0 0 24 24" fill="none" aria-hidden="true" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
         <circle cx="12" cy="12" r="3.25"></circle>
@@ -165,6 +167,10 @@
           <label>이미지 설명</label>
           <textarea id="input-description" placeholder="핵심 분류 항목에만 설명을 입력할 수 있습니다."></textarea>
         </div>
+        <label class="hidden-option-row" style="margin-top:0">
+          <input id="input-is-private" type="checkbox" />
+          <span>프라이빗</span>
+        </label>
         <div class="prompt-image-block">
           <label>설명 이미지</label>
           <div class="image-orientation-tabs" role="tablist" aria-label="프롬프트 이미지 방향 선택">
@@ -219,6 +225,10 @@
           </div>
           <div class="composed-modal-items" id="composed-items-edit-list"></div>
         </div>
+        <label class="hidden-option-row" style="margin-top:0">
+          <input id="combo-is-private" type="checkbox" />
+          <span>프라이빗</span>
+        </label>
         <div class="prompt-image-block">
           <label>설명 이미지</label>
           <div class="image-orientation-tabs" role="tablist" aria-label="커스텀 조합 이미지 방향 선택">
@@ -267,6 +277,10 @@
           <div class="composed-modal-editor-title">커스텀 조합 이미지</div>
           <div class="custom-combo-modal-composition-list" id="custom-combo-modal-composition-list"></div>
         </div>
+        <label class="hidden-option-row" style="margin-top:0">
+          <input id="custom-combo-is-private" type="checkbox" />
+          <span>프라이빗</span>
+        </label>
         <div class="custom-combo-image-position">
           <div class="composed-modal-editor-title">커스텀 콤보 이미지 위치</div>
           <label><input type="radio" name="custom-combo-image-position" value="start" checked /> 흐름 맨앞</label>
@@ -410,6 +424,11 @@
 </script>
 
 <div id="toast">복사되었습니다!</div>
+
+<div id="secret-unlock-effect" class="secret-unlock-effect" aria-hidden="true">
+  <div class="secret-unlock-glyph">🔓</div>
+  <div class="secret-unlock-ring"></div>
+</div>
 
 <div class="image-viewer-modal" id="image-viewer-modal">
   <div class="image-viewer-stage" role="dialog" aria-modal="true" aria-labelledby="image-viewer-title">

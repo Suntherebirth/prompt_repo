@@ -330,6 +330,59 @@
     }
   }
 
+  function syncPromptPrivateInput(options = {}) {
+    const input = document.getElementById('input-is-private');
+    if (!input) return;
+    const mainCategory = document.getElementById('input-main-category')?.value?.trim() || '';
+    const subCategory = document.getElementById('input-sub-category')?.value?.trim() || '';
+    const forcedPrivate = !!mainCategory && !!subCategory && isPromptCategoryPrivate(mainCategory, subCategory);
+    if (forcedPrivate) {
+      if (!input.disabled) input.dataset.manualChecked = input.checked ? '1' : '0';
+      input.checked = true;
+      input.disabled = true;
+      return;
+    }
+    if (input.disabled && options.restoreManual !== false) {
+      input.checked = input.dataset.manualChecked === '1';
+    }
+    input.disabled = false;
+  }
+
+  function syncComposedPrivateInput(options = {}) {
+    const input = document.getElementById('combo-is-private');
+    if (!input) return;
+    const mainCategory = document.getElementById('combo-main-category')?.value?.trim() || '';
+    const subCategory = document.getElementById('combo-sub-category')?.value?.trim() || '';
+    const forcedPrivate = !!mainCategory && !!subCategory && isComposedCategoryPrivate(mainCategory, subCategory);
+    if (forcedPrivate) {
+      if (!input.disabled) input.dataset.manualChecked = input.checked ? '1' : '0';
+      input.checked = true;
+      input.disabled = true;
+      return;
+    }
+    if (input.disabled && options.restoreManual !== false) {
+      input.checked = input.dataset.manualChecked === '1';
+    }
+    input.disabled = false;
+  }
+
+  function syncCustomComboPrivateInput(options = {}) {
+    const input = document.getElementById('custom-combo-is-private');
+    if (!input) return;
+    const subCategory = document.getElementById('custom-combo-name')?.value?.trim() || '';
+    const forcedPrivate = !!subCategory && isComposedCategoryPrivate('콤보', subCategory);
+    if (forcedPrivate) {
+      if (!input.disabled) input.dataset.manualChecked = input.checked ? '1' : '0';
+      input.checked = true;
+      input.disabled = true;
+      return;
+    }
+    if (input.disabled && options.restoreManual !== false) {
+      input.checked = input.dataset.manualChecked === '1';
+    }
+    input.disabled = false;
+  }
+
   function handleMainCategoryChange() {
     const select = document.getElementById('input-main-category');
     if (select.value === '__new__') {
@@ -345,6 +398,7 @@
     renderSubCategorySelect();
     renderPromptDescriptionField();
     renderPendingPromptImagePreview();
+    syncPromptPrivateInput();
   }
 
   function handleSubCategoryChange() {
@@ -361,6 +415,7 @@
     }
     renderPromptDescriptionField();
     renderPendingPromptImagePreview();
+    syncPromptPrivateInput();
   }
 
   function handleComposedMainCategoryChange() {
@@ -377,6 +432,7 @@
     }
     renderComposedSubCategorySelect();
     renderPendingComposedImagePreview();
+    syncComposedPrivateInput();
   }
 
   function handleComposedSubCategoryChange() {
@@ -392,6 +448,7 @@
       }
     }
     renderPendingComposedImagePreview();
+    syncComposedPrivateInput();
   }
 
   function setLeftPanelTab(tab, options = {}) {
@@ -601,6 +658,13 @@
     resetPromptFormToAdd();
     renderCategorySelectors();
     syncAddFormSelection();
+    const privateInput = document.getElementById('input-is-private');
+    if (privateInput) {
+      privateInput.checked = false;
+      privateInput.disabled = false;
+      privateInput.dataset.manualChecked = '0';
+    }
+    syncPromptPrivateInput({ restoreManual: false });
     setPromptImageEditOrientation('landscape');
     clearPendingPromptImage({ all: true });
     document.getElementById('input-content').focus();
@@ -639,6 +703,13 @@
     clearPendingComposedImage({ all: true });
     const modal = document.getElementById('save-composed-modal');
     modal.classList.add('open');
+    const privateInput = document.getElementById('combo-is-private');
+    if (privateInput) {
+      privateInput.checked = false;
+      privateInput.disabled = false;
+      privateInput.dataset.manualChecked = '0';
+    }
+    syncComposedPrivateInput({ restoreManual: false });
     renderComposedModalItemEditor();
     document.getElementById('combo-main-category').focus();
   }
@@ -656,12 +727,19 @@
     if (title) title.textContent = '커스텀 콤보 저장';
     if (submitButton) submitButton.textContent = '저장';
     setCustomComboImagePosition('start');
+    const privateInput = document.getElementById('custom-combo-is-private');
+    if (privateInput) {
+      privateInput.checked = false;
+      privateInput.disabled = false;
+      privateInput.dataset.manualChecked = '0';
+    }
     pendingCustomComboImages = { landscape: null, portrait: null };
     removedCustomComboImages = { landscape: false, portrait: false };
     pendingCustomComboItemImages = {};
     const imageFileInput = document.getElementById('custom-combo-image-file');
     if (imageFileInput) imageFileInput.value = '';
     renderCustomComboCompositionImageList(selectedCustomCombo.map(item => item.id));
+    syncCustomComboPrivateInput({ restoreManual: false });
     setCustomComboImageEditOrientation('portrait');
     document.getElementById('save-custom-combo-modal')?.classList.add('open');
     nameInput?.focus();
@@ -674,6 +752,12 @@
     if (nameInput) nameInput.value = customCombo.subCategory || '';
     const title = document.getElementById('save-custom-combo-title');
     const submitButton = document.querySelector('#save-custom-combo-modal .modal-actions .btn-primary');
+    const privateInput = document.getElementById('custom-combo-is-private');
+    if (privateInput) {
+      privateInput.checked = !!customCombo.isPrivate;
+      privateInput.disabled = false;
+      privateInput.dataset.manualChecked = privateInput.checked ? '1' : '0';
+    }
     if (title) title.textContent = '커스텀 콤보 편집';
     if (submitButton) submitButton.textContent = '수정 저장';
     setCustomComboImagePosition(customCombo.comboImagePosition || 'start');
@@ -684,6 +768,7 @@
     const imageFileInput = document.getElementById('custom-combo-image-file');
     if (imageFileInput) imageFileInput.value = '';
     renderCustomComboCompositionImageList(customCombo.items || []);
+    syncCustomComboPrivateInput({ restoreManual: false });
     pendingCustomComboImages = {
       landscape: customCombo.imageData ? { dataUrl: customCombo.imageData, fileName: customCombo.imageName || '', mimeType: '', file: null } : null,
       portrait: customCombo.portraitImageData ? { dataUrl: customCombo.portraitImageData, fileName: customCombo.portraitImageName || '', mimeType: '', file: null } : null,
@@ -910,6 +995,14 @@
       }
       subSelect.value = target.subCategory || '';
     }
+
+    const privateInput = document.getElementById('combo-is-private');
+    if (privateInput) {
+      privateInput.checked = !!target.isPrivate;
+      privateInput.disabled = false;
+      privateInput.dataset.manualChecked = privateInput.checked ? '1' : '0';
+    }
+    syncComposedPrivateInput({ restoreManual: false });
 
     editingComposedImageId = target.imageId || '';
     editingComposedImageData = target.imageData || '';

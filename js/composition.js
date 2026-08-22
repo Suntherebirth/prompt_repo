@@ -4,6 +4,8 @@
     const subCategory = document.getElementById('input-sub-category').value.trim();
     const content = document.getElementById('input-content').value.trim();
     const tags = normalizePromptTags(document.getElementById('input-tags').value);
+    const privateInput = document.getElementById('input-is-private');
+    const isPrivateChecked = !!privateInput?.checked;
     const isCore = !!mainCategory && !!subCategory && isSubCategoryCoreEnabled(mainCategory, subCategory);
     const description = isCore ? document.getElementById('input-description').value.trim() : '';
     if (!mainCategory) { showToast('대분류를 입력하세요'); return; }
@@ -65,6 +67,7 @@
       id: editingPromptId || uid(),
       mainCategory,
       subCategory,
+      isPrivate: isPrivateChecked || isPromptCategoryPrivate(mainCategory, subCategory),
       content,
       tags,
       description: isCore ? description : '',
@@ -96,6 +99,7 @@
       }
     }
 
+    applyCategoryPrivacyRules();
     ensureCategoryConfigConsistency();
     save();
     document.getElementById('input-content').value = '';
@@ -354,6 +358,8 @@
   async function saveCustomCombo() {
     const nameInput = document.getElementById('custom-combo-name');
     const subCategory = nameInput?.value.trim() || '';
+    const privateInput = document.getElementById('custom-combo-is-private');
+    const isPrivateChecked = !!privateInput?.checked;
     if (!subCategory) {
       showToast('커스텀 콤보 이름을 입력하세요');
       nameInput?.focus();
@@ -430,6 +436,7 @@
           mainCategory: '콤보',
           category: '콤보',
           subCategory,
+          isPrivate: isPrivateChecked || isComposedCategoryPrivate('콤보', subCategory),
           imageId,
           imageData: imageId ? '' : (landscapeImage?.dataUrl || item.imageData || ''),
           imageName,
@@ -445,6 +452,7 @@
         id: uid(),
         mainCategory: '콤보',
         subCategory,
+        isPrivate: isPrivateChecked || isComposedCategoryPrivate('콤보', subCategory),
         category: '콤보',
         items: selectedCustomCombo.map(item => item.id),
         content: selectedCustomCombo.map(item => item.content || item.subCategory || '').filter(Boolean).join(', '),
@@ -458,6 +466,7 @@
         comboImagePosition,
       });
     }
+    applyCategoryPrivacyRules();
     save();
     for (const oldImageId of uniqueInOrder(previousCustomComboImageIds)) {
       await deleteImageIfOrphaned(oldImageId);
@@ -473,6 +482,8 @@
     const isEditMode = !!editingComposedPromptId;
     const mainCategory = mainCategoryInput.value.trim();
     const subCategory = subCategoryInput.value.trim();
+    const privateInput = document.getElementById('combo-is-private');
+    const isPrivateChecked = !!privateInput?.checked;
     const items = selected.map(normalizeSelected).filter(item => item && item.content).map(cleanPrompt);
     const previousComposed = isEditMode ? composedPrompts.find(item => item.id === editingComposedPromptId) : null;
     const previousImageId = previousComposed?.imageId || editingComposedImageId || '';
@@ -547,6 +558,7 @@
       id: editingComposedPromptId || uid(),
       mainCategory,
       subCategory,
+      isPrivate: isPrivateChecked || isComposedCategoryPrivate(mainCategory, subCategory),
       category: mainCategory,
       items,
       content: composedContent,
@@ -585,6 +597,7 @@
       }
     }
 
+    applyCategoryPrivacyRules();
     save();
     render();
     closeSaveComposedModal();

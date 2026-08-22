@@ -1,5 +1,5 @@
   function resolveToastTone(message, toneHint) {
-    const allowed = new Set(['success', 'info', 'warning', 'danger']);
+    const allowed = new Set(['success', 'info', 'warning', 'danger', 'secret-premium']);
     if (typeof toneHint === 'string' && allowed.has(toneHint)) return toneHint;
 
     const text = String(message || '').trim();
@@ -31,7 +31,7 @@
 
     const tone = resolveToastTone(msg, toneHint);
     t.textContent = String(msg || '');
-    t.classList.remove('toast-success', 'toast-info', 'toast-warning', 'toast-danger');
+    t.classList.remove('toast-success', 'toast-info', 'toast-warning', 'toast-danger', 'toast-secret-premium');
     t.classList.add(`toast-${tone}`);
     t.classList.add('show');
     clearTimeout(t._timer);

@@ -102,8 +102,9 @@
   }
 
   function renderSelectedPromptGrid(preview, selectedPrompts) {
+    const visibleSelectedPrompts = selectedPrompts.filter(prompt => isPromptVisibleInCurrentMode(prompt));
     const mainCategoryRank = new Map(categoryConfig.mainOrder.map((category, index) => [category, index]));
-    const sortedPrompts = [...selectedPrompts].sort((a, b) => {
+    const sortedPrompts = [...visibleSelectedPrompts].sort((a, b) => {
       const aMainRank = mainCategoryRank.get(a.mainCategory) ?? Number.MAX_SAFE_INTEGER;
       const bMainRank = mainCategoryRank.get(b.mainCategory) ?? Number.MAX_SAFE_INTEGER;
       if (aMainRank !== bMainRank) return aMainRank - bMainRank;
@@ -184,7 +185,8 @@
       lastCategoryItemGridLandscapeKey = categoryGridLandscapeKey;
     }
     let categoryPrompts = prompts.filter(prompt => (
-      prompt.mainCategory === activeCategoryPrompt && prompt.subCategory === activeSubCategoryPrompt
+      isPromptVisibleInCurrentMode(prompt)
+      && prompt.mainCategory === activeCategoryPrompt && prompt.subCategory === activeSubCategoryPrompt
     )).sort((a, b) => {
       const aText = String(a.content || '').localeCompare(String(b.content || ''), 'ko');
       if (aText !== 0) return aText;
@@ -233,7 +235,7 @@
       ? `<button class="preview-tag-grid-sort-toggle${shouldAnimatePromptTagSort ? ' is-changing' : ''}" type="button" data-tag-sort="${activePromptTagSort}" aria-label="현재 ${sortLabel}. ${nextSortLabel}(으)로 정렬">${sortLabel}</button>`
       : '';
     const linkedIrpComposedId = leftPanelTab === 'prompt' ? getSubCategoryLinkedComposedId(activeCategoryPrompt, activeSubCategoryPrompt) : '';
-    const linkedIrpComposed = linkedIrpComposedId ? composedPrompts.find(item => item.id === linkedIrpComposedId) : null;
+    const linkedIrpComposed = linkedIrpComposedId ? composedPrompts.find(item => item.id === linkedIrpComposedId && isComposedPromptVisibleInCurrentMode(item)) : null;
     const irpCopyButtonMarkup = linkedIrpComposed
       ? '<button class="preview-tag-grid-irp-copy-btn" type="button">IRP 복사</button>'
       : '';
@@ -248,7 +250,8 @@
 
   function renderPromptTagBrowser(preview) {
     const categoryPrompts = prompts.filter(prompt => (
-      prompt.mainCategory === activeCategoryPrompt && prompt.subCategory === activeSubCategoryPrompt
+      isPromptVisibleInCurrentMode(prompt)
+      && prompt.mainCategory === activeCategoryPrompt && prompt.subCategory === activeSubCategoryPrompt
     ));
     const tags = uniqueInOrder(categoryPrompts.flatMap(prompt => normalizePromptTags(prompt.tags)));
     if (!tags.length) {

@@ -150,6 +150,11 @@
     return false;
   }
 
+  function normalizePrivateStealthMode(value) {
+    if (value === true || value === '1' || value === 1) return true;
+    return false;
+  }
+
   function renderCoreCategoryWideCardToggle() {
     const btn = document.getElementById('core-category-wide-card-toggle-btn');
     if (!btn) return;
@@ -173,6 +178,119 @@
     button.classList.toggle('active', isExportMetadataSanitizationEnabled);
     button.setAttribute('aria-pressed', isExportMetadataSanitizationEnabled ? 'true' : 'false');
     button.textContent = isExportMetadataSanitizationEnabled ? 'C2PA/XMP 제거 켜짐' : 'C2PA/XMP 제거 꺼짐';
+  }
+
+  function renderPrivateStealthModeToggle() {
+    const button = document.getElementById('private-stealth-mode-toggle-btn');
+    if (!button) return;
+    button.classList.toggle('active', isPrivateStealthMode);
+    button.setAttribute('aria-pressed', isPrivateStealthMode ? 'true' : 'false');
+    button.textContent = isPrivateStealthMode ? '프라이빗-온 모드 ON' : '프라이빗-온 모드 OFF';
+  }
+
+  function setPrivateStealthMode(enabled, options = {}) {
+    isPrivateStealthMode = normalizePrivateStealthMode(enabled);
+    applyPrivateStealthModeSanitization();
+    saveSettings();
+    renderPrivateStealthModeToggle();
+    render();
+    if (!isPrivateStealthMode && options.animateUnlockEffect === true) {
+      showSecretUnlockEffect();
+    }
+    if (options.notify) {
+      showToast(isPrivateStealthMode
+        ? '프라이빗-온 모드: 프라이빗 항목을 숨겼습니다'
+        : '프라이빗 컨텐츠들이 표시됩니다.', isPrivateStealthMode ? undefined : 'secret-premium');
+    }
+  }
+
+  function showSecretUnlockEffect() {
+    const effect = document.getElementById('secret-unlock-effect');
+    if (!effect) return;
+    if (effect._hideTimer) window.clearTimeout(effect._hideTimer);
+    effect.classList.remove('show');
+    void effect.offsetWidth;
+    effect.classList.add('show');
+    effect._hideTimer = window.setTimeout(() => {
+      effect.classList.remove('show');
+      effect._hideTimer = null;
+    }, 920);
+  }
+
+  function togglePrivateStealthMode() {
+    setPrivateStealthMode(!isPrivateStealthMode, { notify: true, animateUnlockEffect: true });
+  }
+
+  function armPrivateStealthEntryStage1() {
+    isPrivateStealthEntryStage1Armed = true;
+    const indicator = document.getElementById('private-entry-stage1-indicator');
+    if (!indicator) return;
+    if (indicator._hideTimer) window.clearTimeout(indicator._hideTimer);
+    indicator.classList.add('show');
+    indicator._hideTimer = window.setTimeout(() => {
+      indicator.classList.remove('show');
+      indicator._hideTimer = null;
+    }, 420);
+  }
+
+  function disarmPrivateStealthEntryStage1() {
+    isPrivateStealthEntryStage1Armed = false;
+  }
+
+  function togglePrivateStealthModeBySecretGesture() {
+    setPrivateStealthMode(!isPrivateStealthMode, { notify: true, animateUnlockEffect: true });
+  }
+
+  function bindPrivateStealthModeSecretEntry() {
+    const stage1Hotspot = document.getElementById('private-entry-stage1-hotspot');
+    const settingsTitle = document.getElementById('settings-drawer-title');
+    if (stage1Hotspot) {
+      stage1Hotspot.addEventListener('click', () => {
+        armPrivateStealthEntryStage1();
+      });
+    }
+    if (!settingsTitle) return;
+
+    let pressTimer = null;
+    let pointerId = null;
+    let startX = 0;
+    let startY = 0;
+
+    const clearPressTimer = () => {
+      if (pressTimer) window.clearTimeout(pressTimer);
+      pressTimer = null;
+      pointerId = null;
+    };
+
+    const isEnabled = () => {
+      const drawerOpen = document.getElementById('settings-drawer')?.classList.contains('open');
+      return !!drawerOpen && !!isPrivateStealthEntryStage1Armed;
+    };
+
+    settingsTitle.addEventListener('pointerdown', (event) => {
+      if (!isEnabled()) return;
+      if (event.pointerType === 'mouse' && event.button !== 0) return;
+      pointerId = event.pointerId;
+      startX = event.clientX;
+      startY = event.clientY;
+      pressTimer = window.setTimeout(() => {
+        disarmPrivateStealthEntryStage1();
+        togglePrivateStealthModeBySecretGesture();
+        clearPressTimer();
+      }, LONG_PRESS_DURATION_MS);
+    });
+
+    settingsTitle.addEventListener('pointermove', (event) => {
+      if (!pressTimer || pointerId !== event.pointerId) return;
+      const dx = event.clientX - startX;
+      const dy = event.clientY - startY;
+      if (Math.hypot(dx, dy) > LONG_PRESS_MOVE_TOLERANCE_PX) {
+        clearPressTimer();
+      }
+    });
+
+    settingsTitle.addEventListener('pointerup', clearPressTimer);
+    settingsTitle.addEventListener('pointercancel', clearPressTimer);
   }
 
   function setExportMetadataSanitizationEnabled(enabled, options = {}) {

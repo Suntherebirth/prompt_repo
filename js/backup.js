@@ -50,6 +50,7 @@
         id: item.id,
         mainCategory: item.mainCategory,
         subCategory: item.subCategory,
+        isPrivate: !!item.isPrivate,
         category: item.category,
         items: Array.isArray(item.items) ? item.items.map(cleanPrompt) : [],
         content: item.content,
@@ -70,6 +71,7 @@
         id: item.id,
         mainCategory: item.mainCategory || '콤보',
         subCategory: item.subCategory || '',
+        isPrivate: !!item.isPrivate,
         category: item.category || '콤보',
         items: Array.isArray(item.items) ? item.items.filter(Boolean) : [],
         content: item.content || '',
@@ -106,6 +108,7 @@
         id: item.id,
         mainCategory: '콤보',
         subCategory: String(item.subCategory || '').trim(),
+        isPrivate: !!item.isPrivate,
         category: '콤보',
         items: Array.isArray(item.items) ? item.items.filter(Boolean) : [],
         content: String(item.content || '').trim(),
@@ -143,6 +146,7 @@
         if (!key || !value || typeof value !== 'object') return;
         categoryConfig.mains[key] = {
           hiddenByDefault: !!value.hiddenByDefault,
+          isPrivate: !!value.isPrivate,
           emoji: typeof value.emoji === 'string' ? value.emoji.trim() : '',
           subOrder: uniqueInOrder(Array.isArray(value.subOrder) ? value.subOrder.filter(Boolean) : []),
           subSettings: Object.fromEntries(
@@ -161,7 +165,11 @@
         if (!key || !value || typeof value !== 'object') return;
         composedCategoryConfig.mains[key] = {
           editOnly: !!value.editOnly,
+          isPrivate: !!value.isPrivate,
           emoji: typeof value.emoji === 'string' ? value.emoji.trim() : '',
+          subSettings: Object.fromEntries(
+            Object.entries((value.subSettings && typeof value.subSettings === 'object') ? value.subSettings : {}).map(([subKey, subValue]) => [subKey, { ...(subValue || {}) }])
+          ),
         };
       });
     } else {
@@ -171,6 +179,7 @@
     applyPromptDescriptionRules();
     ensureCategoryConfigConsistency();
     ensureComposedCategoryConfigConsistency();
+    applyCategoryPrivacyRules();
     activePromptPreviewId = prompts[0]?.id || null;
     save();
     render();

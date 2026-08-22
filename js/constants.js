@@ -17,6 +17,7 @@
   const CORE_CATEGORY_WIDE_CARD_KEY = 'prompt_repo_core_category_wide_card_v1';
   const LARGE_ITEM_GRID_KEY = 'prompt_repo_large_item_grid_v1';
   const EXPORT_METADATA_SANITIZATION_KEY = 'prompt_repo_export_metadata_sanitization_v1';
+  const PRIVATE_STEALTH_MODE_KEY = 'prompt_repo_private_stealth_mode_v1';
   const IMAGE_DB_NAME = 'prompt_repo_images_v1';
   const IMAGE_STORE_NAME = 'images';
   const LONG_PRESS_DURATION_MS = 600;

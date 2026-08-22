@@ -91,6 +91,8 @@
   let isCoreCategoryWideCardEnabled = false;
   let isLargeItemGridEnabled = false;
   let isExportMetadataSanitizationEnabled = true;
+  let isPrivateStealthMode = false;
+  let isPrivateStealthEntryStage1Armed = false;
   let promptImageEditOrientation = 'portrait';
   let composedImageEditOrientation = 'portrait';
   let composedImageEditStage = 'after';

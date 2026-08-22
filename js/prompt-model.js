@@ -17,6 +17,7 @@
       id: prompt.id || uid(),
       mainCategory: mainCategory || '기타',
       subCategory: subCategory || '기타',
+      isPrivate: !!prompt.isPrivate,
       content,
       tags: normalizePromptTags(prompt.tags),
       description: String(prompt.description ?? '').trim(),
@@ -38,6 +39,7 @@
       id: prompt.id,
       mainCategory: prompt.mainCategory,
       subCategory: prompt.subCategory,
+      isPrivate: !!prompt.isPrivate,
       content: prompt.content,
       tags: normalizePromptTags(prompt.tags),
       description: isCore ? (prompt.description || '').trim() : '',
@@ -126,6 +128,7 @@
             id: referencedComposed.id,
             mainCategory: referencedComposed.mainCategory,
             subCategory: referencedComposed.subCategory,
+            isPrivate: !!referencedComposed.isPrivate,
             content: String(referencedComposed.content || '').trim() || getComposedItemText(referencedComposed),
           };
         }
@@ -139,6 +142,7 @@
         id: uid(),
         mainCategory,
         subCategory,
+        isPrivate: false,
         content: item.content.trim(),
       }];
     }
@@ -149,6 +153,7 @@
       id: item.id || uid(),
       mainCategory,
       subCategory,
+      isPrivate: !!item.isPrivate,
       category: mainCategory,
       items,
       content: items.map(p => p.content).join(', '),
@@ -182,6 +187,7 @@
       id: item.id || uid(),
       mainCategory: '콤보',
       subCategory: String(item.subCategory || '').trim(),
+      isPrivate: !!item.isPrivate,
       category: '콤보',
       items: Array.isArray(item.items) ? item.items.filter(Boolean) : [],
       content: String(item.content || '').trim(),

@@ -4,14 +4,18 @@
 
   function getMainCategories() {
     ensureCategoryConfigConsistency();
-    return [...categoryConfig.mainOrder];
+    const categories = [...categoryConfig.mainOrder];
+    if (!isPrivateStealthModeEnabled()) return categories;
+    return categories.filter((mainCategory) => !isMainCategoryPrivate(mainCategory));
   }
 
   function getSubCategories(mainCategory) {
     if (!mainCategory) return [];
     ensureCategoryConfigConsistency();
     const mainConfig = getMainCategoryConfig(mainCategory);
-    return uniqueInOrder(mainConfig.subOrder || []);
+    const subCategories = uniqueInOrder(mainConfig.subOrder || []);
+    if (!isPrivateStealthModeEnabled()) return subCategories;
+    return subCategories.filter((subCategory) => !isSubCategoryPrivate(mainCategory, subCategory));
   }
 
   function setMainCategoryHidden(mainCategory, hiddenByDefault) {
@@ -96,6 +100,7 @@
     delete categoryConfig.mains[mainCategory];
     categoryConfig.mains[nextMainCategory] = {
       hiddenByDefault: !!prevConfig.hiddenByDefault,
+      isPrivate: !!prevConfig.isPrivate,
       emoji: prevConfig.emoji || '',
       subOrder: uniqueInOrder(Array.isArray(prevConfig.subOrder) ? prevConfig.subOrder : []),
       subSettings: Object.fromEntries(
@@ -288,17 +293,21 @@
 
   function getComposedMainCategoryOrder() {
     ensureComposedCategoryConfigConsistency();
-    return uniqueInOrder(composedPrompts.map(item => item.mainCategory).filter(Boolean));
+    const order = uniqueInOrder(composedPrompts.map(item => item.mainCategory).filter(Boolean));
+    if (!isPrivateStealthModeEnabled()) return order;
+    return order.filter((mainCategory) => !getComposedMainCategoryConfig(mainCategory).isPrivate);
   }
 
   function getComposedSubCategoryOrder(mainCategory) {
     if (!mainCategory) return [];
-    return uniqueInOrder(
+    const order = uniqueInOrder(
       composedPrompts
         .filter(item => item.mainCategory === mainCategory)
         .map(item => item.subCategory)
         .filter(Boolean)
     );
+    if (!isPrivateStealthModeEnabled()) return order;
+    return order.filter((subCategory) => !getComposedSubCategoryConfig(mainCategory, subCategory).isPrivate);
   }
 
   function getComposedEditOnlyMainCategories() {
@@ -415,7 +424,11 @@
     delete composedCategoryConfig.mains[mainCategory];
     composedCategoryConfig.mains[nextMainCategory] = {
       editOnly: !!prevConfig.editOnly,
+      isPrivate: !!prevConfig.isPrivate,
       emoji: prevConfig.emoji || '',
+      subSettings: Object.fromEntries(
+        Object.entries(prevConfig.subSettings || {}).map(([subKey, subValue]) => [subKey, { ...(subValue || {}) }])
+      ),
     };
 
     save();
@@ -478,6 +491,12 @@
       return { ...item, subCategory: nextSubCategory };
     });
 
+    const mainConfig = ensureComposedMainCategoryConfig(mainCategory);
+    if (mainConfig.subSettings?.[subCategory]) {
+      mainConfig.subSettings[nextSubCategory] = { ...mainConfig.subSettings[subCategory] };
+      delete mainConfig.subSettings[subCategory];
+    }
+
     save();
     render();
     renderCategoryManageList();
@@ -497,6 +516,10 @@
       .filter(Boolean);
 
     composedPrompts = composedPrompts.filter(item => !(item.mainCategory === mainCategory && item.subCategory === subCategory));
+    const mainConfig = ensureComposedMainCategoryConfig(mainCategory);
+    if (mainConfig.subSettings) {
+      delete mainConfig.subSettings[subCategory];
+    }
     if (activeComposedPreviewId && !composedPrompts.some(item => item.id === activeComposedPreviewId)) {
       activeComposedPreviewId = null;
     }
@@ -519,6 +542,20 @@
     renderCategoryManageList();
   }
 
+  function toggleMainCategoryPrivate(mainCategory, checked) {
+    setMainCategoryPrivate(mainCategory, checked);
+    save();
+    render();
+    renderCategoryManageList();
+  }
+
+  function toggleSubCategoryPrivate(mainCategory, subCategory, checked) {
+    setSubCategoryPrivate(mainCategory, subCategory, checked);
+    save();
+    render();
+    renderCategoryManageList();
+  }
+
   function toggleSubCategoryCore(mainCategory, subCategory, checked) {
     setSubCategoryCore(mainCategory, subCategory, checked);
     save();
@@ -535,6 +572,20 @@
 
   function toggleComposedMainCategoryEditOnly(mainCategory, checked) {
     setComposedMainCategoryEditOnly(mainCategory, checked);
+    save();
+    render();
+    renderCategoryManageList();
+  }
+
+  function toggleComposedMainCategoryPrivate(mainCategory, checked) {
+    setComposedMainCategoryPrivate(mainCategory, checked);
+    save();
+    render();
+    renderCategoryManageList();
+  }
+
+  function toggleComposedSubCategoryPrivate(mainCategory, subCategory, checked) {
+    setComposedSubCategoryPrivate(mainCategory, subCategory, checked);
     save();
     render();
     renderCategoryManageList();
@@ -632,6 +683,14 @@
       hiddenInput.checked = !!mainConfig.hiddenByDefault;
       hiddenInput.onchange = () => toggleMainCategoryHidden(mainCategory, hiddenInput.checked);
 
+      const privateLabel = document.createElement('label');
+      privateLabel.className = 'hidden-option-row category-manage-option';
+      privateLabel.style.marginTop = '0';
+      privateLabel.innerHTML = '<input type="checkbox" /><span>프라이빗</span>';
+      const privateInput = privateLabel.querySelector('input');
+      privateInput.checked = !!mainConfig.isPrivate;
+      privateInput.onchange = () => toggleMainCategoryPrivate(mainCategory, privateInput.checked);
+
       const upBtn = document.createElement('button');
       upBtn.type = 'button';
       upBtn.className = 'btn btn-secondary btn-sm category-manage-btn-move';
@@ -661,6 +720,7 @@
       mainMeta.appendChild(emojiInput);
       mainMeta.appendChild(title);
       mainMeta.appendChild(hiddenLabel);
+      mainMeta.appendChild(privateLabel);
       actions.appendChild(upBtn);
       actions.appendChild(downBtn);
       actions.appendChild(renameBtn);
@@ -721,6 +781,14 @@
           const coreInput = coreLabel.querySelector('input');
           coreInput.checked = isSubCategoryCoreEnabled(mainCategory, subCategory);
           coreInput.onchange = () => toggleSubCategoryCore(mainCategory, subCategory, coreInput.checked);
+
+          const privateLabel = document.createElement('label');
+          privateLabel.className = 'hidden-option-row category-manage-option';
+          privateLabel.style.marginTop = '0';
+          privateLabel.innerHTML = '<input type="checkbox" /><span>프라이빗</span>';
+          const privateInput = privateLabel.querySelector('input');
+          privateInput.checked = isSubCategoryPrivate(mainCategory, subCategory);
+          privateInput.onchange = () => toggleSubCategoryPrivate(mainCategory, subCategory, privateInput.checked);
 
           const irpLabel = document.createElement('label');
           irpLabel.className = 'category-manage-option category-manage-irp-option';
@@ -840,6 +908,7 @@
 
           subHeaderRight.appendChild(randomLabel);
           subHeaderRight.appendChild(coreLabel);
+          subHeaderRight.appendChild(privateLabel);
           subHeaderRight.appendChild(irpLabel);
           subButtonRow.appendChild(subUpBtn);
           subButtonRow.appendChild(subDownBtn);
@@ -908,6 +977,14 @@
       editOnlyInput.checked = !!mainConfig.editOnly;
       editOnlyInput.onchange = () => toggleComposedMainCategoryEditOnly(mainCategory, editOnlyInput.checked);
 
+      const privateLabel = document.createElement('label');
+      privateLabel.className = 'hidden-option-row category-manage-option';
+      privateLabel.style.marginTop = '0';
+      privateLabel.innerHTML = '<input type="checkbox" /><span>프라이빗</span>';
+      const privateInput = privateLabel.querySelector('input');
+      privateInput.checked = !!mainConfig.isPrivate;
+      privateInput.onchange = () => toggleComposedMainCategoryPrivate(mainCategory, privateInput.checked);
+
       const upBtn = document.createElement('button');
       upBtn.type = 'button';
       upBtn.className = 'btn btn-secondary btn-sm category-manage-btn-move';
@@ -937,6 +1014,7 @@
       mainMeta.appendChild(emojiInput);
       mainMeta.appendChild(title);
       mainMeta.appendChild(editOnlyLabel);
+      mainMeta.appendChild(privateLabel);
       actions.appendChild(upBtn);
       actions.appendChild(downBtn);
       actions.appendChild(renameBtn);
@@ -964,6 +1042,14 @@
 
           const subButtonRow = document.createElement('div');
           subButtonRow.className = 'category-manage-actions category-manage-actions-sub category-manage-sub-button-row';
+
+          const subPrivateLabel = document.createElement('label');
+          subPrivateLabel.className = 'hidden-option-row category-manage-option';
+          subPrivateLabel.style.marginTop = '0';
+          subPrivateLabel.innerHTML = '<input type="checkbox" /><span>프라이빗</span>';
+          const subPrivateInput = subPrivateLabel.querySelector('input');
+          subPrivateInput.checked = !!getComposedSubCategoryConfig(mainCategory, subCategory).isPrivate;
+          subPrivateInput.onchange = () => toggleComposedSubCategoryPrivate(mainCategory, subCategory, subPrivateInput.checked);
 
           const subUpBtn = document.createElement('button');
           subUpBtn.type = 'button';
@@ -993,6 +1079,7 @@
 
           subButtonRow.appendChild(subUpBtn);
           subButtonRow.appendChild(subDownBtn);
+          subButtonRow.appendChild(subPrivateLabel);
           subButtonRow.appendChild(subRenameBtn);
           subButtonRow.appendChild(subDeleteBtn);
           subItem.appendChild(subTitle);
@@ -1012,7 +1099,8 @@
   }
 
   function getComposedSubCategories(mainCategory) {
-    const filtered = mainCategory ? composedPrompts.filter(p => p.mainCategory === mainCategory) : composedPrompts;
+    const filtered = (mainCategory ? composedPrompts.filter(p => p.mainCategory === mainCategory) : composedPrompts)
+      .filter(item => isComposedPromptVisibleInCurrentMode(item));
     return uniqueInOrder(filtered.map(p => p.subCategory).filter(Boolean));
   }
 

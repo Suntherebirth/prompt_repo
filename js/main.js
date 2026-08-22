@@ -58,6 +58,7 @@
 
   document.getElementById('custom-combo-name').addEventListener('input', () => {
     renderPendingCustomComboImagePreview();
+    syncCustomComboPrivateInput();
   });
 
   document.addEventListener('keydown', e => {
@@ -335,6 +336,7 @@
   bindWorkspaceTitleSwipe();
   loadSettings();
   renderSettingsDrawer();
+  bindPrivateStealthModeSecretEntry();
   renderImageViewer();
   setLeftPanelTab(localStorage.getItem(LEFT_PANEL_TAB_KEY) || 'prompt');
   load();

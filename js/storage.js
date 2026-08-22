@@ -42,6 +42,7 @@
           if (!key || !value || typeof value !== 'object') return;
           categoryConfig.mains[key] = {
             hiddenByDefault: !!value.hiddenByDefault,
+            isPrivate: !!value.isPrivate,
             emoji: typeof value.emoji === 'string' ? value.emoji.trim() : '',
             subOrder: uniqueInOrder(Array.isArray(value.subOrder) ? value.subOrder.filter(Boolean) : []),
             subSettings: Object.fromEntries(
@@ -66,7 +67,11 @@
           if (!key || !value || typeof value !== 'object') return;
           composedCategoryConfig.mains[key] = {
             editOnly: !!value.editOnly,
+            isPrivate: !!value.isPrivate,
             emoji: typeof value.emoji === 'string' ? value.emoji.trim() : '',
+            subSettings: Object.fromEntries(
+              Object.entries((value.subSettings && typeof value.subSettings === 'object') ? value.subSettings : {}).map(([subKey, subValue]) => [subKey, { ...(subValue || {}) }])
+            ),
           };
         });
       } else {
@@ -87,6 +92,7 @@
     applyPromptDescriptionRules();
     ensureCategoryConfigConsistency();
     ensureComposedCategoryConfigConsistency();
+    applyCategoryPrivacyRules();
 
   }
 
@@ -96,6 +102,7 @@
       id: item.id,
       mainCategory: item.mainCategory,
       subCategory: item.subCategory,
+      isPrivate: !!item.isPrivate,
       category: item.category,
       items: Array.isArray(item.items) ? item.items.map(cleanPrompt) : [],
       content: item.content,
@@ -144,6 +151,7 @@
     localStorage.setItem(CORE_CATEGORY_WIDE_CARD_KEY, payload.isCoreCategoryWideCardEnabled ? '1' : '0');
     localStorage.setItem(LARGE_ITEM_GRID_KEY, payload.isLargeItemGridEnabled ? '1' : '0');
     localStorage.setItem(EXPORT_METADATA_SANITIZATION_KEY, payload.isExportMetadataSanitizationEnabled ? '1' : '0');
+    localStorage.removeItem(PRIVATE_STEALTH_MODE_KEY);
   }
 
   function loadSettings() {
@@ -159,6 +167,8 @@
     setPreviewTransitionMode(storedSettings?.previewTransitionMode ?? localStorage.getItem(PREVIEW_TRANSITION_MODE_KEY) ?? 'scale');
     setCoreCategoryWideCard(storedSettings?.isCoreCategoryWideCardEnabled ?? localStorage.getItem(CORE_CATEGORY_WIDE_CARD_KEY));
     setLargeItemGrid(storedSettings?.isLargeItemGridEnabled ?? localStorage.getItem(LARGE_ITEM_GRID_KEY));
+    // 보안 모드는 세션 전용: 앱을 새로 시작하면 항상 잠금(프라이빗-온) 상태로 시작한다.
+    setPrivateStealthMode(true);
     isExportMetadataSanitizationEnabled = storedSettings?.isExportMetadataSanitizationEnabled
       ?? localStorage.getItem(EXPORT_METADATA_SANITIZATION_KEY) !== '0';
     saveSettings();
