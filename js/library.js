@@ -1465,6 +1465,7 @@
     renderLibraryLayout();
     renderCategorySelectors();
     renderComposedCategorySelectors();
+    renderPrivateFeatureControlVisibility();
     syncAddFormSelection();
     renderPromptList();
     renderSelected();

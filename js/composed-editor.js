@@ -330,6 +330,13 @@
     }
   }
 
+  function renderPrivateFeatureControlVisibility() {
+    const shouldHide = isPrivateStealthModeEnabled();
+    document.querySelectorAll('.private-feature-control').forEach((element) => {
+      element.style.display = shouldHide ? 'none' : '';
+    });
+  }
+
   function syncPromptPrivateInput(options = {}) {
     const input = document.getElementById('input-is-private');
     if (!input) return;

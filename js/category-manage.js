@@ -641,6 +641,7 @@
 
   function renderCategoryManagePromptList(list) {
     const mainCategories = getMainCategories();
+    const hidePrivateControls = isPrivateStealthModeEnabled();
     list.innerHTML = '';
 
     if (mainCategories.length === 0) {
@@ -720,7 +721,9 @@
       mainMeta.appendChild(emojiInput);
       mainMeta.appendChild(title);
       mainMeta.appendChild(hiddenLabel);
-      mainMeta.appendChild(privateLabel);
+      if (!hidePrivateControls) {
+        mainMeta.appendChild(privateLabel);
+      }
       actions.appendChild(upBtn);
       actions.appendChild(downBtn);
       actions.appendChild(renameBtn);
@@ -908,7 +911,9 @@
 
           subHeaderRight.appendChild(randomLabel);
           subHeaderRight.appendChild(coreLabel);
-          subHeaderRight.appendChild(privateLabel);
+          if (!hidePrivateControls) {
+            subHeaderRight.appendChild(privateLabel);
+          }
           subHeaderRight.appendChild(irpLabel);
           subButtonRow.appendChild(subUpBtn);
           subButtonRow.appendChild(subDownBtn);
@@ -935,6 +940,7 @@
 
   function renderCategoryManageComposedList(list) {
     const mainCategories = getComposedMainCategoryOrder();
+    const hidePrivateControls = isPrivateStealthModeEnabled();
     list.innerHTML = '';
 
     if (mainCategories.length === 0) {
@@ -1014,7 +1020,9 @@
       mainMeta.appendChild(emojiInput);
       mainMeta.appendChild(title);
       mainMeta.appendChild(editOnlyLabel);
-      mainMeta.appendChild(privateLabel);
+      if (!hidePrivateControls) {
+        mainMeta.appendChild(privateLabel);
+      }
       actions.appendChild(upBtn);
       actions.appendChild(downBtn);
       actions.appendChild(renameBtn);
@@ -1079,7 +1087,9 @@
 
           subButtonRow.appendChild(subUpBtn);
           subButtonRow.appendChild(subDownBtn);
-          subButtonRow.appendChild(subPrivateLabel);
+          if (!hidePrivateControls) {
+            subButtonRow.appendChild(subPrivateLabel);
+          }
           subButtonRow.appendChild(subRenameBtn);
           subButtonRow.appendChild(subDeleteBtn);
           subItem.appendChild(subTitle);
