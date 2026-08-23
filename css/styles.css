@@ -5351,6 +5351,13 @@
       pointer-events: none;
     }
 
+    #toast.toast-unlock-below {
+      top: calc(50% + 116px);
+      bottom: auto;
+      transform: translateX(-50%) translateY(20px);
+      z-index: 10001;
+    }
+
     #toast.toast-success {
       background: var(--toast-bg-success);
       border-color: var(--toast-border-success);
@@ -5404,7 +5411,7 @@
     }
 
     .secret-unlock-effect.show {
-      animation: secretUnlockFade 900ms ease-out forwards;
+      animation: secretUnlockFade 2000ms ease-out forwards;
     }
 
     .secret-unlock-glyph {
@@ -5416,7 +5423,7 @@
     }
 
     .secret-unlock-effect.show .secret-unlock-glyph {
-      animation: secretUnlockGlyph 900ms cubic-bezier(.2,.85,.2,1) forwards;
+      animation: secretUnlockGlyph 2000ms cubic-bezier(.2,.85,.2,1) forwards;
     }
 
     .secret-unlock-ring {
@@ -5431,7 +5438,7 @@
     }
 
     .secret-unlock-effect.show .secret-unlock-ring {
-      animation: secretUnlockRing 900ms ease-out forwards;
+      animation: secretUnlockRing 2000ms ease-out forwards;
     }
 
     @keyframes secretUnlockFade {

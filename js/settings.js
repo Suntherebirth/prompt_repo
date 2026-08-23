@@ -189,6 +189,7 @@
   }
 
   function setPrivateStealthMode(enabled, options = {}) {
+    const revealFeedbackDurationMs = 2000;
     isPrivateStealthMode = normalizePrivateStealthMode(enabled);
     applyPrivateStealthModeSanitization();
     saveSettings();
@@ -200,7 +201,9 @@
     if (options.notify) {
       showToast(isPrivateStealthMode
         ? '프라이빗-온 모드: 프라이빗 항목을 숨겼습니다'
-        : '프라이빗 컨텐츠들이 표시됩니다.', isPrivateStealthMode ? undefined : 'secret-premium');
+        : '프라이빗 컨텐츠들이 표시됩니다.',
+      isPrivateStealthMode ? undefined : 'secret-premium',
+      isPrivateStealthMode ? undefined : { placement: 'unlock-below', durationMs: revealFeedbackDurationMs });
     }
   }
 
@@ -214,7 +217,7 @@
     effect._hideTimer = window.setTimeout(() => {
       effect.classList.remove('show');
       effect._hideTimer = null;
-    }, 920);
+    }, 2000);
   }
 
   function togglePrivateStealthMode() {

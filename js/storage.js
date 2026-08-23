@@ -92,33 +92,37 @@
     applyPromptDescriptionRules();
     ensureCategoryConfigConsistency();
     ensureComposedCategoryConfigConsistency();
+    normalizeComposedPromptItemOrder();
     applyCategoryPrivacyRules();
 
   }
 
   function save() {
     const promptPayload = prompts.map(cleanPrompt);
-    const composedPayload = composedPrompts.map(item => ({
-      id: item.id,
-      mainCategory: item.mainCategory,
-      subCategory: item.subCategory,
-      isPrivate: !!item.isPrivate,
-      category: item.category,
-      items: Array.isArray(item.items) ? item.items.map(cleanPrompt) : [],
-      content: item.content,
-      imageId: item.imageId || '',
-      imageData: !item.imageId && item.imageData ? item.imageData : '',
-      imageName: item.imageName || '',
-      portraitImageId: item.portraitImageId || '',
-      portraitImageData: !item.portraitImageId && item.portraitImageData ? item.portraitImageData : '',
-      portraitImageName: item.portraitImageName || '',
-      beforeImageId: item.beforeImageId || '',
-      beforeImageData: !item.beforeImageId && item.beforeImageData ? item.beforeImageData : '',
-      beforeImageName: item.beforeImageName || '',
-      beforePortraitImageId: item.beforePortraitImageId || '',
-      beforePortraitImageData: !item.beforePortraitImageId && item.beforePortraitImageData ? item.beforePortraitImageData : '',
-      beforePortraitImageName: item.beforePortraitImageName || '',
-    }));
+    const composedPayload = composedPrompts.map(item => {
+      const items = Array.isArray(item.items) ? sortPromptsByCategoryOrder(item.items) : [];
+      return {
+        id: item.id,
+        mainCategory: item.mainCategory,
+        subCategory: item.subCategory,
+        isPrivate: !!item.isPrivate,
+        category: item.category,
+        items: items.map(cleanPrompt),
+        content: items.map(prompt => prompt.content).join(', '),
+        imageId: item.imageId || '',
+        imageData: !item.imageId && item.imageData ? item.imageData : '',
+        imageName: item.imageName || '',
+        portraitImageId: item.portraitImageId || '',
+        portraitImageData: !item.portraitImageId && item.portraitImageData ? item.portraitImageData : '',
+        portraitImageName: item.portraitImageName || '',
+        beforeImageId: item.beforeImageId || '',
+        beforeImageData: !item.beforeImageId && item.beforeImageData ? item.beforeImageData : '',
+        beforeImageName: item.beforeImageName || '',
+        beforePortraitImageId: item.beforePortraitImageId || '',
+        beforePortraitImageData: !item.beforePortraitImageId && item.beforePortraitImageData ? item.beforePortraitImageData : '',
+        beforePortraitImageName: item.beforePortraitImageName || '',
+      };
+    });
 
     localStorage.setItem(STORAGE_KEY, JSON.stringify(promptPayload));
     localStorage.setItem(COMPOSED_STORAGE_KEY, JSON.stringify(composedPayload));

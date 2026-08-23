@@ -46,14 +46,16 @@
       version: 7,
       exportedAt: new Date().toISOString(),
       prompts: prompts.map(cleanPrompt),
-      composedPrompts: composedPrompts.map(item => ({
-        id: item.id,
-        mainCategory: item.mainCategory,
-        subCategory: item.subCategory,
-        isPrivate: !!item.isPrivate,
-        category: item.category,
-        items: Array.isArray(item.items) ? item.items.map(cleanPrompt) : [],
-        content: item.content,
+      composedPrompts: composedPrompts.map(item => {
+        const items = Array.isArray(item.items) ? sortPromptsByCategoryOrder(item.items) : [];
+        return {
+          id: item.id,
+          mainCategory: item.mainCategory,
+          subCategory: item.subCategory,
+          isPrivate: !!item.isPrivate,
+          category: item.category,
+          items: items.map(cleanPrompt),
+          content: items.map(prompt => prompt.content).join(', '),
         imageId: item.imageId || '',
         imageData: !item.imageId && item.imageData ? item.imageData : '',
         imageName: item.imageName || '',
@@ -65,8 +67,9 @@
         beforeImageName: item.beforeImageName || '',
         beforePortraitImageId: item.beforePortraitImageId || '',
         beforePortraitImageData: !item.beforePortraitImageId && item.beforePortraitImageData ? item.beforePortraitImageData : '',
-        beforePortraitImageName: item.beforePortraitImageName || '',
-      })),
+          beforePortraitImageName: item.beforePortraitImageName || '',
+        };
+      }),
       customCombos: customCombos.map(item => ({
         id: item.id,
         mainCategory: item.mainCategory || '콤보',
@@ -179,6 +182,7 @@
     applyPromptDescriptionRules();
     ensureCategoryConfigConsistency();
     ensureComposedCategoryConfigConsistency();
+    normalizeComposedPromptItemOrder();
     applyCategoryPrivacyRules();
     activePromptPreviewId = prompts[0]?.id || null;
     save();

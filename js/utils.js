@@ -25,17 +25,27 @@
     return 'info';
   }
 
-  function showToast(msg, toneHint) {
+  function showToast(msg, toneHint, options) {
     const t = document.getElementById('toast');
     if (!t) return;
 
+    const normalizedOptions = options && typeof options === 'object' ? options : {};
+    const placement = normalizedOptions.placement === 'unlock-below' ? 'unlock-below' : 'default';
+    const durationMs = Number.isFinite(normalizedOptions.durationMs) && normalizedOptions.durationMs > 0
+      ? normalizedOptions.durationMs
+      : 2000;
+
     const tone = resolveToastTone(msg, toneHint);
     t.textContent = String(msg || '');
-    t.classList.remove('toast-success', 'toast-info', 'toast-warning', 'toast-danger', 'toast-secret-premium');
+    t.classList.remove('toast-success', 'toast-info', 'toast-warning', 'toast-danger', 'toast-secret-premium', 'toast-unlock-below');
+    if (placement === 'unlock-below') t.classList.add('toast-unlock-below');
     t.classList.add(`toast-${tone}`);
     t.classList.add('show');
     clearTimeout(t._timer);
-    t._timer = setTimeout(() => t.classList.remove('show'), 2000);
+    t._timer = setTimeout(() => {
+      t.classList.remove('show');
+      t.classList.remove('toast-unlock-below');
+    }, durationMs);
   }
 
   // ── Escape HTML ──

@@ -186,7 +186,7 @@
     if (customOutputText !== null) return customOutputText;
     if (selected.length === 0) return '';
     const sep = ', ';
-    return selected.map(p => p.content).join(sep);
+    return sortPromptsByCategoryOrder(selected).map(p => p.content).join(sep);
   }
 
   function setOutputEditMode(editing) {

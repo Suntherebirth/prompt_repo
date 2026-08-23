@@ -201,6 +201,7 @@
     clearOutputOverride();
     selectingFromPreviewId = p.id;
     selected.push({ ...p, source: 'prompt' });
+    selected = sortPromptsByCategoryOrder(selected);
     render();
     scrollSelectedPromptChipIntoView(p.id);
     if (options.scrollToCard) {
@@ -484,7 +485,7 @@
     const subCategory = subCategoryInput.value.trim();
     const privateInput = document.getElementById('combo-is-private');
     const isPrivateChecked = !!privateInput?.checked;
-    const items = selected.map(normalizeSelected).filter(item => item && item.content).map(cleanPrompt);
+    const items = sortPromptsByCategoryOrder(selected.map(normalizeSelected).filter(item => item && item.content)).map(cleanPrompt);
     const previousComposed = isEditMode ? composedPrompts.find(item => item.id === editingComposedPromptId) : null;
     const previousImageId = previousComposed?.imageId || editingComposedImageId || '';
     const previousPortraitImageId = previousComposed?.portraitImageId || editingComposedPortraitImageId || '';

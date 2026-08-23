@@ -65,10 +65,11 @@
       });
 
       if (!wasUpdated) return composed;
+      const sortedItems = sortPromptsByCategoryOrder(items);
       return {
         ...composed,
-        items,
-        content: items.map(item => item.content).join(', '),
+        items: sortedItems,
+        content: sortedItems.map(item => item.content).join(', '),
       };
     });
   }
@@ -112,6 +113,37 @@
       subCategory: (item.subCategory ?? item.category ?? '기타').trim() || '기타',
       content: (item.content ?? '').trim(),
     };
+  }
+
+  function sortPromptsByCategoryOrder(items) {
+    if (!Array.isArray(items)) return [];
+    const mainRank = new Map((categoryConfig.mainOrder || []).map((category, index) => [category, index]));
+    return items
+      .map((item, index) => ({ item, index }))
+      .sort((a, b) => {
+        const aMainRank = mainRank.get(a.item.mainCategory) ?? Number.MAX_SAFE_INTEGER;
+        const bMainRank = mainRank.get(b.item.mainCategory) ?? Number.MAX_SAFE_INTEGER;
+        if (aMainRank !== bMainRank) return aMainRank - bMainRank;
+
+        const aSubOrder = getMainCategoryConfig(a.item.mainCategory).subOrder || [];
+        const bSubOrder = getMainCategoryConfig(b.item.mainCategory).subOrder || [];
+        const aSubRank = aSubOrder.indexOf(a.item.subCategory);
+        const bSubRank = bSubOrder.indexOf(b.item.subCategory);
+        if (aSubRank !== bSubRank) {
+          return (aSubRank < 0 ? Number.MAX_SAFE_INTEGER : aSubRank)
+            - (bSubRank < 0 ? Number.MAX_SAFE_INTEGER : bSubRank);
+        }
+        return a.index - b.index;
+      })
+      .map(({ item }) => item);
+  }
+
+  function normalizeComposedPromptItemOrder() {
+    composedPrompts = composedPrompts.map((composed) => {
+      if (!Array.isArray(composed.items)) return composed;
+      const items = sortPromptsByCategoryOrder(composed.items);
+      return { ...composed, items, content: items.map(item => item.content).join(', ') };
+    });
   }
 
   function normalizeComposedPrompt(item, composedSourceById = null) {
