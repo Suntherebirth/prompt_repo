@@ -59,7 +59,7 @@
       promptTagLayouts[key] = canonicalLayout;
     }
 
-    // 화면 표시용 레이아웃은 현재 가시 태그만 사용하되 구분선은 연속/양끝에 오지 않게 정리한다.
+    // 화면 표시용 레이아웃은 현재 가시 태그만 사용하되 연속 구분선은 정리한다.
     const visibleLayout = [];
     canonicalLayout.forEach(item => {
       if (item.type === 'tag') {
@@ -79,10 +79,6 @@
       }
       normalizedVisibleLayout.push(item);
     });
-    while (normalizedVisibleLayout.length && normalizedVisibleLayout[normalizedVisibleLayout.length - 1].type === 'divider') {
-      normalizedVisibleLayout.pop();
-    }
-
     return normalizedVisibleLayout;
   }
 
