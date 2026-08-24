@@ -59,7 +59,7 @@
       promptTagLayouts[key] = canonicalLayout;
     }
 
-    // 화면 표시용 레이아웃은 현재 가시 태그만 사용하되 연속 구분선은 정리한다.
+    // 화면 표시용 레이아웃은 현재 가시 태그만 사용하고, 구분선은 저장된 순서를 그대로 유지한다.
     const visibleLayout = [];
     canonicalLayout.forEach(item => {
       if (item.type === 'tag') {
@@ -68,18 +68,7 @@
       }
       visibleLayout.push(item);
     });
-
-    const normalizedVisibleLayout = [];
-    visibleLayout.forEach(item => {
-      const last = normalizedVisibleLayout[normalizedVisibleLayout.length - 1];
-      if (item.type === 'divider') {
-        if (!last || last.type === 'divider') return;
-        normalizedVisibleLayout.push(item);
-        return;
-      }
-      normalizedVisibleLayout.push(item);
-    });
-    return normalizedVisibleLayout;
+    return visibleLayout;
   }
 
   function savePromptTagLayout(layout) {
