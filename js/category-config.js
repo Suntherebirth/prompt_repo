@@ -30,19 +30,60 @@
     const availableTags = uniqueInOrder(tags);
     const availableSet = new Set(availableTags);
     const stored = Array.isArray(promptTagLayouts[key]) ? promptTagLayouts[key] : [];
-    const usedTags = new Set();
-    const layout = stored.filter(item => {
-      if (!item || typeof item !== 'object') return false;
-      if (item.type === 'divider') return typeof item.id === 'string' && item.id;
-      if (item.type !== 'tag' || !availableSet.has(item.tag) || usedTags.has(item.tag)) return false;
-      usedTags.add(item.tag);
-      return true;
+
+    // 원본 레이아웃은 프라이빗 모드 토글로 파괴되지 않도록 비가시 태그도 유지한다.
+    const canonicalLayout = [];
+    const canonicalTagSet = new Set();
+    stored.forEach(item => {
+      if (!item || typeof item !== 'object') return;
+      if (item.type === 'divider') {
+        if (typeof item.id === 'string' && item.id) canonicalLayout.push({ type: 'divider', id: item.id });
+        return;
+      }
+      if (item.type !== 'tag') return;
+      const tag = typeof item.tag === 'string' ? item.tag : '';
+      if (!tag || canonicalTagSet.has(tag)) return;
+      canonicalTagSet.add(tag);
+      canonicalLayout.push({ type: 'tag', tag });
     });
+
+    // 새로 생긴 태그만 canonical 끝에 추가한다.
+    let canonicalChanged = false;
     availableTags.forEach(tag => {
-      if (!usedTags.has(tag)) layout.push({ type: 'tag', tag });
+      if (canonicalTagSet.has(tag)) return;
+      canonicalTagSet.add(tag);
+      canonicalLayout.push({ type: 'tag', tag });
+      canonicalChanged = true;
     });
-    promptTagLayouts[key] = layout;
-    return layout;
+    if (canonicalChanged || !Array.isArray(promptTagLayouts[key])) {
+      promptTagLayouts[key] = canonicalLayout;
+    }
+
+    // 화면 표시용 레이아웃은 현재 가시 태그만 사용하되 구분선은 연속/양끝에 오지 않게 정리한다.
+    const visibleLayout = [];
+    canonicalLayout.forEach(item => {
+      if (item.type === 'tag') {
+        if (availableSet.has(item.tag)) visibleLayout.push(item);
+        return;
+      }
+      visibleLayout.push(item);
+    });
+
+    const normalizedVisibleLayout = [];
+    visibleLayout.forEach(item => {
+      const last = normalizedVisibleLayout[normalizedVisibleLayout.length - 1];
+      if (item.type === 'divider') {
+        if (!last || last.type === 'divider') return;
+        normalizedVisibleLayout.push(item);
+        return;
+      }
+      normalizedVisibleLayout.push(item);
+    });
+    while (normalizedVisibleLayout.length && normalizedVisibleLayout[normalizedVisibleLayout.length - 1].type === 'divider') {
+      normalizedVisibleLayout.pop();
+    }
+
+    return normalizedVisibleLayout;
   }
 
   function savePromptTagLayout(layout) {

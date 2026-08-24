@@ -139,6 +139,15 @@
       return;
     }
 
+    const idx = selected.findIndex(s => s.id === p.id && s.source === 'prompt');
+    if (idx >= 0) {
+      clearOutputOverride();
+      selected.splice(idx, 1);
+      activePromptComposedGridMode = false;
+      render();
+      return;
+    }
+
     if (activePromptPreviewId === p.id) {
       activePromptComposedGridMode = !activePromptComposedGridMode;
       render();
@@ -152,14 +161,6 @@
     activePromptTagFilter = null;
     activePromptTagBrowser = false;
     activePromptCategoryGridMode = false;
-
-    const idx = selected.findIndex(s => s.id === p.id && s.source === 'prompt');
-    if (idx >= 0) {
-      clearOutputOverride();
-      selected.splice(idx, 1);
-      render();
-      return;
-    }
 
     if (tapComposeMode === PROMPT_ADD_MODE.TAP) {
       addPromptToComposition(p);
